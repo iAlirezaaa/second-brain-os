@@ -6,6 +6,13 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; test-matrix coverage, pending CI)
+- `scripts/ci_floor.py` now refuses an absent Ubuntu or Windows
+  **unit-test** matrix even when a backup job uses that operating system.
+  It also fails closed if the `jobs.test` matrix cannot be derived.
+  Three offline regression cases cover this false-green path; no CI runner,
+  required branch status, runtime permissions or external settings change.
+
 ### Added (issue #107; P0 check audit in review)
 - The existing `scripts/ci_floor.py` can optionally compare GitHub's **actual**
   protected-main required status names against the current `jobs.test` matrix,
