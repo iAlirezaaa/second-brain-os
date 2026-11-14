@@ -37,6 +37,13 @@ over something it cannot see is a silent gate, not a clean house.
       existing regression `tests/test_phase37_ci_python_floor.py` now tests
       correct, stale and unverifiable snapshots without increasing test count.
       No new dependency, default network traffic, admin write or bypass.
+- [x] **P0 CI coverage:** the offline floor gate now rejects a `jobs.test`
+      matrix missing either Ubuntu or Windows, even if a backup job runs
+      on the missing OS. Three regression cases cover Linux hidden by an
+      Ubuntu backup, absent Windows, and an unrecognizable `jobs.test`
+      job. This closes a false-green path in the same read-only CI audit;
+      no branch rules or workflows are modified. Test:
+      `tests/test_phase37_ci_python_floor.py`.
 - [ ] **P0 blocker:** an administrator must replace the stale
       `test (ubuntu-latest, 3.9/3.12)` required contexts with the actual
       `test (ubuntu-24.04, 3.9/3.12)` checks while preserving Windows checks
