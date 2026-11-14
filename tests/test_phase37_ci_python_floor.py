@@ -129,6 +129,28 @@ class TestRefusals(unittest.TestCase):
                 self.assertTrue(ci_floor.required_status_context_problems(root, bad),
                                 "unknown/absent protection must not look green")
 
+    def test_floor_refuses_linux_only_in_backup(self):
+        """Issue #107: an Ubuntu backup job cannot stand in for a Linux test job."""
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("os: [ubuntu-24.04, windows-latest]",
+                                 "os: [windows-latest]")
+            ci += "\n  backup-seal:\n    runs-on: ubuntu-24.04\n"
+            problems, _ = ci_floor.check(fixture(tmp, ci=ci))
+            self.assertIn("jobs.test has no Ubuntu runner", "\n".join(problems))
+
+    def test_floor_refuses_no_windows_test_runner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("os: [ubuntu-24.04, windows-latest]",
+                                 "os: [ubuntu-24.04]")
+            problems, _ = ci_floor.check(fixture(tmp, ci=ci))
+            self.assertIn("jobs.test has no Windows runner", "\n".join(problems))
+
+    def test_floor_refuses_unrecognized_test_job_before_claiming_health(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("  test:\n", "  smoke:\n")
+            problems, _ = ci_floor.check(fixture(tmp, ci=ci))
+            self.assertIn("cannot derive jobs.test matrix", "\n".join(problems))
+
     def test_a_floor_ci_never_installs_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
             ci = CI_GOOD.replace('["3.9", "3.12"]', '["3.11", "3.12"]')
