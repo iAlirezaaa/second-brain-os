@@ -4,6 +4,7 @@ Each fixture is disposable; the outside sentinel is synthetic, never user data.
 """
 import os
 import sqlite3
+from contextlib import closing
 import sys
 import tempfile
 import unittest
@@ -84,9 +85,14 @@ class KbCorpusAliases(unittest.TestCase):
         foreign_cache = self.base / "external-cache"
         foreign_cache.mkdir()
         foreign_db = foreign_cache / "kb.sqlite"
-        with sqlite3.connect(str(foreign_db)) as conn:
-            conn.execute("CREATE TABLE sentinel (value TEXT)")
-            conn.execute("INSERT INTO sentinel VALUES ('unchanged')")
+        with closing(sqlite3.connect(str(foreign_db))) as conn:
+            with conn:
+                conn.execute("CREATE TABLE sentinel (value TEXT)")
+                conn.execute("INSERT INTO sentinel VALUES ('unchanged')")
+        # The sqlite3 connection context manager commits but does NOT close.
+        # Keep the outside-file fixture unlocked before alias checks/cleanup.
+        with self.assertRaises(sqlite3.ProgrammingError):
+            conn.execute("SELECT 1")
         before = foreign_db.read_bytes()
 
         cache_dir = self.root / ".kb"
