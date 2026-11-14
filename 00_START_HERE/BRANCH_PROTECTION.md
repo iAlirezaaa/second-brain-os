@@ -37,6 +37,15 @@ from a private repository or a response containing credentials. Normal
 `python scripts/ci_floor.py` remains fully offline and does **not**
 claim to have verified GitHub's remote settings.
 
+## Local cross-platform matrix integrity
+
+The same `ci_floor.py` offline gate also verifies that `jobs.test`
+contains **both Ubuntu and Windows**. Other jobs (including the separate
+Ubuntu backup-seal job) cannot prove that unit tests ran on Linux. Missing
+or unrecognizable unit-test matrices now fail closed, even if the declared
+Python floor appears in another job. This is a static coverage check, not
+a replacement for inspecting live GitHub Actions jobs.
+
 ## Required maintainer action
 
 A repository administrator must open **Settings → Branches → main branch
