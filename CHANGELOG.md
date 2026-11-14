@@ -6,6 +6,9 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #115 follow-up; Windows CI regression; verification pending)
+- CI run #43618064693 failed only on Windows/Python 3.12 because the synthetic external SQLite sentinel in `tests/test_kb_corpus_symlink_boundary.py` remained open after `with sqlite3.connect(...)`. The context manager commits/rolls back but does not close. The fixture now wraps the connection in `contextlib.closing`, retains the transaction boundary and asserts the connection cannot be reused. This changes tests only, not user databases or the production KB schema. Full CI must pass before PR #116 can be merged.
+
 ### Fixed (issue #115; KB cache symlink boundary, review pending)
 - `scripts/kb.py` now refuses symbolic links at `.kb/` or `.kb/kb.sqlite` before opening its derived SQLite index. A disposable cache directory pointing outside the brain could previously cause `ingest` to write to an unrelated SQLite file despite symlink-safe Markdown corpus enumeration. A synthetic regression covers directory/file/dangling aliases without touching real user data. No schema, network, dependency or permission changes. This is a static alias check, **not** a race-free or OS-level sandbox; full CI and protected-branch merge remain pending.
 
