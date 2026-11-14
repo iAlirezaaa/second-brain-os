@@ -177,6 +177,18 @@ def check(root):
         for version in ci_versions:
             if parse_version(version) < parse_version(floor):
                 problems.append("ci.yml installs %s, below the declared floor %s" % (version, floor))
+        # Only jobs.test proves the advertised cross-platform Python floor.
+        # A backup job running on Ubuntu is not a substitute for Linux unit tests;
+        # workflow_matrix() deliberately also sees backup-job runners.
+        try:
+            contexts = expected_required_test_contexts(root)
+        except (OSError, ValueError) as exc:
+            problems.append("ci.yml cannot derive jobs.test matrix: %s" % exc)
+        else:
+            if not any(name.startswith("test (ubuntu-") for name in contexts):
+                problems.append("ci.yml jobs.test has no Ubuntu runner for the Python floor")
+            if not any(name.startswith("test (windows-") for name in contexts):
+                problems.append("ci.yml jobs.test has no Windows runner for the Python floor")
         ubuntu = ubuntu_images(ci_runs)
         floating = [image for image in ubuntu if image == UNPINNED_UBUNTU]
         if floating:
