@@ -627,6 +627,8 @@ def registry_surface_problems(root):
         record = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return ["MCP REGISTRY: invalid JSON (%s)" % type(exc).__name__]
+    if not isinstance(record, dict):
+        return ["MCP REGISTRY: bridge record must be a JSON object"]
     declared = record.get("tools_exposed")
     if not isinstance(declared, list) or not all(isinstance(x, str) for x in declared):
         return ["MCP REGISTRY: tools_exposed must be an explicit string list"]
