@@ -6,6 +6,14 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #60 partial; source-memory guard in review)
+- `scripts/memory.py --check` and its JSON verdict now refuse a source checkout
+  whose present lesson ledger has zero entries, instead of reporting memory
+  health over no evidence. A first-run installed brain with an empty ledger is
+  still valid; ordinary recall and rendering are unchanged. Synthetic regression
+  coverage: `tests/test_memory_check_zero_ledger.py`. Cross-platform CI and
+  merge remain pending; no private content, dependencies or permissions changed.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
