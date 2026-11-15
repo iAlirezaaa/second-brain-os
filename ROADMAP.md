@@ -27,6 +27,24 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Refuse silent zero-lesson source memory gates (issue #60; CI pending)
+
+- [ ] **S** In a source checkout, `python scripts/memory.py --check` must refuse a
+      readable but blank `15_SYSTEM/memory/lessons.jsonl` rather than claiming
+      zero lessons are trustworthy. An installed, initially empty local brain
+      remains valid; missing/corrupt ledgers retain their original refusals.
+- [ ] Synthetic tests verify both human and JSON gate outputs and the installed
+      home exception. No private memory is read, no ledger is rewritten, no
+      dependency or permission changes. CI and the pre-existing full health gate
+      must pass on Ubuntu and Windows before review/merge.
+- [ ] The known P0 integration blocker remains issue #107: protected `main`
+      still demands obsolete Ubuntu check names. Never bypass protection.
+
+**Next 1:** Reconcile the seven CI jobs for this head and check that source
+memory validation does not break an installed first-run home.
+**Next 2:** Audit the other zero-denominator paths in #60 using distinct
+fixture tests, without stacking changes on unrelated open PRs.
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
