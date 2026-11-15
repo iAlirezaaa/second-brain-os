@@ -112,6 +112,31 @@ class TestTheGateBites(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("error: tracked store missing: 15_SYSTEM/memory/lessons.jsonl",
                       result.stdout)
+        # An absolute path to another checkout must never count as tracked evidence.
+        with tempfile.TemporaryDirectory() as foreign_home:
+            foreign = Path(foreign_home) / "lessons.jsonl"
+            foreign.write_text("external data\n", encoding="utf-8")
+            config_path = root / "15_SYSTEM" / "config" / "system.json"
+            cfg = json.loads(config_path.read_text(encoding="utf-8"))
+            cfg["memory_planes"]["error"]["tracked_store"] = [str(foreign)]
+            config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            result = self.run_gate(root)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertIn("unsafe tracked store path", result.stdout)
+
+            # Symlinks, even when the target exists, are not clone-readable stores.
+            cfg["memory_planes"]["error"]["tracked_store"] = [
+                "15_SYSTEM/memory/lessons.jsonl"]
+            config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            link = root / "15_SYSTEM" / "memory" / "lessons.jsonl"
+            try:
+                link.symlink_to(foreign)
+            except (OSError, NotImplementedError):
+                pass  # Some Windows runners do not permit creating symlinks.
+            else:
+                result = self.run_gate(root)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("unsafe tracked store path", result.stdout)
 
     def test_a_dropped_plane_fails(self):
         root = self.fixture()
@@ -129,6 +154,18 @@ class TestTheGateBites(unittest.TestCase):
         result = self.run_gate(root)
         self.assertEqual(1, result.returncode)
         self.assertIn("error: reader does not exist: scripts/memory.py", result.stdout)
+        # Reader contracts must be confined too, not just the stored bytes.
+        with tempfile.TemporaryDirectory() as foreign_home:
+            foreign = Path(foreign_home) / "reader.py"
+            foreign.write_text("# outsider\n", encoding="utf-8")
+            (root / "scripts" / "memory.py").write_text("# restored\n", encoding="utf-8")
+            path = root / "15_SYSTEM" / "config" / "system.json"
+            cfg = json.loads(path.read_text(encoding="utf-8"))
+            cfg["memory_planes"]["error"]["reader_script"] = str(foreign)
+            path.write_text(json.dumps(cfg), encoding="utf-8")
+            result = self.run_gate(root)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertIn("unsafe reader path", result.stdout)
 
     def test_an_empty_tracked_folder_without_gitkeep_fails(self):
         root = self.fixture()
