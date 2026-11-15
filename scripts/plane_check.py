@@ -99,8 +99,16 @@ def judge(root):
                                 % (name, rel))
             else:
                 summary["tracked"] += 1
-        for rel in spec.get("disposable_store") or []:
-            summary["by_design"] += 0 if (root / rel).exists() else 1
+        disposable = spec.get("disposable_store")
+        if not isinstance(disposable, list):
+            problems.append("%s: invalid disposable store mapping (expected list)" % name)
+            disposable = []
+        for rel in disposable:
+            cache_path = confined_path(root, rel)
+            if cache_path is None:
+                problems.append("%s: unsafe disposable store path: %s" % (name, rel))
+            elif not cache_path.exists():
+                summary["by_design"] += 1
         reader = spec.get("reader_script") or spec.get("reader_doc")
         if not reader:
             problems.append("%s: no reader declared (reader_script or reader_doc)" % name)
