@@ -45,8 +45,8 @@ from collections import namedtuple
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import (WIKILINK_RE, find_root, is_recorded_base, iter_markdown,
-                    iter_notes)
+from common import (WIKILINK_RE, find_root, is_recorded_base, is_repo_checkout,
+                    iter_markdown, iter_notes)
 
 # every gate prints its verdict in UTF-8: an em dash that dies on a Windows console turns a
 # refusal into mojibake, and nobody reads a message they cannot read
@@ -383,7 +383,10 @@ def main():
     if not vault.is_dir():
         print("REFUSED — vault directory does not exist: %s" % vault)
         return 1
-    if args.require_notes and not any(iter_notes(vault)):
+    # A source checkout promises a populated, checked-in note corpus. Never turn a
+    # missing or blank source template into a zero-denominator green verdict.
+    # An installed personal home may legitimately be empty on first launch.
+    if (args.require_notes or is_repo_checkout(root)) and not any(iter_notes(vault)):
         print("REFUSED — no notes to judge in %s" % vault)
         return 1
 
