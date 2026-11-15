@@ -273,6 +273,31 @@ class TestTheAuditRefusesByName(unittest.TestCase):
         self.assertIn(RECORD_PATH, result.stdout)
         self.assertIn("is not JSON", result.stdout, result.stdout)
 
+        # #122: symlinked JSON must be a named refusal, not an external
+        # target that --stamp --write can edit. The fixture is disposable.
+        path.unlink()
+        outside = write_json(Path(self.tmp) / "outside-history.json", {"runs": []})
+        before = outside.read_bytes()
+        link = self.root / HISTORY_PATH
+        link.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            link.symlink_to(outside)
+        except (OSError, NotImplementedError):
+            return  # Windows without symlink privilege; Linux CI exercises it
+        self.assertEqual(schema_stamp.UNREADABLE, states(self.root)[HISTORY_PATH])
+        refused = gate("--root", str(self.root), "--stamp", "--write")
+        self.assertEqual(1, refused.returncode, refused.stdout)
+        self.assertIn(HISTORY_PATH, refused.stdout)
+        self.assertEqual(before, outside.read_bytes(), "an outside JSON file was modified")
+
+        # A dangling link must not disappear from the audited denominator.
+        link.unlink()
+        link.symlink_to(Path(self.tmp) / "missing-history.json")
+        refused = check(self.root)
+        self.assertEqual(1, refused.returncode, refused.stdout)
+        self.assertIn(HISTORY_PATH, refused.stdout)
+        self.assertEqual(schema_stamp.UNREADABLE, states(self.root)[HISTORY_PATH])
+
     def test_a_file_no_contract_claims_is_a_refusal_because_a_clone_carries_it(self):
         write_json(self.root / "02_WIKI/mystery.json", {"whatever": 1})
         row = rows_by_path(self.root)["02_WIKI/mystery.json"]
