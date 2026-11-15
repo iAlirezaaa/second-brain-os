@@ -72,6 +72,13 @@ created, prints a JSON result and exits nonzero on failure. Both processes
 run only against a disposable root and are bounded by a timeout; existing
 host configurations and private brain data are never read by this probe.
 
+Malformed JSON-RPC method/params shapes and non-string resource URIs are expected to
+return a protocol error without terminating the stdio process. The offline regression
+`python -m unittest discover -s tests -p test_mcp_wire_invalid_requests.py`
+sends malformed requests followed by a healthy ping and verifies notification silence.
+It does not validate arbitrary untrusted traffic, external client compatibility or an
+operating-system sandbox.
+
 This is a local transport and strict-gate smoke test, **not** a verification
 that any specific version of Claude Desktop, Claude Code, Codex, or OpenCode
 connects, nor an OS-level sandbox or a blanket read-only guarantee. Outside
