@@ -30,6 +30,7 @@ over something it cannot see is a silent gate, not a clean house.
 ## P0 — MCP registry malformed JSON refusal (issue #51; in review)
 
 - [ ] **S** The MCP bridge registry must be a JSON object, not just any valid JSON value. In `15_SYSTEM/scripts/mcp_server.py`, `--check-tools` must return a named `MCP REGISTRY` refusal and exit 1 for a JSON list, scalar or null rather than crashing with `AttributeError`. The existing `tests/test_phase44_mcp_tool_tags.py` gate exercises five synthetic invalid roots and one actual subprocess refusal. No tool permission, API, package or private data changes.
+- [ ] **S** Refuse ambiguous bridge JSON with duplicate keys at any object depth, even if the last `tools_exposed` declaration matches the live tool set. `tests/test_phase44_mcp_tool_tags.py` now exercises both duplicate top-level and nested fields, and the public `--check-tools` diagnostic must return a named refusal rather than success or a traceback. A unique-key JSON object remains supported. No extra parser package or permission change.
 - [ ] Verify `python -m unittest discover -s tests` and `python scripts/health.py` on the CI matrix before merge. Issue #51 remains open until the served-tool registry and generated `HANDOFF.md` are reconciled and independently verified; this is only the malformed-record subcase.
 - **Next 1 (P0):** reconcile `HANDOFF.md` with the live 13-tool surface without hand-editing the generated snapshot.
 - **Next 2 (P1):** exercise one synthetic stdio host handshake under strict session/write permissions, without host config mutation.
