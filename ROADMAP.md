@@ -27,6 +27,50 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## Prioritized execution queue — reviewed 2026-11-15 (not a release claim)
+
+The open PRs are independent proposals, **not shipped capabilities**. In particular,
+`main` still requires obsolete `ubuntu-latest` statuses while CI runs on
+`ubuntu-24.04` (issue #107); do not bypass this protection. Reconcile
+concurrent branches before selecting the next small slice.
+
+- [ ] **P0 / correctness:** finish the seven-job CI review of #125 and the
+      branch-local regression for #126 (`scripts/plane_check.py`,
+      `tests/test_phase26_memory_planes.py`). #126 refuses absolute,
+      parent-traversing and symlinked evidence paths that used to count as
+      healthy memory planes; reject false-green rather than expanding privileges.
+      On #107, the repository administrator must replace only the obsolete
+      required status names with their exact current check names after verifying
+      the matrix and ruleset; retain every substantive required check.
+- [ ] **P0 / first success:** verify `skills/first-session/SKILL.md`,
+      `README.md` and `00_START_HERE/START.md` on a clean checkout. Target
+      a measured sub-five-minute synthetic keyword search and repeatable Windows,
+      macOS and Linux shell recipes, not an unmeasured time promise.
+- [ ] **P1 / MCP usability:** version-pin real installed Claude Code,
+      Codex and OpenCode host handshakes against synthetic data. Keep registration
+      opt-in and disabled for writes until actual host-level permission tests.
+      Then improve bilingual quickstarts, clear use cases, lightweight docs and
+      reproducible installation/search timing.
+- [ ] **P2 / optional operator surface:** propose a read-only memory/provenance/
+      agent-activity UI; export and import require identity, scope, explicit
+      permission gates and rollback tests before any state mutation.
+- [ ] **P3 / independent research:** compare Mem0, Basic Memory, Letta and
+      OpenMemory on provenance, shared-memory scoping, data portability and
+      isolation with reproducible synthetic workloads and license review.
+      A competitor's issue is a hypothesis, never proof of a defect here.
+      The 2026-08-25 Basic Memory #1319 report on assistant suggestions without
+      usable accept/reject controls motivates a future **proposal/review** test,
+      not importing its implementation:
+      https://github.com/basicmachines-co/basic-memory/issues/1319
+
+**Next 1:** obtain all seven current CI results for #126, and preserve Draft
+until they are green; review its path boundary against Windows and Python 3.9.
+**Next 2:** reconcile check-name drift in #107 with the repository owner, then
+review ready PRs for conflicts before safe merge. Do not replace the branch
+protection with a weaker policy.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
