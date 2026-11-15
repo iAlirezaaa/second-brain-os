@@ -260,6 +260,25 @@ class TheGateRunsOnTheRealHouse(unittest.TestCase):
             self.assertIn("JSON object", result.stdout)
             self.assertNotIn("Traceback", result.stderr)
 
+            # Duplicate JSON keys are ambiguous even when the final value
+            # matches the served tool set. Fail closed at every object depth.
+            declared = json.dumps([tool["name"] for tool in mcp_server.TOOLS])
+            ambiguous = (
+                '{"tools_exposed":[],"tools_exposed":%s}' % declared,
+                '{"metadata":{"actor":"a","actor":"b"},"tools_exposed":%s}' % declared,
+            )
+            for payload in ambiguous:
+                with self.subTest(ambiguous=payload[:48]):
+                    record.write_text(payload, encoding="utf-8")
+                    problems = mcp_server.registry_surface_problems(root)
+                    self.assertTrue(any("MCP REGISTRY" in p and "duplicate JSON key" in p
+                                        for p in problems), problems)
+            result = run_utf8([sys.executable, SERVER, "--root", str(root), "--check-tools"],
+                              cwd=str(ROOT))
+            self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+            self.assertIn("duplicate JSON key", result.stdout)
+            self.assertNotIn("Traceback", result.stderr)
+
     def test_the_shipped_agent_allowlists_are_all_tagged_by_a_door(self):
         rows = mcp_server.agent_rows(ROOT)
         names = {str(tool["name"]) for tool in mcp_server.TOOLS} | set(engine_names())
