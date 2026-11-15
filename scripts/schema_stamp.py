@@ -210,6 +210,10 @@ CONTRACT_BY_NAME = dict((c.name, c) for c in CONTRACTS)
 # --- the audit ---------------------------------------------------------------------------------
 def load_payload(path):
     """(data, error) -- a file that cannot be parsed is a finding, never a silent skip."""
+    # A JSON filename may be a link to an outside file. Even a read-only
+    # audit must not open that target; --stamp --write must not modify it.
+    if path.is_symlink():
+        return None, "is a symlinked JSON file; refusing to follow its target"
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
@@ -225,7 +229,9 @@ def json_files(root):
     root = Path(root)
     out = []
     for path in sorted(root.rglob("*.json")):
-        if not path.is_file():
+        # Include dangling JSON symlinks so the audit refuses them by name
+        # instead of silently shrinking the number of examined entries.
+        if not path.is_file() and not path.is_symlink():
             continue
         rel = path.relative_to(root).as_posix()
         if set(rel.split("/")[:-1]) & set(FINGERPRINT_SKIP_DIRS):
@@ -482,6 +488,12 @@ def migrate(root, write):
     if not write:
         print("DRY RUN — %d file(s) would gain a stamp; re-run with --write" % len(targets))
         return 0
+    # Recheck before the first write; this narrows accidental link swaps
+    # between inspection and migration. It is not a TOCTOU-safe sandbox.
+    for rel, _name, _version, path, _text in targets:
+        if path.is_symlink():
+            print("REFUSED: %s became a symlink before stamping" % rel)
+            return 1
     for _rel, _name, _version, path, text in targets:
         path.write_bytes(text.encode("utf-8"))
     print("STAMPED %d file(s); %d named above needed nothing (already stamped, hand-authored, "
