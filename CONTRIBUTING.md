@@ -57,7 +57,7 @@ exactly the same gate names; `tests/test_backlog_governance.py` checks drift.
 | `scripts/link_check.py` | links resolving to missing destinations |
 | `scripts/link_check.py --readout` | ambiguous link graph edges |
 | `scripts/frontmatter_check.py` | invalid notes and registry metadata |
-| `scripts/plane_check.py` | declared memory planes missing stores or readers |
+| `scripts/plane_check.py` | missing or unsafe mapped memory stores/readers; absolute, parent-traversing and symlinked evidence paths are not clone-readable (issue #126, pending CI review) |
 | `scripts/candidate_check.py` | proposals with missing or inconsistent evidence |
 | `scripts/memory.py --check` | invalid lesson ledger or stale generated memory |
 | `scripts/sync_hosts.py --check` | host instructions drifting from AGENTS.md |
