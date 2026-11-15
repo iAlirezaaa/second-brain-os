@@ -104,6 +104,31 @@ class TestTheGateBites(unittest.TestCase):
         result = self.run_gate(root)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("absent by design", result.stdout)
+        # A disposable cache may be absent, but its declaration still has to
+        # stay inside this checkout. An external/aliased cache cannot count
+        # as a legitimate, clone-local absence.
+        config_path = root / "15_SYSTEM" / "config" / "system.json"
+        cfg = json.loads(config_path.read_text(encoding="utf-8"))
+        original = cfg["memory_planes"]["agent"]["disposable_store"]
+        unsafe = (str(root.parent / "foreign-cache"), "../foreign-cache",
+                  r"C:\foreign\cache", 123)
+        for rel in unsafe:
+            with self.subTest(disposable=repr(rel)):
+                cfg["memory_planes"]["agent"]["disposable_store"] = [rel]
+                config_path.write_text(json.dumps(cfg), encoding="utf-8")
+                rejected = self.run_gate(root)
+                self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                self.assertIn("unsafe disposable store path", rejected.stdout)
+        for malformed in ("12_RUNTIME/not-a-list", None):
+            with self.subTest(mapping=repr(malformed)):
+                cfg["memory_planes"]["agent"]["disposable_store"] = malformed
+                config_path.write_text(json.dumps(cfg), encoding="utf-8")
+                rejected = self.run_gate(root)
+                self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                self.assertIn("invalid disposable store mapping", rejected.stdout)
+        cfg["memory_planes"]["agent"]["disposable_store"] = original
+        config_path.write_text(json.dumps(cfg), encoding="utf-8")
+
 
     def test_a_missing_tracked_store_fails_and_names_the_plane(self):
         root = self.fixture()
