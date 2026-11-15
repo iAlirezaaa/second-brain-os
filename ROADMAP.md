@@ -27,6 +27,14 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — MCP stdio malformed request isolation (bounded fix, CI pending)
+
+- [ ] **S** Keep the real server alive after a client sends a non-string/empty JSON-RPC method, a non-object `params`, or a non-string `resources/read.uri`. The server must answer with a JSON-RPC `-32600` or `-32602` error for requests with IDs and then successfully handle a later `ping`. A valid initialize, tools/list and initialization notification must retain their existing behavior.
+- [ ] Test-first regression in `tests/test_mcp_wire_invalid_requests.py` launches the actual `15_SYSTEM/scripts/mcp_server.py` with a disposable root, sends six invalid requests and valid follow-up messages, checks response IDs/error codes, no traceback and successful process exit. No host config, personal notes, tool permissions or packages are touched. This is input-shape safety, **not** a full protocol certification or sandbox.
+- [ ] Verify all four Python/OS CI unit-test jobs, health gates and three backup jobs before marking the existing PR ready. Protected-main required-check drift in #107 remains a separate merge blocker; do not bypass it.
+- **Next 1 (P0):** reconcile Issue #107's two obsolete protected-branch Ubuntu check contexts with actual CI without weakening other protections.
+- **Next 2 (P1):** test an installed host's synthetic initialize / tools/list / read-only lookup end-to-end, and record exact host version and consent gates before claiming compatibility.
+
 ## P0 — MCP registry malformed JSON refusal (issue #51; in review)
 
 - [ ] **S** The MCP bridge registry must be a JSON object, not just any valid JSON value. In `15_SYSTEM/scripts/mcp_server.py`, `--check-tools` must return a named `MCP REGISTRY` refusal and exit 1 for a JSON list, scalar or null rather than crashing with `AttributeError`. The existing `tests/test_phase44_mcp_tool_tags.py` gate exercises five synthetic invalid roots and one actual subprocess refusal. No tool permission, API, package or private data changes.
