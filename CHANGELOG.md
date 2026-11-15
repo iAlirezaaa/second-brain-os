@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #119; first-session path and write-boundary correction; in review)
+- The first-session skill now uses real governed destinations: `01_INBOX/` is
+  a human-owned inbox, not an agent write grant; findings go to a GitHub issue
+  or a contract-valid `14_CANDIDATES/loop/` row when offline. It no longer
+  directs a new agent to nonexistent output folders. An onboarding regression
+  rejects those stale names and checks the source paths. This is documentation
+  and test hardening, not an operating-system ACL or capability change.
+
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

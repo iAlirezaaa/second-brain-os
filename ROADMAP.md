@@ -27,6 +27,26 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Governed first-session destinations (issue #119; CI pending)
+
+- [ ] **S** Replace two stale first-session instructions pointing at nonexistent
+      output/inbox paths with the actual `01_INBOX/` human-owned inbox and the
+      existing `14_CANDIDATES/loop/` proposal shelf. New agents must not mistake
+      directory visibility for write permission or create an ungoverned plan folder.
+- [ ] Extend `tests/test_first_session_onboarding.py` with a regression checking
+      nonexistent path references, destination existence and explicit human ownership.
+      Preserve offline clone, ingest and recall examples; no runtime permissions change.
+- [ ] Verify the focused test and full health/unit/backup matrix (seven CI jobs),
+      then review the Draft PR. Existing stale branch-protection contexts in #107
+      remain a separate merge blocker; no bypass is permitted.
+
+**Next 1:** audit remaining user-facing skills for stale paths without changing
+historical records or inventing permission grants.
+**Next 2:** measure clean-clone-to-first-recall wall time across supported OSes
+with a fixed synthetic fixture before claiming an under-five-minute experience.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
