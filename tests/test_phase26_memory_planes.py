@@ -124,6 +124,14 @@ class TestTheGateBites(unittest.TestCase):
             self.assertEqual(1, result.returncode, result.stdout)
             self.assertIn("unsafe tracked store path", result.stdout)
 
+            # Dot-dot also escapes, even when expressed as a relative value.
+            relative_escape = "../" + Path(foreign_home).name + "/lessons.jsonl"
+            cfg["memory_planes"]["error"]["tracked_store"] = [relative_escape]
+            config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            result = self.run_gate(root)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertIn("unsafe tracked store path", result.stdout)
+
             # Symlinks, even when the target exists, are not clone-readable stores.
             cfg["memory_planes"]["error"]["tracked_store"] = [
                 "15_SYSTEM/memory/lessons.jsonl"]
@@ -166,6 +174,32 @@ class TestTheGateBites(unittest.TestCase):
             result = self.run_gate(root)
             self.assertEqual(1, result.returncode, result.stdout)
             self.assertIn("unsafe reader path", result.stdout)
+
+            # A linked parent directory is as unsafe as a linked final file.
+            cfg["memory_planes"]["error"]["reader_script"] = (
+                "scripts/linked-parent/reader.py")
+            path.write_text(json.dumps(cfg), encoding="utf-8")
+            parent_link = root / "scripts" / "linked-parent"
+            foreign_named = Path(foreign_home) / "reader.py"
+            try:
+                parent_link.symlink_to(Path(foreign_home), target_is_directory=True)
+            except (OSError, NotImplementedError):
+                pass
+            else:
+                result = self.run_gate(root)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("unsafe reader path", result.stdout)
+
+            # Every kind of declared evidence uses the same bounded path rule.
+            cfg["memory_planes"]["error"]["reader_script"] = "scripts/memory.py"
+            for field in ("test", "map"):
+                current = cfg["memory_planes"]["error"][field]
+                cfg["memory_planes"]["error"][field] = str(foreign_named)
+                path.write_text(json.dumps(cfg), encoding="utf-8")
+                result = self.run_gate(root)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("unsafe %s path" % field, result.stdout)
+                cfg["memory_planes"]["error"][field] = current
 
     def test_an_empty_tracked_folder_without_gitkeep_fails(self):
         root = self.fixture()
