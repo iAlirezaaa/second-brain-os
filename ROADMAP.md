@@ -27,6 +27,18 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Honest link gates over a real corpus (issue #60 partial; PR #123)
+
+- [ ] **S** In a source checkout, `scripts/link_check.py --vault EMPTY` must refuse a directory with zero scannable notes, for the default, `--confidence` and `--readout` modes. Keep a newly installed home (no `.git` or `pyproject.toml`) eligible to start empty; explicit `--require-notes` remains strict. Regression: `tests/test_ci_issue_hardening.py` copies the real two scripts into a disposable installed-home fixture, then compares acceptance/refusal. No additional discovered tests or dependencies.
+- [ ] **S** Make `python scripts/link_check.py --vault FIXTURE --readout` refuse a graph with broken wikilinks, even when it has no ambiguous edges. The default mode already refuses broken links, but the standalone readout previously printed `OK — link graph measured` over unresolved targets. Regression: `tests/test_phase44_readout_is_a_gate.py::TestTheReadoutIsAVerdict.test_a_broken_link_refuses_standalone_readout`.
+- [ ] Preserve the clean and ambiguous-edge paths; print the missing target by name, reuse one graph snapshot per run, and pass all four Windows/Ubuntu Python 3.9/3.12 tests plus three cross-machine backup jobs before review or merge. No dependency, persisted-data or permission changes. The existing issue #60 covers other zero-denominator gates separately.
+- [ ] Verify the final-head CI result; keep this draft until the seven jobs pass. Protected-`main` required-check drift remains tracked by issue #107, not bypassed.
+
+**Next 1:** re-run seven CI jobs on the new #123 head, then review the refusal across both source and installed-home fixtures without weakening the other link modes.
+**Next 2:** reconcile obsolete branch-protection check names (#107); then review the remaining zero-denominator cases in #60 without duplicating open PRs.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

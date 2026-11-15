@@ -9,7 +9,7 @@ Default (gate): exit 0 = clean, exit 1 = broken links found. Also prints the mea
               (source, target) — an uncertain edge is escalated, never counted healthy.
 --readout:    the graph-health gate `health.py` runs after the link gate — it prints degree-0
               notes, bridge notes and the god-node signal, then refuses while any `ambiguous`
-              edge is escalated. A graph the tool cannot settle is not a healthy graph, and
+              edge or missing target is detected. A graph with unresolved links is not healthy, and
               "OK" over an edge it had to guess at is the silent gate this repo exists to kill.
 
 Why the labels exist (ROADMAP phase 44, taken from graphify's `EXTRACTED | INFERRED |
@@ -45,8 +45,8 @@ from collections import namedtuple
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import (WIKILINK_RE, find_root, is_recorded_base, iter_markdown,
-                    iter_notes)
+from common import (WIKILINK_RE, find_root, is_recorded_base, is_repo_checkout,
+                    iter_markdown, iter_notes)
 
 # every gate prints its verdict in UTF-8: an em dash that dies on a Windows console turns a
 # refusal into mojibake, and nobody reads a message they cannot read
@@ -336,9 +336,10 @@ def print_confidence(vault):
     return counts, broken, ambiguous
 
 
-def print_readout(vault):
-    """Report mode: the navigation structure, each line naming the file it judged."""
-    data = graph_readout(vault)
+def print_readout(vault, data=None):
+    """Report one measured graph; reuse the gate's snapshot to avoid a second scan."""
+    if data is None:
+        data = graph_readout(vault)
     root = data["root"]
     print("link-graph readout over %s" % root)
     print("  notes scanned: %d (every note iter_notes found; this denominator is the proof "
@@ -382,7 +383,10 @@ def main():
     if not vault.is_dir():
         print("REFUSED — vault directory does not exist: %s" % vault)
         return 1
-    if args.require_notes and not any(iter_notes(vault)):
+    # A source checkout promises a populated, checked-in note corpus. Never turn a
+    # missing or blank source template into a zero-denominator green verdict.
+    # An installed personal home may legitimately be empty on first launch.
+    if (args.require_notes or is_repo_checkout(root)) and not any(iter_notes(vault)):
         print("REFUSED — no notes to judge in %s" % vault)
         return 1
 
@@ -398,10 +402,13 @@ def main():
     # and a gate that scanned the vault twice could print two different answers
     data = graph_readout(vault)
     if args.readout:
-        print_readout(vault)
-        if data["ambiguous"]:
-            print("REFUSED — %d ambiguous edge(s) escalated: the readout will not call a graph "
-                  "it cannot settle healthy" % len(data["ambiguous"]))
+        print_readout(vault, data=data)
+        if data["broken"] or data["ambiguous"]:
+            for source, target in data["broken"]:
+                print("BROKEN  %s: [[%s]]" % (source, target))
+            print("REFUSED — %d broken and %d ambiguous edge(s): "
+                  "the readout cannot certify unresolved wikilinks"
+                  % (len(data["broken"]), len(data["ambiguous"])))
             return 1
         print("OK — link graph measured over %s: %d note(s), %d component(s), %d degree-0, "
               "%d bridge note(s), 0 ambiguous"

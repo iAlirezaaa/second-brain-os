@@ -6,6 +6,10 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #60 partial; PR #123 re-verification pending)
+- Source-checkout `scripts/link_check.py` now refuses a present but zero-note vault, rather than certifying an empty denominator. A copied, installed-home fixture without repository metadata retains the intentional empty-first-use case. The existing `--require-notes` strict mode remains available. The regression reuses an existing test method; the prior 7-job CI result covered the previous head only and **does not verify this update**. No user data, policy settings or external services changed.
+- Standalone `scripts/link_check.py --readout` now rejects missing wikilink targets, names each broken edge and returns nonzero instead of printing a green graph verdict. It reuses the initial graph snapshot for its report to avoid inconsistent double scans. The existing default link and ambiguous-edge refusals are preserved. Regression in `tests/test_phase44_readout_is_a_gate.py`; complete cross-platform CI verification and merge are pending. No data, permissions or dependencies changed.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

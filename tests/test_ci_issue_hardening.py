@@ -3,6 +3,7 @@
 All mutable fixtures are isolated temporary directories; no network calls are required.
 """
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -44,13 +45,30 @@ class RepoGateHardening(unittest.TestCase):
                               "--confidence")
         self.assertEqual(1, result.returncode)
 
-    def test_empty_vault_requires_explicit_minimum_to_be_refused(self):
-        self.assertEqual(0, self.command("link_check.py", "--vault",
-                                         str(self.base)).returncode)
-        result = self.command("link_check.py", "--vault", str(self.base),
-                              "--require-notes")
-        self.assertEqual(1, result.returncode)
+    def test_empty_source_vault_refuses_without_opt_in_but_installed_home_can_be_empty(self):
+        """A checkout must not report zero inspected notes as healthy."""
+        result = self.command("link_check.py", "--vault", str(self.base))
+        self.assertEqual(1, result.returncode, result.stdout)
+        self.assertIn("REFUSED", result.stdout)
         self.assertIn("no notes", result.stdout)
+        strict = self.command("link_check.py", "--vault", str(self.base),
+                              "--require-notes")
+        self.assertEqual(1, strict.returncode, strict.stdout)
+
+        # Install-like copy has the same scripts/rules but no .git or pyproject.toml.
+        # Fresh personal homes may legitimately have no notes yet.
+        installed = self.base / "installed"
+        (installed / "scripts").mkdir(parents=True)
+        (installed / "rules").mkdir()
+        (installed / "rules" / "zones.json").write_text("{}", encoding="utf-8")
+        for name in ("common.py", "link_check.py"):
+            shutil.copy2(ROOT / "scripts" / name, installed / "scripts" / name)
+        empty = installed / "empty"
+        empty.mkdir()
+        home = run_utf8([sys.executable, str(installed / "scripts" / "link_check.py"),
+                         "--vault", str(empty)], cwd=str(installed))
+        self.assertEqual(0, home.returncode, home.stdout)
+        self.assertIn("0 broken links", home.stdout)
 
     def test_confidence_counts_broken_links_and_refuses_them(self):
         (self.base / "source.md").write_text("[[nowhere]]", encoding="utf-8")

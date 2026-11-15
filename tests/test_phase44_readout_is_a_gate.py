@@ -79,6 +79,18 @@ class TestTheReadoutIsAVerdict(unittest.TestCase):
         self.assertIn("notes scanned: 2", code.stdout,
                       "the denominator has to be the notes it scanned")
 
+    def test_a_broken_link_refuses_standalone_readout(self):
+        """A graph report must not issue a green verdict when a target is missing."""
+        (self.vault / "broken.md").write_text(
+            NOTE.format(stem="broken") + "see [[missing-target]]\n", encoding="utf-8"
+        )
+        code = run(self.vault, "--readout")
+        self.assertEqual(code.returncode, 1, code.stdout + code.stderr)
+        self.assertIn("BROKEN", code.stdout, code.stdout)
+        self.assertIn("missing-target", code.stdout, code.stdout)
+        self.assertNotIn("OK — link graph measured", code.stdout,
+                         "a broken link cannot be certified by the readout")
+
     def test_an_escalated_edge_refuses_the_readout(self):
         """A colliding stem binds a link by accident; the graph gate must not call that healthy."""
         vault = vault_with(ESCALATED)
