@@ -35,9 +35,10 @@ The open PRs are independent proposals, **not shipped capabilities**. In particu
 concurrent branches before selecting the next small slice.
 
 - [ ] **P0 / correctness:** #125 passed seven of seven GitHub Actions jobs
-      (run 43738134987). #127's seven jobs passed at SHA e20413a (run
-      43749403882); **the subsequent disposable-cache confinement regression
-      and fix are new, unverified changes**, not covered by that result.
+      (run 43738134987). #127's seven jobs passed at SHA 37f5412 (run
+      43760592613), covering its disposable-cache follow-up. An additional
+      config-file/parent symlink refusal now has a synthetic regression;
+      **CI on that newer head is pending**.
       `scripts/plane_check.py` now rejects absolute, parent-traversing,
       symlinked, or malformed tracked, reader, test, map **and disposable**
       declarations. Recheck CI before changing Draft status. On #107, an
@@ -65,7 +66,7 @@ concurrent branches before selecting the next small slice.
       https://github.com/basicmachines-co/basic-memory/issues/1319
 
 **Next 1:** verify all seven GitHub Actions jobs on #127's **new**
-head after disposable-cache path validation, including Windows/Python 3.9;
+head after configuration-symlink refusal, including Windows/Python 3.9;
 only then mark it ready for human review.
 **Next 2:** reconcile #107's required-check names with an authorized
 administrator, then review green PRs for overlap before permitted merges.

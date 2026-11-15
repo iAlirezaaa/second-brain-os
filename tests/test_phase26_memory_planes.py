@@ -129,6 +129,42 @@ class TestTheGateBites(unittest.TestCase):
         cfg["memory_planes"]["agent"]["disposable_store"] = original
         config_path.write_text(json.dumps(cfg), encoding="utf-8")
 
+        # The map itself must be from this clone, not a linked config file or
+        # a linked config parent. Neither may silently bless external evidence.
+        with tempfile.TemporaryDirectory() as foreign_home:
+            outside = Path(foreign_home)
+            external_cfg = outside / "system.json"
+            external_cfg.write_text(json.dumps(cfg), encoding="utf-8")
+            config_path.unlink()
+            try:
+                config_path.symlink_to(external_cfg)
+            except (OSError, NotImplementedError):
+                config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            else:
+                try:
+                    rejected = self.run_gate(root)
+                    self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                    self.assertIn("configuration file or parent is a symlink", rejected.stdout)
+                finally:
+                    config_path.unlink()
+                    config_path.write_text(json.dumps(cfg), encoding="utf-8")
+
+            config_dir = config_path.parent
+            saved_dir = config_dir.with_name("config-original")
+            config_dir.rename(saved_dir)
+            try:
+                config_dir.symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                saved_dir.rename(config_dir)
+            else:
+                try:
+                    rejected = self.run_gate(root)
+                    self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                    self.assertIn("configuration file or parent is a symlink", rejected.stdout)
+                finally:
+                    config_dir.unlink()
+                    saved_dir.rename(config_dir)
+
 
     def test_a_missing_tracked_store_fails_and_names_the_plane(self):
         root = self.fixture()

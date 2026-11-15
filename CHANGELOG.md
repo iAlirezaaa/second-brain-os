@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (PR #127 follow-up; CI on new head pending)
+- The memory-plane gate now refuses a symbolic link at its own
+  `15_SYSTEM/config/system.json` file or any parent directory before
+  parsing configuration. Previously the validator could read an external
+  checkout's mapping through a link and count that configuration as local
+  evidence. An existing phase-26 fixture checks both cases where the OS
+  permits symlinks; no new test-method count, dependencies, permissions or
+  user-data writes. This is a configuration-boundary check, not a
+  race-free filesystem sandbox; the PR remains unmerged until verified.
+
 ### Proposed (issue #126; branch review pending; not released)
 - Harden `scripts/plane_check.py` so a mapped memory plane cannot be
   falsely certified by an external absolute path, a `..` traversal or a

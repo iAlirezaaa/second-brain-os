@@ -33,7 +33,11 @@ PLANES = ("project", "repository", "agent", "task", "error", "decision", "knowle
 
 
 def load(root):
-    path = Path(root) / "15_SYSTEM" / "config" / "system.json"
+    # The configuration is evidence too: reading through a linked file or
+    # parent directory could import an unrelated checkout's memory mapping.
+    path = confined_path(Path(root), "15_SYSTEM/config/system.json")
+    if path is None:
+        raise ValueError("configuration file or parent is a symlink")
     return json.loads(path.read_text(encoding="utf-8"))
 
 
