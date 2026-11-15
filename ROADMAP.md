@@ -27,6 +27,25 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P2 — Creative-output lifecycle must respect the clone boundary (issue #48; review pending)
+
+- [ ] **S** Correct the Persian lifecycle and bilingual guide: `14_CANDIDATES/outputs/`
+      is gitignored local staging, not a reviewable or backed-up artifact. A durable
+      textual review decision can live under `14_CANDIDATES/loop/` while binary output
+      needs an independently retrievable, source-and-hash-backed location.
+- [ ] Extend the existing git-boundary regression test to refuse misleading
+      onboarding prose while asserting Git actually ignores candidate output.
+      No changes to registry approval, promotion scripts, permissions, or user files.
+      Only check off after seven green CI jobs on the exact PR head and review.
+- [ ] Keep issue #48 open until merged and independently verified.
+
+**Next 1:** propose an explicit, consent-driven artifact review/export contract
+with provenance, hashing, size limits and rollback before writing automation.
+**Next 2:** test a synthetic creative artifact's path from staging to an
+owner-approved, retrievable delivery record on Windows and Linux.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

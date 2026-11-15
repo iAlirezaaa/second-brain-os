@@ -62,9 +62,19 @@ class RepoContractTests(unittest.TestCase):
         self.assertCountEqual(health.GATES, normalized)
 
     def test_generated_wiki_site_is_ignored(self):
-        result = subprocess.run(["git", "check-ignore", "-q", "02_WIKI/_site/index.html"],
-                                cwd=ROOT, check=False)
-        self.assertEqual(0, result.returncode)
+        # Issue #48: unreviewed creative outputs must never masquerade as
+        # clone-readable evidence. The guide must say this explicitly.
+        for rel in ("02_WIKI/_site/index.html", "14_CANDIDATES/outputs/example.png"):
+            with self.subTest(path=rel):
+                result = subprocess.run(["git", "check-ignore", "-q", rel],
+                                        cwd=ROOT, check=False)
+                self.assertEqual(0, result.returncode, rel)
+        for rel in ("00_START_HERE/LIFECYCLE.md", "00_START_HERE/GUIDE_FA_EN.md"):
+            with self.subTest(document=rel):
+                guide = (ROOT / rel).read_text(encoding="utf-8")
+                self.assertIn("14_CANDIDATES/outputs/", guide)
+                self.assertIn("14_CANDIDATES/loop/", guide)
+                self.assertIn("gitignored", guide)
 
     def test_candidate_rules_no_longer_cite_nonexistent_phase(self):
         doc = (ROOT / "14_CANDIDATES/README.md").read_text(encoding="utf-8")

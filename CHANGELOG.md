@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #48; documentation correction under review, not released)
+- The creative-output lifecycle no longer implies `14_CANDIDATES/outputs/`
+  is persistent evidence: the folder is gitignored and absent from a fresh
+  clone. The Persian lifecycle and bilingual guide now distinguish local
+  staging from durable text review under `14_CANDIDATES/loop/`, requiring
+  explicit human approval and a retrievable source/hash for media deliveries.
+  A repository contract test checks the actual ignore boundary and both docs.
+  No permission, artifact bytes, automatic promotion, or runtime API changed.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
