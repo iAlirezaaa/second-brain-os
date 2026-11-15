@@ -623,10 +623,29 @@ def registry_surface_problems(root):
         if (root / "pyproject.toml").is_file():
             return ["MCP REGISTRY: the source repo has no registered second-brain bridge"]
         return []  # installed home / fixture with no source-control registry
+    # Python's default JSON decoder silently accepts duplicate keys, taking the
+    # last value. A tool manifest must not accept contradictory declarations,
+    # including duplicates in nested objects that may gain meaning later.
+    class DuplicateJSONKey(ValueError):
+        pass
+
+    def unique_keys(pairs):
+        parsed = {}
+        for key, value in pairs:
+            if key in parsed:
+                raise DuplicateJSONKey()
+            parsed[key] = value
+        return parsed
+
     try:
-        record = json.loads(path.read_text(encoding="utf-8"))
+        record = json.loads(path.read_text(encoding="utf-8"),
+                            object_pairs_hook=unique_keys)
+    except DuplicateJSONKey:
+        return ["MCP REGISTRY: duplicate JSON key (ambiguous bridge record)"]
     except (OSError, ValueError) as exc:
         return ["MCP REGISTRY: invalid JSON (%s)" % type(exc).__name__]
+    if not isinstance(record, dict):
+        return ["MCP REGISTRY: bridge record must be a JSON object"]
     declared = record.get("tools_exposed")
     if not isinstance(declared, list) or not all(isinstance(x, str) for x in declared):
         return ["MCP REGISTRY: tools_exposed must be an explicit string list"]
@@ -693,6 +712,8 @@ def tool_resources(root):
 
 
 def read_resource(root, uri):
+    if not isinstance(uri, str):
+        raise ToolRefused("resource uri must be a string")
     rel = uri[len("file://"):] if uri.startswith("file://") else uri
     if rel not in {item[0] for item in RESOURCE_FILES}:
         raise ToolRefused("resource is not published: %s" % rel)
@@ -791,14 +812,21 @@ def handle(root, msg, responses):
             responses.append(err(None, -32600, "Invalid Request"))
         return
     method, mid = msg.get("method"), msg.get("id")
-    if method is None:
-        if mid is not None:
-            responses.append(err(mid, -32600, "Invalid Request: no method"))
+    if not isinstance(method, str) or not method:
+        responses.append(err(mid, -32600, "Invalid Request: method must be a non-empty string"))
         return
     if method.startswith("notifications/"):
         return  # a notification gets no reply, by protocol
+    # A valid method with malformed params is a client error, not a fatal
+    # AttributeError that drops the entire stdio session.
+    params = msg.get("params")
+    if params is None:
+        params = {}
+    if not isinstance(params, dict):
+        responses.append(err(mid, -32602, "Invalid params: expected a JSON object"))
+        return
     if method == "initialize":
-        wanted = str((msg.get("params") or {}).get("protocolVersion") or PROTOCOL_VERSION)
+        wanted = str(params.get("protocolVersion") or PROTOCOL_VERSION)
         responses.append(ok(mid, {
             "protocolVersion": wanted,
             "capabilities": {"tools": {"listChanged": False},
@@ -812,12 +840,12 @@ def handle(root, msg, responses):
     elif method == "tools/list":
         responses.append(ok(mid, {"tools": TOOLS}))
     elif method == "tools/call":
-        responses.append(ok(mid, handle_tool_call(root, msg.get("params") or {})))
+        responses.append(ok(mid, handle_tool_call(root, params)))
     elif method == "resources/list":
         responses.append(ok(mid, {"resources": tool_resources(root)}))
     elif method == "resources/read":
         try:
-            responses.append(ok(mid, {"contents": [read_resource(root, (msg.get("params") or {}).get("uri"))]}))
+            responses.append(ok(mid, {"contents": [read_resource(root, params.get("uri"))]}))
         except ToolRefused as refused:
             responses.append(err(mid, -32602, str(refused)))
     else:
