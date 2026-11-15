@@ -81,7 +81,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from common import FINGERPRINT_SKIP_DIRS, clone_readable, find_root  # noqa: E402
+from common import FINGERPRINT_SKIP_DIRS, clone_readable, find_root, is_repo_checkout  # noqa: E402
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -513,6 +513,12 @@ def run_check(root, as_list=False):
     counts = state_counts(rows)
     if as_list:
         return 0
+    # A source checkout promises schema hygiene; zero JSON means that promise
+    # was not examined. Installed homes legitimately need not contain JSON yet.
+    if not rows and is_repo_checkout(root):
+        print("REFUSED: 0 JSON file(s) opened in source checkout %s — "
+              "nothing was inspected; restore the shipped manifests" % root)
+        return 1
     problems = refusal_lines(rows)
     if problems:
         print("REFUSED: %d of %d JSON file(s) cannot be trusted as written — each is named here "

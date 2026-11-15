@@ -27,6 +27,23 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Schema audit refuses an empty source checkout (issue #60 partial; PR #121)
+
+- [x] **S** `scripts/schema_stamp.py` refuses zero JSON files in a source checkout
+      instead of printing a green verdict over files it never opened. An installed brain
+      home with no JSON is intentionally permitted; `--list` remains enumeration-only.
+- [x] **S** `tests/test_phase44_schema_version.py` covers that source/home distinction
+      and refusal message, without increasing discovered test totals.
+- [ ] **Verification:** final-head GitHub Actions on Ubuntu/Windows Python
+      3.9/3.12 plus the backup jobs must pass before this PR can merge.
+
+**Next 1:** reconcile other outstanding zero-denominator gates in #60, avoiding
+overlap with the candidate-shelf #75 and zone #85 PRs.
+**Next 2:** verify first-recall user success on a clean clone across platforms
+without claiming that installed MCP host compatibility has been proven.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

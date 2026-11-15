@@ -67,7 +67,7 @@ exactly the same gate names; `tests/test_backlog_governance.py` checks drift.
 | `scripts/version.py --check` | incompatible version tags and metadata |
 | `scripts/ci_floor.py` | CI Python versions below the supported floor |
 | `scripts/goldfish_check.py` | invalid independent review artifacts |
-| `scripts/schema_stamp.py --check` | stale generated JSON schemas |
+| `scripts/schema_stamp.py --check` | missing/stale JSON schemas and zero inspected JSON files in a source checkout |
 | `scripts/roadmap_check.py --check` | missing roadmap evidence |
 | `scripts/vault_check.py` | unjustified backup claims |
 | `scripts/battery_check.py` | a door battery that fails, hangs, or reports no counts |

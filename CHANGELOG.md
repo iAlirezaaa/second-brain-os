@@ -6,6 +6,14 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #60 partial; PR #121 in review)
+- `scripts/schema_stamp.py --check` now refuses a source checkout containing
+  zero JSON files, rather than claiming that its nonexistent corpus was validated.
+  A legitimately empty installed home and the enumeration-only `--list` mode
+  retain their previous behavior. Existing regression coverage was extended
+  without changing test discovery totals. No dependencies or data writes added;
+  final-head multi-platform CI remains the verification gate.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
