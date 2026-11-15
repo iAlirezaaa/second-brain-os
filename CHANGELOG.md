@@ -16,6 +16,12 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   A failing-isolated baseline was recorded on 2026-11-15; repository CI
   remains the cross-platform authority. This is not a race-free filesystem
   sandbox or a new write-permission boundary.
+- In the same draft, also validate `disposable_store` entries before even
+  measuring their absence: an absolute/parent-traversing, linked or non-list
+  cache declaration must not silently yield a healthy plane report. The
+  existing phase-26 fixture exercises malformed and external cache paths.
+  No cache is created, deleted, opened or migrated by this read-only gate;
+  the prior seven-job green run does not certify this follow-up yet.
 
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
