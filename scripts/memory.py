@@ -44,7 +44,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import candidate_check
-from common import find_root, load_json, run_utf8
+from common import find_root, is_repo_checkout, load_json, run_utf8
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -403,6 +403,12 @@ def check_index(root, rows):
 
 def check(root):
     rows, problems = read_lessons(root)
+    # The packaged repo promises a tracked lesson ledger. An empty but readable
+    # catalog must not make CI green over zero evidence. A newly installed brain
+    # home starts with no lessons legitimately, so preserve that first-run path.
+    if not rows and not problems and is_repo_checkout(root):
+        problems.append("no lessons in source checkout — the memory gate scanned "
+                        "0 rows; restore the ledger or record a reviewed lesson")
     allowed = plane_ids(root)
     seen = set()
     for row in rows:
