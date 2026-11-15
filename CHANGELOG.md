@@ -7,7 +7,7 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 ## [Unreleased]
 
 ### Fixed (issue #51; pending PR review / CI)
-- A syntactically valid but non-object JSON value in the MCP bridge registry now produces a named `MCP REGISTRY` refusal from `mcp_server.py --check-tools`, instead of an `AttributeError` traceback. The existing phase-44 test now covers five malformed-root values and the CLI's nonzero refusal. No tool surface, actor permissions or user data are changed. This does not by itself close the broader registry/documentation drift tracked by #51.
+- A syntactically valid but non-object JSON value in the MCP bridge registry now produces a named `MCP REGISTRY` refusal from `mcp_server.py --check-tools`, instead of an `AttributeError` traceback. The existing phase-44 test now covers five malformed-root values and the CLI's nonzero refusal. It also rejects duplicate JSON keys, including shadowed tool declarations and nested ambiguities, rather than accepting the last occurrence. No tool surface, actor permissions or user data are changed. This does not by itself close the broader registry/documentation drift tracked by #51.
 
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
