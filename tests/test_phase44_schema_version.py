@@ -306,7 +306,7 @@ class TestTheAuditRefusesByName(unittest.TestCase):
                           "%d file(s) opened, %d line(s) printed:\n%s"
                           % (len(opened), len(lines), listed.stdout))
 
-    def test_the_ok_line_counts_every_state_it_judged(self):
+    def test_the_ok_line_counts_states_and_refuses_empty_source_checkout(self):
         write_json(self.root / RECORD_PATH, record_payload("3.0.0"))
         write_json(self.root / "rules/zones.json", {"zones": []})
         result = check(self.root)
@@ -315,6 +315,24 @@ class TestTheAuditRefusesByName(unittest.TestCase):
         for state in ("stamped", "hand-authored", "behind the git boundary", "missing", "stale",
                       "unreadable"):
             self.assertIn(state, result.stdout, result.stdout)
+
+        # Issue #60: a source checkout with no JSON must not pass a gate that
+        # claims to have checked schema versions. A genuinely empty installed
+        # home is different, and the enumeration-only mode is not a health gate.
+        empty_checkout = Path(self.tmp) / "empty-checkout"
+        empty_checkout.mkdir()
+        (empty_checkout / "pyproject.toml").write_text("[project]\nname='fixture'\n", encoding="utf-8")
+        refused = check(empty_checkout)
+        self.assertNotEqual(0, refused.returncode, refused.stdout)
+        self.assertIn("REFUSED", refused.stdout)
+        self.assertIn("0 JSON", refused.stdout)
+        self.assertEqual(0, gate("--root", str(empty_checkout), "--list").returncode)
+
+        empty_home = Path(self.tmp) / "empty-installed-home"
+        empty_home.mkdir()
+        accepted = check(empty_home)
+        self.assertEqual(0, accepted.returncode, accepted.stdout)
+        self.assertIn("0 JSON", accepted.stdout)
 
     def test_the_shipped_tree_passes_the_gate_and_no_generated_file_is_left_unstamped(self):
         result = check(ROOT)
