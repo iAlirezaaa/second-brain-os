@@ -623,8 +623,25 @@ def registry_surface_problems(root):
         if (root / "pyproject.toml").is_file():
             return ["MCP REGISTRY: the source repo has no registered second-brain bridge"]
         return []  # installed home / fixture with no source-control registry
+    # Python's default JSON decoder silently accepts duplicate keys, taking the
+    # last value. A tool manifest must not accept contradictory declarations,
+    # including duplicates in nested objects that may gain meaning later.
+    class DuplicateJSONKey(ValueError):
+        pass
+
+    def unique_keys(pairs):
+        parsed = {}
+        for key, value in pairs:
+            if key in parsed:
+                raise DuplicateJSONKey()
+            parsed[key] = value
+        return parsed
+
     try:
-        record = json.loads(path.read_text(encoding="utf-8"))
+        record = json.loads(path.read_text(encoding="utf-8"),
+                            object_pairs_hook=unique_keys)
+    except DuplicateJSONKey:
+        return ["MCP REGISTRY: duplicate JSON key (ambiguous bridge record)"]
     except (OSError, ValueError) as exc:
         return ["MCP REGISTRY: invalid JSON (%s)" % type(exc).__name__]
     if not isinstance(record, dict):
