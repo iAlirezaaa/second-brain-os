@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Proposed (issue #126; branch review pending; not released)
+- Harden `scripts/plane_check.py` so a mapped memory plane cannot be
+  falsely certified by an external absolute path, a `..` traversal or a
+  symlinked evidence path (including parent components). The same check
+  applies to declared readers, tests and maps; missing disposable stores
+  remain legitimate. Existing fixture regressions now cover external files
+  and links without changing the discovered test-method count.
+  A failing-isolated baseline was recorded on 2026-11-15; repository CI
+  remains the cross-platform authority. This is not a race-free filesystem
+  sandbox or a new write-permission boundary.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
