@@ -712,6 +712,8 @@ def tool_resources(root):
 
 
 def read_resource(root, uri):
+    if not isinstance(uri, str):
+        raise ToolRefused("resource uri must be a string")
     rel = uri[len("file://"):] if uri.startswith("file://") else uri
     if rel not in {item[0] for item in RESOURCE_FILES}:
         raise ToolRefused("resource is not published: %s" % rel)
@@ -810,14 +812,21 @@ def handle(root, msg, responses):
             responses.append(err(None, -32600, "Invalid Request"))
         return
     method, mid = msg.get("method"), msg.get("id")
-    if method is None:
-        if mid is not None:
-            responses.append(err(mid, -32600, "Invalid Request: no method"))
+    if not isinstance(method, str) or not method:
+        responses.append(err(mid, -32600, "Invalid Request: method must be a non-empty string"))
         return
     if method.startswith("notifications/"):
         return  # a notification gets no reply, by protocol
+    # A valid method with malformed params is a client error, not a fatal
+    # AttributeError that drops the entire stdio session.
+    params = msg.get("params")
+    if params is None:
+        params = {}
+    if not isinstance(params, dict):
+        responses.append(err(mid, -32602, "Invalid params: expected a JSON object"))
+        return
     if method == "initialize":
-        wanted = str((msg.get("params") or {}).get("protocolVersion") or PROTOCOL_VERSION)
+        wanted = str(params.get("protocolVersion") or PROTOCOL_VERSION)
         responses.append(ok(mid, {
             "protocolVersion": wanted,
             "capabilities": {"tools": {"listChanged": False},
@@ -831,12 +840,12 @@ def handle(root, msg, responses):
     elif method == "tools/list":
         responses.append(ok(mid, {"tools": TOOLS}))
     elif method == "tools/call":
-        responses.append(ok(mid, handle_tool_call(root, msg.get("params") or {})))
+        responses.append(ok(mid, handle_tool_call(root, params)))
     elif method == "resources/list":
         responses.append(ok(mid, {"resources": tool_resources(root)}))
     elif method == "resources/read":
         try:
-            responses.append(ok(mid, {"contents": [read_resource(root, (msg.get("params") or {}).get("uri"))]}))
+            responses.append(ok(mid, {"contents": [read_resource(root, params.get("uri"))]}))
         except ToolRefused as refused:
             responses.append(err(mid, -32602, str(refused)))
     else:
