@@ -27,6 +27,29 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — JSON schema-audit symlink refusal (issue #122; PR #121 follow-up)
+
+- [x] **S, test-first:** Existing phase-44 regression now exercises a linked
+      `14_CANDIDATES/loop/history.json` that points to a disposable **outside**
+      JSON file, and a broken `*.json` symlink. On platforms permitting file
+      symlinks, the audit must name both as unreadable and `--stamp --write`
+      must not mutate the outside target. A platform without symlink privilege
+      still runs the existing malformed-JSON test.
+- [x] `scripts/schema_stamp.py` now refuses to load a JSON symlink, counts
+      broken links as invalid rather than skipping them, and rechecks stamp
+      targets before writes. No dependencies, registry edits or user-vault data.
+      This is **not** a race-free filesystem sandbox; symlinked directory
+      contents not traversed by `rglob` remain outside the claim.
+- [ ] **Verify:** all four Windows/Ubuntu Python unit-test jobs and all three
+      backup jobs green at the final PR #121 head. Keep draft until then.
+
+**Next 1:** obtain seven green final-head CI jobs and settle protected-main
+required context drift #107 before any merge.
+**Next 2:** independently evaluate directory-symlink omission and atomic
+no-follow stamping before claiming a stronger boundary; retain offline fallback.
+
+---
+
 ## P0 — Schema audit refuses an empty source checkout (issue #60 partial; PR #121)
 
 - [x] **S** `scripts/schema_stamp.py` refuses zero JSON files in a source checkout
