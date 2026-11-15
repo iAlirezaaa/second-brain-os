@@ -34,14 +34,15 @@ The open PRs are independent proposals, **not shipped capabilities**. In particu
 `ubuntu-24.04` (issue #107); do not bypass this protection. Reconcile
 concurrent branches before selecting the next small slice.
 
-- [ ] **P0 / correctness:** finish the seven-job CI review of #125 and the
-      branch-local regression for #126 (`scripts/plane_check.py`,
-      `tests/test_phase26_memory_planes.py`). #126 refuses absolute,
-      parent-traversing and symlinked evidence paths that used to count as
-      healthy memory planes; reject false-green rather than expanding privileges.
-      On #107, the repository administrator must replace only the obsolete
-      required status names with their exact current check names after verifying
-      the matrix and ruleset; retain every substantive required check.
+- [ ] **P0 / correctness:** #125 passed seven of seven GitHub Actions jobs
+      (run 43738134987). #127's seven jobs passed at SHA e20413a (run
+      43749403882); **the subsequent disposable-cache confinement regression
+      and fix are new, unverified changes**, not covered by that result.
+      `scripts/plane_check.py` now rejects absolute, parent-traversing,
+      symlinked, or malformed tracked, reader, test, map **and disposable**
+      declarations. Recheck CI before changing Draft status. On #107, an
+      administrator must reconcile obsolete required Ubuntu check names
+      with the actual pinned runner contexts, retaining every other rule.
 - [ ] **P0 / first success:** verify `skills/first-session/SKILL.md`,
       `README.md` and `00_START_HERE/START.md` on a clean checkout. Target
       a measured sub-five-minute synthetic keyword search and repeatable Windows,
@@ -63,11 +64,12 @@ concurrent branches before selecting the next small slice.
       not importing its implementation:
       https://github.com/basicmachines-co/basic-memory/issues/1319
 
-**Next 1:** obtain all seven current CI results for #126, and preserve Draft
-until they are green; review its path boundary against Windows and Python 3.9.
-**Next 2:** reconcile check-name drift in #107 with the repository owner, then
-review ready PRs for conflicts before safe merge. Do not replace the branch
-protection with a weaker policy.
+**Next 1:** verify all seven GitHub Actions jobs on #127's **new**
+head after disposable-cache path validation, including Windows/Python 3.9;
+only then mark it ready for human review.
+**Next 2:** reconcile #107's required-check names with an authorized
+administrator, then review green PRs for overlap before permitted merges.
+Do not weaken branch protection.
 
 ---
 
