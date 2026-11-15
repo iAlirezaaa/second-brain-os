@@ -64,5 +64,18 @@ class FirstSessionOnboarding(unittest.TestCase):
             self.assertIn("02_WIKI/example.md", recall.stdout)
 
 
+
+    def test_first_session_write_destinations_follow_zone_contract(self):
+        """A first-time agent must not invent folders or gain human-zone writes."""
+        skill = (ROOT / "skills/first-session/SKILL.md").read_text(encoding="utf-8")
+        self.assertTrue((ROOT / "01_INBOX").is_dir(), "actual human inbox missing")
+        self.assertTrue((ROOT / "14_CANDIDATES" / "loop").is_dir(),
+                        "approved candidate shelf missing")
+        self.assertNotIn("90_Agent_Output", skill)
+        self.assertNotIn("00_Inbox", skill)
+        self.assertIn("`01_INBOX/`", skill)
+        self.assertIn("`14_CANDIDATES/loop/`", skill)
+        self.assertIn("human-owned", skill)
+
 if __name__ == "__main__":
     unittest.main()
