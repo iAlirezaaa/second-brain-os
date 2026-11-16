@@ -16,7 +16,7 @@ Usage: python scripts/plane_check.py [--vault path]
 import argparse
 import json
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 sys.path.insert(0, str(Path(__file__).parent))
 from common import find_root
@@ -33,8 +33,35 @@ PLANES = ("project", "repository", "agent", "task", "error", "decision", "knowle
 
 
 def load(root):
-    path = Path(root) / "15_SYSTEM" / "config" / "system.json"
+    # The configuration is evidence too: reading through a linked file or
+    # parent directory could import an unrelated checkout's memory mapping.
+    path = confined_path(Path(root), "15_SYSTEM/config/system.json")
+    if path is None:
+        raise ValueError("configuration file or parent is a symlink")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def confined_path(root, rel):
+    """Return a declared path only when every segment stays inside this checkout.
+
+    This checks configured evidence paths, not a race-free filesystem sandbox.
+    Neither an absolute/parent path nor a symlinked parent may count as tracked
+    memory or as the reader/test/map that supposedly proves that memory.
+    """
+    if not isinstance(rel, str) or not rel.strip() or "\x00" in rel:
+        return None
+    relative = Path(rel)
+    windows = PureWindowsPath(rel)
+    if (not relative.parts or relative.is_absolute() or windows.drive or
+            windows.is_absolute() or ".." in relative.parts or
+            ".." in windows.parts):
+        return None
+    target = root
+    for part in relative.parts:
+        target = target / part
+        if target.is_symlink():  # includes dangling links and linked directories
+            return None
+    return target
 
 
 def judge(root):
@@ -58,34 +85,56 @@ def judge(root):
     for name in PLANES:
         spec = planes.get(name)
         if not isinstance(spec, dict):
+            # A declared key is not evidence of a valid plane. Never silently
+            # skip it and report a successful, smaller-than-eight audit.
+            problems.append("invalid plane mapping: %s (expected object)" % name)
             continue
         summary["planes"] += 1
-        tracked = spec.get("tracked_store") or []
-        if not tracked:
+        tracked = spec.get("tracked_store")
+        if not isinstance(tracked, list) or not tracked:
             problems.append("%s: no tracked store -- a plane with nothing the clone can open"
                             % name)
+            tracked = []
         for rel in tracked:
-            target = (root / rel)
-            if not target.exists():
+            target = confined_path(root, rel)
+            if target is None:
+                problems.append("%s: unsafe tracked store path: %s" % (name, rel))
+            elif not target.exists():
                 problems.append("%s: tracked store missing: %s" % (name, rel))
             elif target.is_dir() and not any(target.iterdir()):
                 problems.append("%s: tracked store is an empty folder with no .gitkeep: %s"
                                 % (name, rel))
             else:
                 summary["tracked"] += 1
-        for rel in spec.get("disposable_store") or []:
-            summary["by_design"] += 0 if (root / rel).exists() else 1
+        disposable = spec.get("disposable_store")
+        if not isinstance(disposable, list):
+            problems.append("%s: invalid disposable store mapping (expected list)" % name)
+            disposable = []
+        for rel in disposable:
+            cache_path = confined_path(root, rel)
+            if cache_path is None:
+                problems.append("%s: unsafe disposable store path: %s" % (name, rel))
+            elif not cache_path.exists():
+                summary["by_design"] += 1
         reader = spec.get("reader_script") or spec.get("reader_doc")
         if not reader:
             problems.append("%s: no reader declared (reader_script or reader_doc)" % name)
-        elif not (root / reader).is_file():
-            problems.append("%s: reader does not exist: %s" % (name, reader))
+        else:
+            reader_path = confined_path(root, reader)
+            if reader_path is None:
+                problems.append("%s: unsafe reader path: %s" % (name, reader))
+            elif not reader_path.is_file():
+                problems.append("%s: reader does not exist: %s" % (name, reader))
         for field in ("test", "map"):
             rel = spec.get(field)
             if not rel:
                 problems.append("%s: no %s declared" % (name, field))
-            elif not (root / rel).is_file():
-                problems.append("%s: %s does not exist: %s" % (name, field, rel))
+            else:
+                evidence_path = confined_path(root, rel)
+                if evidence_path is None:
+                    problems.append("%s: unsafe %s path: %s" % (name, field, rel))
+                elif not evidence_path.is_file():
+                    problems.append("%s: %s does not exist: %s" % (name, field, rel))
     return problems, summary
 
 

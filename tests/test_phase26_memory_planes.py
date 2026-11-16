@@ -104,6 +104,67 @@ class TestTheGateBites(unittest.TestCase):
         result = self.run_gate(root)
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("absent by design", result.stdout)
+        # A disposable cache may be absent, but its declaration still has to
+        # stay inside this checkout. An external/aliased cache cannot count
+        # as a legitimate, clone-local absence.
+        config_path = root / "15_SYSTEM" / "config" / "system.json"
+        cfg = json.loads(config_path.read_text(encoding="utf-8"))
+        original = cfg["memory_planes"]["agent"]["disposable_store"]
+        unsafe = (str(root.parent / "foreign-cache"), "../foreign-cache",
+                  r"C:\foreign\cache", 123)
+        for rel in unsafe:
+            with self.subTest(disposable=repr(rel)):
+                cfg["memory_planes"]["agent"]["disposable_store"] = [rel]
+                config_path.write_text(json.dumps(cfg), encoding="utf-8")
+                rejected = self.run_gate(root)
+                self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                self.assertIn("unsafe disposable store path", rejected.stdout)
+        for malformed in ("12_RUNTIME/not-a-list", None):
+            with self.subTest(mapping=repr(malformed)):
+                cfg["memory_planes"]["agent"]["disposable_store"] = malformed
+                config_path.write_text(json.dumps(cfg), encoding="utf-8")
+                rejected = self.run_gate(root)
+                self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                self.assertIn("invalid disposable store mapping", rejected.stdout)
+        cfg["memory_planes"]["agent"]["disposable_store"] = original
+        config_path.write_text(json.dumps(cfg), encoding="utf-8")
+
+        # The map itself must be from this clone, not a linked config file or
+        # a linked config parent. Neither may silently bless external evidence.
+        with tempfile.TemporaryDirectory() as foreign_home:
+            outside = Path(foreign_home)
+            external_cfg = outside / "system.json"
+            external_cfg.write_text(json.dumps(cfg), encoding="utf-8")
+            config_path.unlink()
+            try:
+                config_path.symlink_to(external_cfg)
+            except (OSError, NotImplementedError):
+                config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            else:
+                try:
+                    rejected = self.run_gate(root)
+                    self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                    self.assertIn("configuration file or parent is a symlink", rejected.stdout)
+                finally:
+                    config_path.unlink()
+                    config_path.write_text(json.dumps(cfg), encoding="utf-8")
+
+            config_dir = config_path.parent
+            saved_dir = config_dir.with_name("config-original")
+            config_dir.rename(saved_dir)
+            try:
+                config_dir.symlink_to(outside, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                saved_dir.rename(config_dir)
+            else:
+                try:
+                    rejected = self.run_gate(root)
+                    self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+                    self.assertIn("configuration file or parent is a symlink", rejected.stdout)
+                finally:
+                    config_dir.unlink()
+                    saved_dir.rename(config_dir)
+
 
     def test_a_missing_tracked_store_fails_and_names_the_plane(self):
         root = self.fixture()
@@ -112,6 +173,39 @@ class TestTheGateBites(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("error: tracked store missing: 15_SYSTEM/memory/lessons.jsonl",
                       result.stdout)
+        # An absolute path to another checkout must never count as tracked evidence.
+        with tempfile.TemporaryDirectory() as foreign_home:
+            foreign = Path(foreign_home) / "lessons.jsonl"
+            foreign.write_text("external data\n", encoding="utf-8")
+            config_path = root / "15_SYSTEM" / "config" / "system.json"
+            cfg = json.loads(config_path.read_text(encoding="utf-8"))
+            cfg["memory_planes"]["error"]["tracked_store"] = [str(foreign)]
+            config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            result = self.run_gate(root)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertIn("unsafe tracked store path", result.stdout)
+
+            # Dot-dot also escapes, even when expressed as a relative value.
+            relative_escape = "../" + Path(foreign_home).name + "/lessons.jsonl"
+            cfg["memory_planes"]["error"]["tracked_store"] = [relative_escape]
+            config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            result = self.run_gate(root)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertIn("unsafe tracked store path", result.stdout)
+
+            # Symlinks, even when the target exists, are not clone-readable stores.
+            cfg["memory_planes"]["error"]["tracked_store"] = [
+                "15_SYSTEM/memory/lessons.jsonl"]
+            config_path.write_text(json.dumps(cfg), encoding="utf-8")
+            link = root / "15_SYSTEM" / "memory" / "lessons.jsonl"
+            try:
+                link.symlink_to(foreign)
+            except (OSError, NotImplementedError):
+                pass  # Some Windows runners do not permit creating symlinks.
+            else:
+                result = self.run_gate(root)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("unsafe tracked store path", result.stdout)
 
     def test_a_dropped_plane_fails(self):
         root = self.fixture()
@@ -123,12 +217,59 @@ class TestTheGateBites(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("not mapped: conversation", result.stdout)
 
+        # A present key with a malformed plane object is not a mapped plane.
+        # Prior to the fix the gate skipped it and returned status zero.
+        cfg = config()
+        cfg["memory_planes"]["conversation"] = None
+        path.write_text(json.dumps(cfg), encoding="utf-8")
+        malformed = self.run_gate(root)
+        self.assertEqual(1, malformed.returncode, malformed.stdout + malformed.stderr)
+        self.assertIn("invalid plane mapping: conversation", malformed.stdout)
+
     def test_a_reader_that_points_at_nothing_fails(self):
         root = self.fixture()
         (root / "scripts" / "memory.py").unlink()
         result = self.run_gate(root)
         self.assertEqual(1, result.returncode)
         self.assertIn("error: reader does not exist: scripts/memory.py", result.stdout)
+        # Reader contracts must be confined too, not just the stored bytes.
+        with tempfile.TemporaryDirectory() as foreign_home:
+            foreign = Path(foreign_home) / "reader.py"
+            foreign.write_text("# outsider\n", encoding="utf-8")
+            (root / "scripts" / "memory.py").write_text("# restored\n", encoding="utf-8")
+            path = root / "15_SYSTEM" / "config" / "system.json"
+            cfg = json.loads(path.read_text(encoding="utf-8"))
+            cfg["memory_planes"]["error"]["reader_script"] = str(foreign)
+            path.write_text(json.dumps(cfg), encoding="utf-8")
+            result = self.run_gate(root)
+            self.assertEqual(1, result.returncode, result.stdout)
+            self.assertIn("unsafe reader path", result.stdout)
+
+            # A linked parent directory is as unsafe as a linked final file.
+            cfg["memory_planes"]["error"]["reader_script"] = (
+                "scripts/linked-parent/reader.py")
+            path.write_text(json.dumps(cfg), encoding="utf-8")
+            parent_link = root / "scripts" / "linked-parent"
+            foreign_named = Path(foreign_home) / "reader.py"
+            try:
+                parent_link.symlink_to(Path(foreign_home), target_is_directory=True)
+            except (OSError, NotImplementedError):
+                pass
+            else:
+                result = self.run_gate(root)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("unsafe reader path", result.stdout)
+
+            # Every kind of declared evidence uses the same bounded path rule.
+            cfg["memory_planes"]["error"]["reader_script"] = "scripts/memory.py"
+            for field in ("test", "map"):
+                current = cfg["memory_planes"]["error"][field]
+                cfg["memory_planes"]["error"][field] = str(foreign_named)
+                path.write_text(json.dumps(cfg), encoding="utf-8")
+                result = self.run_gate(root)
+                self.assertEqual(1, result.returncode, result.stdout)
+                self.assertIn("unsafe %s path" % field, result.stdout)
+                cfg["memory_planes"]["error"][field] = current
 
     def test_an_empty_tracked_folder_without_gitkeep_fails(self):
         root = self.fixture()

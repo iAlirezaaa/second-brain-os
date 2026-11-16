@@ -6,6 +6,44 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #126; PR #127 follow-up, CI on new head pending)
+- A named memory plane whose configuration value is null, a list or another
+  non-object no longer silently disappears from the audit and produces a false
+  OK over seven planes. The read-only gate now refuses the malformed mapping
+  with the plane name. A regression extends the existing phase-26 test method
+  without changing the discovered test count; no data, permissions or external
+  dependencies change. The previous configuration-symlink fix passed seven of
+  seven GitHub Actions jobs at SHA 0b09f87 (run 43771663020), **not** this
+  follow-up. This PR remains unmerged until verification and branch-protection
+  reconciliation (#107).
+
+### Fixed (PR #127 follow-up; CI on new head pending)
+- The memory-plane gate now refuses a symbolic link at its own
+  `15_SYSTEM/config/system.json` file or any parent directory before
+  parsing configuration. Previously the validator could read an external
+  checkout's mapping through a link and count that configuration as local
+  evidence. An existing phase-26 fixture checks both cases where the OS
+  permits symlinks; no new test-method count, dependencies, permissions or
+  user-data writes. This is a configuration-boundary check, not a
+  race-free filesystem sandbox; the PR remains unmerged until verified.
+
+### Proposed (issue #126; branch review pending; not released)
+- Harden `scripts/plane_check.py` so a mapped memory plane cannot be
+  falsely certified by an external absolute path, a `..` traversal or a
+  symlinked evidence path (including parent components). The same check
+  applies to declared readers, tests and maps; missing disposable stores
+  remain legitimate. Existing fixture regressions now cover external files
+  and links without changing the discovered test-method count.
+  A failing-isolated baseline was recorded on 2026-11-15; repository CI
+  remains the cross-platform authority. This is not a race-free filesystem
+  sandbox or a new write-permission boundary.
+- In the same draft, also validate `disposable_store` entries before even
+  measuring their absence: an absolute/parent-traversing, linked or non-list
+  cache declaration must not silently yield a healthy plane report. The
+  existing phase-26 fixture exercises malformed and external cache paths.
+  No cache is created, deleted, opened or migrated by this read-only gate;
+  the prior seven-job green run does not certify this follow-up yet.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
