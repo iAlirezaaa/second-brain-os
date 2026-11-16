@@ -118,8 +118,8 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
         # if the child accidentally exits 0 and all its counters agree.
         path = self.battery(
             "hidden_failure",
-            "print('FAIL harness: a real check failed')\\n"
-            "print('checks: 7 | passed: 7 | failed: 0')\\n",
+            "print('FAIL harness: a real check failed')\n"
+            "print('checks: 7 | passed: 7 | failed: 0')\n",
         )
         verdict = run(["--battery", path])
         self.assert_invalid(verdict, "must not ship")
