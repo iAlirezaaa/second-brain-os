@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #131; contributor documentation, CI pending)
+- CONTRIBUTING now points dependency proposals to the six evidence and human
+  decision conditions in Constitution §2, including the governed `DEC-…`
+  record in `09_OPERATIONS/decisions/`, bounded disabled-by-default feature
+  flags, and a standard-library fallback. Previously it named a wiki decision
+  note instead of the constitutional gate. A regression assertion within the
+  existing contributor-contract test catches drift without changing the
+  measured test count. No packages, runtime permissions, user data or defaults
+  were changed. This remains unreleased pending CI and protected review.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
