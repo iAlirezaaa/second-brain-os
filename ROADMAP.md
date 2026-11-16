@@ -27,6 +27,59 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## Current prioritized delivery queue (reviewed 2026-11-16; not a release claim)
+
+This queue takes precedence for the *next small slice*, not over the constitution or
+existing issue acceptance. Never mark a check complete on a test-only or pending CI
+branch. Cross-PR work must be reconciled before another patch is created.
+
+### P0 — safety, CI reliability, first real use
+- [ ] **S; #128 / PR #129 Draft (new head not yet verified):** the battery success gate must refuse
+      `checks: 0`, a negative/malformed number, or a mismatch between passed,
+      failed and checks, even with process exit 0. Extend existing synthetic
+      regression; also refuse an explicit `FAIL` verdict even if the summary
+      falsely claims seven of seven passed (including leading-whitespace `FAIL`
+      lines from wrapped subprocesses). Require full seven-job CI on the
+      **latest** commit before review/merge. Previous SHA `8ee4edf` passed 7/7
+      jobs (CI #43806425250); that pass does not cover this follow-up. Rollback:
+      revert the bounded gate, synthetic tests and associated documentation.
+- [ ] **P0 blocking #107 / PR #112:** align protected-main *required check
+      contexts* with the actual Ubuntu 24.04/Python 3.9+ matrix through authorized
+      repository settings; never bypass, rename jobs deceptively or force-push.
+- [ ] **P0 onboarding #110 / PR #111:** verify synthetic SQLite rows, then
+      measure *clone-to-first-success* on clean Windows/macOS/Linux installs.
+      The `first_success.py` subprocess number alone is **not** a five-minute
+      onboarding benchmark. Record hardware, Python version, commands and
+      elapsed time; leave unsupported OS measurements **unknown**.
+
+### P1 — cross-host and reproducible adoption
+- [ ] Reconcile #102/#106 and their PRs before further MCP integration;
+      test actual version-pinned Claude Code, Codex and OpenCode sessions with
+      **synthetic data** and tool-permission checks, not only generated snippets.
+- [ ] Keep the English/Persian quickstarts, lightweight documentation, read-only
+      examples, source-backed search metrics and repeatable baseline benchmarks
+      aligned with verified behavior. No automatic host-config writes.
+
+### P2 — opt-in inspectable memory and portability
+- [ ] Write a proposal, ADR, permission gate, threat model, tests and reversible
+      rollback before any memory-view UI, provenance/audit dashboard,
+      import/export or multi-user collaboration. Keep the stdlib fallback.
+
+### P3 — bounded competitor evaluation
+- [ ] Under #92 compare Mem0, Basic Memory, Letta and OpenMemory against
+      synthetic provenance, permission, conflict and retrieval scenarios.
+      Log source date, license, repeat count and *unknowns*, without importing
+      implementations or claiming a win without measured evidence.
+
+**After #128 (reconciled 2026-11-16):** (1) run/verify all seven CI jobs
+on the latest head after the indented-FAIL regression, then change PR #129
+from Draft back to Ready for review, without bypassing protected main #107.
+(2) independently measure the HADES battery count for #53 and include
+clone-readable, source-backed documentation; the current custom-runner count
+is **unknown** in README, even though CI runs the battery.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

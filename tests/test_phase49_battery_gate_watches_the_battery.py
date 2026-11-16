@@ -98,7 +98,43 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
         # exit code 0 and no count line: the loudest fake pass a silent suite can produce
         path = self.battery("quiet", "print('all good, trust me')\n")
         result = run(["--battery", path])
-        self.assert_invalid(result, "without printing a `checks:` summary")
+        self.assert_invalid(result, "without printing a valid `checks:` summary")
+        # A zero-check or internally contradictory battery is *also* silent,
+        # even if the child exits 0 and its own printed failed count is zero.
+        for i, summary in enumerate((
+                "checks: 0 | passed: 0 | failed: 0",
+                "checks: 7 | passed: 0 | failed: 0",
+                "checks: -3 | passed: 3 | failed: 0",
+                "checks: 7 | passed: 7 | failed: 0garbage",
+                "checks: 3 | passed: 3 | failed: 0 | note: 0")):
+            fake = self.battery("fake_green_%d" % i, "print(%r)\n" % summary)
+            verdict = run(["--battery", fake])
+            self.assertEqual(1, verdict.returncode,
+                             "false-green battery accepted %r: %r" % (summary, verdict.stdout))
+            self.assertIn("INVALID battery", verdict.stdout)
+
+        # The battery emits FAIL lines for individual checks. A success total
+        # contradicting a FAIL line is not evidence of a green battery, even
+        # if the child accidentally exits 0 and all its counters agree.
+        path = self.battery(
+            "hidden_failure",
+            "print('FAIL harness: a real check failed')\n"
+            "print('checks: 7 | passed: 7 | failed: 0')\n",
+        )
+        verdict = run(["--battery", path])
+        self.assert_invalid(verdict, "must not ship")
+        self.assertIn("FAIL harness: a real check failed", verdict.stdout)
+
+        # The runner's failure messages can be indented by a wrapper. A failure
+        # must not disappear just because a child printed leading whitespace.
+        indented = self.battery(
+            "indented_failure",
+            "print('    FAIL harness: a real check failed')\n"
+            "print('checks: 7 | passed: 7 | failed: 0')\n",
+        )
+        verdict = run(["--battery", indented])
+        self.assert_invalid(verdict, "must not ship")
+        self.assertIn("FAIL harness: a real check failed", verdict.stdout)
 
     def test_a_missing_battery_file_is_refused_not_skipped(self):
         result = run(["--battery", str(Path(self.tmp) / "nowhere.py")])

@@ -24,6 +24,7 @@ other repo-only gates use, so `health.py` keeps exactly one line per gate.
 """
 import argparse
 import os
+import re
 import subprocess
 import sys
 import time
@@ -43,27 +44,28 @@ SUMMARY_KEY = "checks:"
 MAX_REPORTED_FAILURES = 12
 
 
+SUMMARY_PATTERN = re.compile(r"^checks:\s*(\d+)\s*\|\s*passed:\s*(\d+)\s*\|\s*failed:\s*(\d+)$")
+
+
 def parse_summary(text):
-    """The battery's own last summary line, or None when it never printed one."""
+    """Read the last summary strictly; never bless zero or inconsistent evidence."""
     found = None
     for line in text.splitlines():
-        if SUMMARY_KEY in line and "failed" in line:
-            found = line
+        if line.strip().startswith(SUMMARY_KEY):
+            found = line.strip()
     if found is None:
         return None
-    counts = {}
-    for part in found.split("|"):
-        head, _, value = part.strip().partition(":")
-        digits = "".join(ch for ch in value if ch.isdigit())
-        if digits:
-            counts[head.strip().lower()] = int(digits)
-    if "checks" not in counts or "failed" not in counts:
+    match = SUMMARY_PATTERN.fullmatch(found)
+    if match is None:
         return None
-    return counts
+    checks, passed, failed = (int(value) for value in match.groups())
+    if checks == 0 or passed + failed != checks:
+        return None
+    return {"checks": checks, "passed": passed, "failed": failed}
 
 
 def failure_lines(text):
-    lines = [line.strip() for line in text.splitlines() if line.startswith("FAIL")]
+    lines = [line.strip() for line in text.splitlines() if line.lstrip().startswith("FAIL")]
     return lines[:MAX_REPORTED_FAILURES]
 
 
@@ -103,15 +105,18 @@ def main():
     body = (result.stdout or "") + (result.stderr or "")
     summary = parse_summary(body)
     if summary is None:
-        print("INVALID battery: %s exited %s without printing a `%s` summary, so nothing was "
+        print("INVALID battery: %s exited %s without printing a valid `%s` summary (nonzero and consistent counts), so nothing was "
               "measured" % (script.name, result.returncode, SUMMARY_KEY))
         return 1
     failed = summary["failed"]
-    if result.returncode != 0 or failed != 0:
+    failures = failure_lines(body)
+    # Individual FAIL verdicts are stronger evidence than a contradictory
+    # success total, even when the child exits 0 with "failed: 0".
+    if result.returncode != 0 or failed != 0 or failures:
         print("INVALID battery: %s checks | %d passed | %d failed in %.0fs -- the HADES plane "
               "disagrees with itself, so this tree must not ship"
               % (summary["checks"], summary.get("passed", 0), failed, took))
-        for line in failure_lines(body):
+        for line in failures:
             print("  %s" % line[:160])
         return 1
 
