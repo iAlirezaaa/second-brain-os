@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #133; synthetic first-recall subprocess environment; in review)
+- The offline `scripts/first_success.py` diagnostic now gives its real keyword
+  ingest/search child processes a small allowlist of OS launch variables rather
+  than the entire shell environment, which could include unrelated API keys,
+  `PYTHONPATH`, and agent overrides. UTF-8 output and disabled Python user-site
+  imports are explicit. An existing regression exercises both real KB calls
+  with a synthetic canary. The probe still uses disposable notes and reports
+  the same JSON/exit status. This is **not** an OS sandbox, host permission
+  boundary, production-memory benchmark or claim of actual credential leakage.
+  Pending full cross-platform CI and protected-branch review; revert the
+  allowlist if a supported OS demonstrates a missing required launch key.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
