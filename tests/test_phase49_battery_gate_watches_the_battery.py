@@ -107,7 +107,7 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
                 "checks: -3 | passed: 3 | failed: 0",
                 "checks: 7 | passed: 7 | failed: 0garbage",
                 "checks: 3 | passed: 3 | failed: 0 | note: 0")):
-            fake = self.battery("fake_green_%d" % i, "print(%r)\\n" % summary)
+            fake = self.battery("fake_green_%d" % i, "print(%r)\n" % summary)
             verdict = run(["--battery", fake])
             self.assertEqual(1, verdict.returncode,
                              "false-green battery accepted %r: %r" % (summary, verdict.stdout))
