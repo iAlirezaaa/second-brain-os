@@ -36,7 +36,7 @@ class BatteryMetricsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, data)
         self.assertEqual(data["status"], "verified")
         self.assertEqual((data["checks"], data["passed"], data["failed"]), (3, 3, 0))
-        self.assertEqual(data["battery_sha256"], hashlib.sha256(code.encode()).hexdigest())
+        self.assertEqual(data["battery_sha256"], hashlib.sha256(self.battery.read_bytes()).hexdigest())
 
     def test_zero_count_is_not_success(self):
         result, data = self.run_probe("print('checks: 0 | passed: 0 | failed: 0')\n")
