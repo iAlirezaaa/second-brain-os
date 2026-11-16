@@ -217,6 +217,15 @@ class TestTheGateBites(unittest.TestCase):
         self.assertEqual(1, result.returncode)
         self.assertIn("not mapped: conversation", result.stdout)
 
+        # A present key with a malformed plane object is not a mapped plane.
+        # Prior to the fix the gate skipped it and returned status zero.
+        cfg = config()
+        cfg["memory_planes"]["conversation"] = None
+        path.write_text(json.dumps(cfg), encoding="utf-8")
+        malformed = self.run_gate(root)
+        self.assertEqual(1, malformed.returncode, malformed.stdout + malformed.stderr)
+        self.assertIn("invalid plane mapping: conversation", malformed.stdout)
+
     def test_a_reader_that_points_at_nothing_fails(self):
         root = self.fixture()
         (root / "scripts" / "memory.py").unlink()
