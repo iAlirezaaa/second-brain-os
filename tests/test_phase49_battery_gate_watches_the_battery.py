@@ -99,6 +99,19 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
         path = self.battery("quiet", "print('all good, trust me')\n")
         result = run(["--battery", path])
         self.assert_invalid(result, "without printing a `checks:` summary")
+        # A zero-check or internally contradictory battery is *also* silent,
+        # even if the child exits 0 and its own printed failed count is zero.
+        for i, summary in enumerate((
+                "checks: 0 | passed: 0 | failed: 0",
+                "checks: 7 | passed: 0 | failed: 0",
+                "checks: -3 | passed: 3 | failed: 0",
+                "checks: 7 | passed: 7 | failed: 0garbage",
+                "checks: 3 | passed: 3 | failed: 0 | note: 0")):
+            fake = self.battery("fake_green_%d" % i, "print(%r)\\n" % summary)
+            verdict = run(["--battery", fake])
+            self.assertEqual(1, verdict.returncode,
+                             "false-green battery accepted %r: %r" % (summary, verdict.stdout))
+            self.assertIn("INVALID battery", verdict.stdout)
 
     def test_a_missing_battery_file_is_refused_not_skipped(self):
         result = run(["--battery", str(Path(self.tmp) / "nowhere.py")])
