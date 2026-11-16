@@ -12,10 +12,14 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   even if the synthetic battery exits zero. The old parser concatenated all
   digits and accepted `checks: 0 | passed: 0 | failed: 0` or mismatched counts
   as a successful health check. The existing synthetic-battery unittest method
-  now includes five false-green examples, leaving the collected test count
-  unchanged. The real HADES battery, installed-home skip, permissions and user
-  data are untouched. This change is **under review**, not a released security
-  guarantee; seven GitHub Actions jobs are required before merge.
+  now includes five false-green examples. A follow-up synthetic test
+  refuses a printed `FAIL` verdict even when a contradictory summary claims
+  every check passed and the child exits zero; the gate prints the named failure.
+  The earlier head `8ee4edf` passed 7/7 CI jobs in run #43806425250, but this
+  follow-up needs its own successful run. The real HADES battery, installed-home
+  skip, permissions and user data are untouched. This change is **under review**,
+  not a released security guarantee; seven GitHub Actions jobs on the latest
+  SHA are required before merge.
 
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
