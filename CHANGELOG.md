@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #126; PR #127 follow-up, CI on new head pending)
+- A named memory plane whose configuration value is null, a list or another
+  non-object no longer silently disappears from the audit and produces a false
+  OK over seven planes. The read-only gate now refuses the malformed mapping
+  with the plane name. A regression extends the existing phase-26 test method
+  without changing the discovered test count; no data, permissions or external
+  dependencies change. The previous configuration-symlink fix passed seven of
+  seven GitHub Actions jobs at SHA 0b09f87 (run 43771663020), **not** this
+  follow-up. This PR remains unmerged until verification and branch-protection
+  reconciliation (#107).
+
 ### Fixed (PR #127 follow-up; CI on new head pending)
 - The memory-plane gate now refuses a symbolic link at its own
   `15_SYSTEM/config/system.json` file or any parent directory before
