@@ -14,6 +14,11 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   regression tests and one CI Ubuntu 3.12 execution expose results publicly
   without running the battery inside fast document checks. README links a
   dated, prior CI observation; no release or product benchmark is claimed.
+- A test-first follow-up makes the metric fail closed if a malformed secondary
+  `checks:` line accompanies a canonical green one. Previously the malformed
+  line was ignored and a false `verified` result was possible. The regression
+  extends an existing test method, keeping collected test totals unchanged.
+  Full CI on the final head and review are still required; this is unreleased.
 
 
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
