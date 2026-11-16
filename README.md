@@ -99,6 +99,9 @@ success rate and per-trial/median latency. It exits nonzero on any failed
 trial and cleans up its temporary index. **It does not measure Git clone,
 installation, full first-use time, semantic recall or real-user performance.**
 The current under-five-minute end-to-end onboarding goal remains unverified.
+The synthetic subprocesses use only OS launch essentials, not ambient API keys,
+`PYTHONPATH` or agent session overrides; this limits accidental forwarding but
+does not sandbox local checkout code or change user-data permissions.
 See [first-success acceptance criteria](https://github.com/iAlirezaaa/second-brain-os/issues/93).
 
 Use the CLI to discover skills, open an accountable session and monitor it:
