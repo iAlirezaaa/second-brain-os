@@ -65,7 +65,7 @@ def parse_summary(text):
 
 
 def failure_lines(text):
-    lines = [line.strip() for line in text.splitlines() if line.startswith("FAIL")]
+    lines = [line.strip() for line in text.splitlines() if line.lstrip().startswith("FAIL")]
     return lines[:MAX_REPORTED_FAILURES]
 
 
