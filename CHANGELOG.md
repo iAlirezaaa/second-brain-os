@@ -15,6 +15,10 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   now includes five false-green examples. A follow-up synthetic test
   refuses a printed `FAIL` verdict even when a contradictory summary claims
   every check passed and the child exits zero; the gate prints the named failure.
+  A further test-first case checks **indented** `FAIL` lines emitted by wrappers:
+  whitespace no longer hides a failed check beneath a false-green summary.
+  This test does not add a newly discovered unittest method, and runs only
+  synthetic data; the latest PR head still needs fresh full CI verification.
   The earlier head `8ee4edf` passed 7/7 CI jobs in run #43806425250, but this
   follow-up needs its own successful run. The real HADES battery, installed-home
   skip, permissions and user data are untouched. This change is **under review**,
