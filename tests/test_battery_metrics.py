@@ -37,6 +37,13 @@ class BatteryMetricsTests(unittest.TestCase):
         self.assertEqual(data["status"], "verified")
         self.assertEqual((data["checks"], data["passed"], data["failed"]), (3, 3, 0))
         self.assertEqual(data["battery_sha256"], hashlib.sha256(self.battery.read_bytes()).hexdigest())
+        # Force Windows-style CRLF even on POSIX so the regression is caught
+        # by a local run, rather than only by Windows CI.
+        self.battery.write_bytes(code.replace("\n", "\r\n").encode("utf-8"))
+        crlf_result, crlf_data = self.run_probe()
+        self.assertEqual(crlf_result.returncode, 0, crlf_data)
+        self.assertEqual(crlf_data["battery_sha256"],
+                         hashlib.sha256(self.battery.read_bytes()).hexdigest())
 
     def test_zero_count_is_not_success(self):
         result, data = self.run_probe("print('checks: 0 | passed: 0 | failed: 0')\n")
