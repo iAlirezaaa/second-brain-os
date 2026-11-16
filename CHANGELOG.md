@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #128; PR #129 Draft, CI verification pending — not released)
+- `scripts/battery_check.py` now treats a malformed, negative, zero-check or
+  internally inconsistent `checks | passed | failed` summary as **invalid**
+  even if the synthetic battery exits zero. The old parser concatenated all
+  digits and accepted `checks: 0 | passed: 0 | failed: 0` or mismatched counts
+  as a successful health check. The existing synthetic-battery unittest method
+  now includes five false-green examples, leaving the collected test count
+  unchanged. The real HADES battery, installed-home skip, permissions and user
+  data are untouched. This change is **under review**, not a released security
+  guarantee; seven GitHub Actions jobs are required before merge.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
