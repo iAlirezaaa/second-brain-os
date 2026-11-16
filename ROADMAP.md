@@ -27,6 +27,31 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Do not forward ambient credentials into synthetic first-recall smoke (#133)
+
+- [ ] **S** Launch `scripts/first_success.py`'s synthetic keyword ingest/search
+      subprocesses with an explicit OS-support environment allowlist. The old
+      subprocess default inherited unrelated API keys, `PYTHONPATH`, and
+      `SBO_*` variables. Set UTF-8 and disable Python user-site imports;
+      retain the disposable offline notes, cache cleanup, JSON and exit codes.
+- [ ] Extend an existing first-success unittest to run the real local KB twice
+      with a synthetic parent canary and verify both child environment maps
+      omit the canary and `PYTHONPATH` (no newly discovered test count).
+- [ ] Require Python 3.9/3.12 Windows/Ubuntu CI and all backup/restore jobs
+      green on the final SHA before any merge; protected-main obsolete Ubuntu
+      check names remain a blocker (#107). This mitigates accidental env
+      forwarding, **not** OS filesystem access or a malicious checkout.
+
+**Next 1 (P0):** verify the environment allowlist on Windows and Ubuntu with the
+real subprocess and document the exact CI run; expand only for a reproducible
+OS requirement, not by reintroducing inherited credentials.
+**Next 2 (P0/P1):** follow up the separately scoped MCP smoke environment fix
+(#113 / #114), then measure an actual Windows/macOS/Linux under-five-minute
+onboarding from clean checkout (issue #93); do not conflate synthetic latency
+with an end-user install metric.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
