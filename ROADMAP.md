@@ -37,8 +37,11 @@ branch. Cross-PR work must be reconciled before another patch is created.
 - [ ] **S; #128 / PR #129 Draft:** the battery success gate must refuse
       `checks: 0`, a negative/malformed number, or a mismatch between passed,
       failed and checks, even with process exit 0. Extend existing synthetic
-      regression; require full seven-job CI before review/merge. Rollback:
-      revert the parser, test and associated documentation.
+      regression; also refuse an explicit `FAIL` verdict even if the summary
+      falsely claims seven of seven passed. Require full seven-job CI on the
+      **latest** commit before review/merge. Previous SHA `8ee4edf` passed 7/7
+      jobs (CI #43806425250); that pass does not cover this follow-up. Rollback:
+      revert the bounded gate, synthetic tests and associated documentation.
 - [ ] **P0 blocking #107 / PR #112:** align protected-main *required check
       contexts* with the actual Ubuntu 24.04/Python 3.9+ matrix through authorized
       repository settings; never bypass, rename jobs deceptively or force-push.
