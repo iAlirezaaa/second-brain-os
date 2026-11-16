@@ -98,7 +98,7 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
         # exit code 0 and no count line: the loudest fake pass a silent suite can produce
         path = self.battery("quiet", "print('all good, trust me')\n")
         result = run(["--battery", path])
-        self.assert_invalid(result, "without printing a `checks:` summary")
+        self.assert_invalid(result, "without printing a valid `checks:` summary")
         # A zero-check or internally contradictory battery is *also* silent,
         # even if the child exits 0 and its own printed failed count is zero.
         for i, summary in enumerate((
