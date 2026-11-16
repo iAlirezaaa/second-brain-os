@@ -125,6 +125,17 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
         self.assert_invalid(verdict, "must not ship")
         self.assertIn("FAIL harness: a real check failed", verdict.stdout)
 
+        # The runner's failure messages can be indented by a wrapper. A failure
+        # must not disappear just because a child printed leading whitespace.
+        indented = self.battery(
+            "indented_failure",
+            "print('    FAIL harness: a real check failed')\n"
+            "print('checks: 7 | passed: 7 | failed: 0')\n",
+        )
+        verdict = run(["--battery", indented])
+        self.assert_invalid(verdict, "must not ship")
+        self.assertIn("FAIL harness: a real check failed", verdict.stdout)
+
     def test_a_missing_battery_file_is_refused_not_skipped(self):
         result = run(["--battery", str(Path(self.tmp) / "nowhere.py")])
         self.assert_invalid(result, "a gate that runs nothing is not a pass")
