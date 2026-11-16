@@ -109,11 +109,14 @@ def main():
               "measured" % (script.name, result.returncode, SUMMARY_KEY))
         return 1
     failed = summary["failed"]
-    if result.returncode != 0 or failed != 0:
+    failures = failure_lines(body)
+    # Individual FAIL verdicts are stronger evidence than a contradictory
+    # success total, even when the child exits 0 with "failed: 0".
+    if result.returncode != 0 or failed != 0 or failures:
         print("INVALID battery: %s checks | %d passed | %d failed in %.0fs -- the HADES plane "
               "disagrees with itself, so this tree must not ship"
               % (summary["checks"], summary.get("passed", 0), failed, took))
-        for line in failure_lines(body):
+        for line in failures:
             print("  %s" % line[:160])
         return 1
 
