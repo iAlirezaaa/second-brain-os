@@ -38,7 +38,8 @@ branch. Cross-PR work must be reconciled before another patch is created.
       `checks: 0`, a negative/malformed number, or a mismatch between passed,
       failed and checks, even with process exit 0. Extend existing synthetic
       regression; also refuse an explicit `FAIL` verdict even if the summary
-      falsely claims seven of seven passed (including leading-whitespace `FAIL`\n      lines from wrapped subprocesses). Require full seven-job CI on the
+      falsely claims seven of seven passed (including leading-whitespace `FAIL`
+      lines from wrapped subprocesses). Require full seven-job CI on the
       **latest** commit before review/merge. Previous SHA `8ee4edf` passed 7/7
       jobs (CI #43806425250); that pass does not cover this follow-up. Rollback:
       revert the bounded gate, synthetic tests and associated documentation.
@@ -70,7 +71,12 @@ branch. Cross-PR work must be reconciled before another patch is created.
       Log source date, license, repeat count and *unknowns*, without importing
       implementations or claiming a win without measured evidence.
 
-**After #128 (reconciled 2026-11-16):** (1) run/verify all seven CI jobs\non the latest head after the indented-FAIL regression, then change PR #129\nfrom Draft back to Ready for review, without bypassing protected main #107.\n(2) independently measure the HADES battery count for #53 and include\nclone-readable, source-backed documentation; the current custom-runner count\nis **unknown** in README, even though CI runs the battery.
+**After #128 (reconciled 2026-11-16):** (1) run/verify all seven CI jobs
+on the latest head after the indented-FAIL regression, then change PR #129
+from Draft back to Ready for review, without bypassing protected main #107.
+(2) independently measure the HADES battery count for #53 and include
+clone-readable, source-backed documentation; the current custom-runner count
+is **unknown** in README, even though CI runs the battery.
 
 ---
 
