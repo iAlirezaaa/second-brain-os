@@ -5,6 +5,9 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+import os
+import subprocess
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,6 +50,30 @@ class FirstRecallProbe(unittest.TestCase):
         self.assertEqual(report["status"], "pass")
         self.assertEqual(report["repeat"], 1)
         self.assertNotIn("sbo-first-recall-", output.getvalue())
+
+        # Real KB subprocesses, with a synthetic canary in the parent shell.
+        # Without an explicit env= these inherit credentials and PYTHONPATH.
+        observed_envs = []
+        actual_run = subprocess.run
+
+        def capture_and_run(*args, **kwargs):
+            observed_envs.append(kwargs.get("env"))
+            return actual_run(*args, **kwargs)
+
+        with mock.patch.dict(os.environ, {
+                "SBO_FIRST_RECALL_SECRET_CANARY": "synthetic-only",
+                "PYTHONPATH": "synthetic-untrusted-import-root"}):
+            with mock.patch.object(first_success.subprocess, "run",
+                                   side_effect=capture_and_run):
+                canary_report = first_success.evaluate(1, KB)
+        self.assertEqual(canary_report["status"], "pass", canary_report)
+        self.assertEqual(len(observed_envs), 2)  # ingest and search
+        for child_env in observed_envs:
+            self.assertIsNotNone(child_env, "child inherited caller environment")
+            self.assertNotIn("SBO_FIRST_RECALL_SECRET_CANARY", child_env)
+            self.assertNotIn("PYTHONPATH", child_env)
+            self.assertEqual(child_env["PYTHONIOENCODING"], "utf-8")
+            self.assertEqual(child_env["PYTHONNOUSERSITE"], "1")
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ Returns JSON and exits nonzero if any synthetic ingest/recall trial fails.
 import argparse
 import datetime
 import json
+import os
 import re
 import statistics
 import subprocess
@@ -23,6 +24,22 @@ HERE = Path(__file__).resolve().parent
 EXPECTED = "02_WIKI/demo.md"
 QUERY = "ORCHIDMEMORY2026"
 MAX_REPEAT = 10
+
+# A synthetic smoke does not need the caller's API credentials, PYTHONPATH,
+# agent session overrides or cloud SDK settings. Retain only OS process-launch
+# essentials; this is environment minimization, not filesystem isolation.
+_CHILD_ENV_KEYS = (
+    "PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT",
+    "TEMP", "TMP", "TMPDIR", "HOME", "USERPROFILE",
+    "HOMEDRIVE", "HOMEPATH", "LANG", "LC_ALL", "LC_CTYPE",
+)
+
+
+def _child_environment():
+    env = {key: os.environ[key] for key in _CHILD_ENV_KEYS if key in os.environ}
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
 
 
 def trial(kb_script, timeout=30):
@@ -42,7 +59,7 @@ def trial(kb_script, timeout=30):
             return subprocess.run(
                 [sys.executable, str(kb_script), *args, "--vault", str(vault)],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
-                timeout=timeout, check=False)
+                timeout=timeout, check=False, env=_child_environment())
 
         start = time.perf_counter()
         try:
