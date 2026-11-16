@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Added (issue #53; pending CI and review)
+- An optional `python scripts/battery_metrics.py` runs the real,
+  self-sandboxed HADES battery and emits source-hashed JSON with an observed
+  check count or explicit unknown on failure. It refuses zero, malformed,
+  conflicting, duplicate, nonzero and timed-out results. Nine synthetic CLI
+  regression tests and one CI Ubuntu 3.12 execution expose results publicly
+  without running the battery inside fast document checks. README links a
+  dated, prior CI observation; no release or product benchmark is claimed.
+
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

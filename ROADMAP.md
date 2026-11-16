@@ -27,6 +27,28 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Executed HADES battery count as auditable JSON (issue #53; in review)
+
+- [ ] **S** Run the real `15_SYSTEM/scripts/test_hades.py` in a disposable
+      synthetic vault through `python scripts/battery_metrics.py`, not
+      via a static grep count or unittest discovery. JSON includes source SHA-256,
+      check totals and elapsed seconds. Missing, zero, contradictory, duplicate,
+      failure-marked, timed-out or nonzero executions report invalid with unknown
+      check count; never a fake green. Nine isolated CLI regressions.
+- [ ] CI must execute the metric command on one Ubuntu 3.12 job (not every fast
+      `doc_report.py --check`), with public run link and real measured
+      output. README distinguishes historical logged totals from live checks,
+      and a full green seven-job CI plus branch protection gates release.
+- [ ] Respect the executable source evidence boundary: observed 122/122 on
+      2026-11-16 at run #43876056162, head fb95c3ad; do not extrapolate to
+      future commits or real-user retrieval quality.
+- **Next 1:** confirm the new CI's output on its exact SHA, compare the count
+      to the previous observed 122 and review regressions on Windows/Python 3.9.
+- **Next 2:** reconcile protected-main required Ubuntu contexts (#107) without
+      bypass, then merge only reviewed green changes and close #53.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
