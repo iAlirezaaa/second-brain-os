@@ -47,6 +47,13 @@ over something it cannot see is a silent gate, not a clean house.
 - **Next 2:** reconcile protected-main required Ubuntu contexts (#107) without
       bypass, then merge only reviewed green changes and close #53.
 
+**P3 competitor input (observed 2026-11-16; not a Second Brain OS bug):**
+[Mem0 #7880](https://github.com/mem0ai/mem0/issues/7880) describes a failed
+SQLite-history write after a vector insertion, risking duplicated retrieval on
+retry. Before pursuing cross-store persistence here, propose a synthetic
+partial-commit/rollback probe and measure whether this architecture has the
+same failure mode; do not copy code or add dependencies based on the report.
+
 ---
 
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
