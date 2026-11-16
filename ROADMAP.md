@@ -27,7 +27,7 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
-## Prioritized execution queue — reviewed 2026-11-15 (not a release claim)
+## Prioritized execution queue — reviewed 2026-11-16 (not a release claim)
 
 The open PRs are independent proposals, **not shipped capabilities**. In particular,
 `main` still requires obsolete `ubuntu-latest` statuses while CI runs on
@@ -37,8 +37,11 @@ concurrent branches before selecting the next small slice.
 - [ ] **P0 / correctness:** #125 passed seven of seven GitHub Actions jobs
       (run 43738134987). #127's seven jobs passed at SHA 37f5412 (run
       43760592613), covering its disposable-cache follow-up. An additional
-      config-file/parent symlink refusal now has a synthetic regression;
-      **CI on that newer head is pending**.
+      config-file/parent symlink refusal passed seven of seven jobs on
+      commit 0b09f87 (Actions run 43771663020). An additional test-first
+      regression now refuses a named memory plane with a non-object value:
+      the previous gate silently skipped it and reported OK with only seven
+      mapped planes. **CI on this follow-up head is pending**.
       `scripts/plane_check.py` now rejects absolute, parent-traversing,
       symlinked, or malformed tracked, reader, test, map **and disposable**
       declarations. Recheck CI before changing Draft status. On #107, an
@@ -64,9 +67,14 @@ concurrent branches before selecting the next small slice.
       usable accept/reject controls motivates a future **proposal/review** test,
       not importing its implementation:
       https://github.com/basicmachines-co/basic-memory/issues/1319
+      Also test explicit project/workspace scoping before storing anything:
+      Basic Memory #954 (2026-06-11) reported a dropped workspace selector
+      in an MCP configuration. This is a competitor report, not a proven
+      Second Brain OS bug; no upstream code or dependency was adopted.
+      https://github.com/basicmachines-co/basic-memory/issues/954
 
 **Next 1:** verify all seven GitHub Actions jobs on #127's **new**
-head after configuration-symlink refusal, including Windows/Python 3.9;
+head after malformed-plane refusal, including Windows/Python 3.9;
 only then mark it ready for human review.
 **Next 2:** reconcile #107's required-check names with an authorized
 administrator, then review green PRs for overlap before permitted merges.
