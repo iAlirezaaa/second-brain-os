@@ -113,6 +113,19 @@ class TestVerdictsFromSyntheticBatteries(unittest.TestCase):
                              "false-green battery accepted %r: %r" % (summary, verdict.stdout))
             self.assertIn("INVALID battery", verdict.stdout)
 
+    def test_a_false_green_summary_cannot_hide_an_explicit_failure(self):
+        # The battery emits FAIL lines for individual checks. A success total
+        # contradicting a FAIL line is not evidence of a green battery, even
+        # if the child accidentally exits 0 and all its counters agree.
+        path = self.battery(
+            "hidden_failure",
+            "print('FAIL harness: a real check failed')\\n"
+            "print('checks: 7 | passed: 7 | failed: 0')\\n",
+        )
+        verdict = run(["--battery", path])
+        self.assert_invalid(verdict, "must not ship")
+        self.assertIn("FAIL harness: a real check failed", verdict.stdout)
+
     def test_a_missing_battery_file_is_refused_not_skipped(self):
         result = run(["--battery", str(Path(self.tmp) / "nowhere.py")])
         self.assert_invalid(result, "a gate that runs nothing is not a pass")
