@@ -85,6 +85,9 @@ def judge(root):
     for name in PLANES:
         spec = planes.get(name)
         if not isinstance(spec, dict):
+            # A declared key is not evidence of a valid plane. Never silently
+            # skip it and report a successful, smaller-than-eight audit.
+            problems.append("invalid plane mapping: %s (expected object)" % name)
             continue
         summary["planes"] += 1
         tracked = spec.get("tracked_store")
