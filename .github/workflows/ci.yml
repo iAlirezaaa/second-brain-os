@@ -54,6 +54,11 @@ jobs:
       # only on the owner's seeded local folder
       - name: HADES plane is honest from a pristine clone
         run: python scripts/ci_hades_plane.py --battery
+      # Report the executed count only once per matrix, without slowing the
+      # document gate or pretending a historical count is current.
+      - name: Measured HADES battery checks (JSON)
+        if: matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.12'
+        run: python scripts/battery_metrics.py
 
   # Track A's independent witness. `scripts/backup_proof.py` seals synthetic bytes and prints a
   # draft, but it cannot certify *where* it ran: a host name is self-reported, and one machine
