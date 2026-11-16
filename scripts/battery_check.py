@@ -44,7 +44,7 @@ SUMMARY_KEY = "checks:"
 MAX_REPORTED_FAILURES = 12
 
 
-SUMMARY_PATTERN = re.compile(r"^checks:\\s*(\\d+)\\s*\\|\\s*passed:\\s*(\\d+)\\s*\\|\\s*failed:\\s*(\\d+)$")
+SUMMARY_PATTERN = re.compile(r"^checks:\s*(\d+)\s*\|\s*passed:\s*(\d+)\s*\|\s*failed:\s*(\d+)$")
 
 
 def parse_summary(text):
