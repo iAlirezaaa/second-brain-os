@@ -61,6 +61,18 @@ class RepoContractTests(unittest.TestCase):
                       else name.split(" --check")[0] for name in names]
         self.assertCountEqual(health.GATES, normalized)
 
+        # Constitution §2 governs dependency admission, not an unreviewed wiki note.
+        # Keep this in the existing contributor-contract test: the measured test
+        # count must change only when a genuinely new case is introduced.
+        setup = doc.split("## Setup", 1)[1].split("## The protocol", 1)[0]
+        constitution = (ROOT / "00_START_HERE/CONSTITUTION.md").read_text(
+            encoding="utf-8")
+        self.assertIn("09_OPERATIONS/decisions/", constitution)
+        self.assertIn("09_OPERATIONS/decisions/", setup)
+        self.assertIn("Constitution §2", setup)
+        self.assertIn("stdlib fallback", setup.lower())
+        self.assertNotIn("02_WIKI/decisions/", setup)
+
     def test_generated_wiki_site_is_ignored(self):
         result = subprocess.run(["git", "check-ignore", "-q", "02_WIKI/_site/index.html"],
                                 cwd=ROOT, check=False)

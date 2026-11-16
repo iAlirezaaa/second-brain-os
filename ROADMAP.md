@@ -27,6 +27,25 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P1 — Truthful dependency contribution instructions (#131; in review)
+
+- [ ] **S** Keep contributor onboarding consistent with the six dependency-admission
+      conditions in `00_START_HERE/CONSTITUTION.md` §2. On main, the contribution
+      instructions incorrectly routed new-package decisions to `02_WIKI/decisions/`
+      instead of the governed `DEC-…` records in `09_OPERATIONS/decisions/`.
+      Repairing documentation does **not** approve a dependency or modify runtime
+      permissions; default stdlib fallback and explicit human control remain.
+- [ ] Hold that path and the fallback requirement with an assertion in the
+      existing contributor-contract unit test (same discovered-test count).
+      Verify the full Ubuntu/Windows CI matrix before checking off or merging.
+
+**Next 1 (P0):** reconcile protected-`main` required-check names in #107
+without bypassing branch protection, then independently review verified PRs.
+**Next 2 (P1):** audit other contributor-facing dependency guidance against
+Constitution §2 and only extend the gate for demonstrated mismatches.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

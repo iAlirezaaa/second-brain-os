@@ -14,9 +14,17 @@ python -m unittest discover -s tests   # the whole suite
 python scripts/health.py               # every integrity gate, in one run
 ```
 
-Python ≥ 3.9 (the floor CI proves on ubuntu-24.04 + windows-latest), **no pip dependencies** —
-engine scripts stay stdlib-only, and a PR that adds one needs a decision note in
-`02_WIKI/decisions/` before code. Nothing here needs Obsidian: any editor reads the same files.
+Python ≥ 3.9 (the floor CI proves on ubuntu-24.04 + windows-latest), **no pip
+packages for the default core**. Engine scripts stay standard-library-only by default.
+A new runtime dependency is **not** authorized by a wiki note: before implementation,
+meet all six admission conditions in [Constitution §2](00_START_HERE/CONSTITUTION.md):
+(1) a named problem, (2) a measured numeric baseline, (3) repeatable before/after
+benefit on the same data, (4) license, maintenance, attack-surface, offline and
+lock-in review, (5) a bounded opt-in module with its feature flag off and a
+**stdlib fallback**, and (6) a reviewable `DEC-…` decision record in
+`09_OPERATIONS/decisions/`. Human approval remains required where the Constitution
+says so. Do not install extra packages during quickstart or send private data to
+external services. Nothing here needs Obsidian: any editor reads the same files.
 
 ## The protocol, in the order it actually works
 
