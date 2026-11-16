@@ -28,11 +28,16 @@ ENV_NAMES = {"PATH", "SYSTEMROOT", "WINDIR", "TMP", "TEMP", "TMPDIR", "HOME",
 
 def assess(output, returncode):
     """Accept exactly one coherent nonempty verdict from a successful battery run."""
-    lines = [match for line in output.splitlines()
-             if (match := SUMMARY.fullmatch(line.strip())) is not None]
-    if len(lines) != 1:
-        raise ValueError("expected exactly one canonical checks summary")
-    checks, passed, failed = (int(value) for value in lines[0].groups())
+    # Count all summary *attempts*, not only perfectly formatted ones.
+    # Otherwise a valid line can conceal a second malformed or negative count.
+    summaries = [line.strip() for line in output.splitlines()
+                 if line.lstrip().startswith("checks:")]
+    if len(summaries) != 1:
+        raise ValueError("expected exactly one checks summary")
+    match = SUMMARY.fullmatch(summaries[0])
+    if match is None:
+        raise ValueError("malformed checks summary")
+    checks, passed, failed = (int(value) for value in match.groups())
     if checks <= 0 or passed + failed != checks:
         raise ValueError("battery check totals are empty or contradictory")
     if returncode or failed or FAILURE.search(output):
