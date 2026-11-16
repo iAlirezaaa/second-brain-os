@@ -35,6 +35,9 @@ over something it cannot see is a silent gate, not a clean house.
       check totals and elapsed seconds. Missing, zero, contradictory, duplicate,
       failure-marked, timed-out or nonzero executions report invalid with unknown
       check count; never a fake green. Nine isolated CLI regressions.
+      A 2026-11-16 test-first follow-up also rejects one valid verdict followed
+      by a malformed `checks:` line (formerly accepted as a green result);
+      it extends an existing test method, so collected test totals do not change.
 - [ ] CI must execute the metric command on one Ubuntu 3.12 job (not every fast
       `doc_report.py --check`), with public run link and real measured
       output. README distinguishes historical logged totals from live checks,
