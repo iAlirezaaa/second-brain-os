@@ -81,6 +81,14 @@ class BatteryMetricsTests(unittest.TestCase):
         result, data = self.run_probe("print('checks: 3 | passed: 3 | failed: 0')\n" * 2)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(data["status"], "invalid")
+        # One valid verdict plus a malformed checks-prefixed verdict is still
+        # ambiguous; the malformed line cannot be silently ignored.
+        result, data = self.run_probe(
+            "print('checks: 3 | passed: 3 | failed: 0')\n"
+            "print('checks: -1 | passed: 0 | failed: 1')\n")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(data["status"], "invalid")
+        self.assertIsNone(data["checks"])
 
     def test_missing_script_is_unknown(self):
         result, data = self.run_probe(path=Path(self.tmp.name) / "absent.py")
