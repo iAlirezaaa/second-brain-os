@@ -27,6 +27,33 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Fail-closed Python-version audit for CI and nightly loop (#107; PR #112, CI pending)
+
+- [ ] **S** A malformed `jobs.test` Python version such as `banana` must
+      produce a named INVALID/REFUSED outcome rather than a `TypeError`
+      traceback. Baseline: `parse_version("banana")` was `None`, then
+      compared to the `(3, 9)` tuple. The existing test method
+      `test_a_floor_ci_never_installs_is_named` now covers this case.
+- [ ] **S** The nightly `python-version: "banana"` scalar must not disappear
+      from regex extraction and be accepted as an empty loop version list.
+      A zero/invalid parsed version count must fail closed. The existing
+      `test_a_nightly_loop_on_a_floating_image_is_named` covers this case;
+      no new dependencies, network calls, branch-rule changes or test-count
+      claims. Verify the exact final SHA through real Ubuntu/Windows CI
+      and backup jobs before review or merge.
+- [ ] **Rollback:** revert the two guarded validations and fixture assertions
+      if a supported workflow is incorrectly rejected; never weaken the
+      requirement for parseable Python versions merely to restore a green gate.
+
+**Next 1 (P0):** verify this branch's full seven-job CI and independent
+review, then repair protected-main's stale required Ubuntu contexts through
+the authorized repository settings (#107), not an administrator bypass.
+
+**Next 2 (P0/P1):** measure clean-checkout-to-first-recall elapsed time using
+synthetic notes on Windows/macOS/Linux; separate recorded data from estimates.
+
+---
+
 ## P0 — Protected-main required check drift (issue #107; auditable, admin fix pending)
 
 - [x] **S** Add a **read-only, opt-in** GitHub branch-status diagnostic to
