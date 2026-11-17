@@ -192,6 +192,12 @@ def check(root):
                 problems.append("ci.yml jobs.test has no Ubuntu runner for the Python floor")
             if not any(name.startswith("test (windows-") for name in contexts):
                 problems.append("ci.yml jobs.test has no Windows runner for the Python floor")
+            # Verify the real test matrix, not a commented-out or backup-job
+            # python-version matched by the broad workflow regex above.
+            # A healthy Python 3.9+ claim requires the unit-test job itself
+            # to install 3.9 on its declared operating systems.
+            if not any(name.endswith(", %s)" % floor) for name in contexts):
+                problems.append("ci.yml jobs.test does not install declared floor %s" % floor)
         ubuntu = ubuntu_images(ci_runs)
         floating = [image for image in ubuntu if image == UNPINNED_UBUNTU]
         if floating:
