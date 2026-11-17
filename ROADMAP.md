@@ -62,17 +62,28 @@ over something it cannot see is a silent gate, not a clean house.
       A successful full seven-job CI on the **new** SHA is required; the prior
       green SHA does not validate this follow-up. Rollback: revert only the
       dispatcher/test change if compatibility fails.
+- [ ] **Windows shell working-directory preservation, issue #46:** the launcher
+      must use a reversible directory stack while executing repo-relative
+      commands. Calling `start.bat help` from an unrelated working directory
+      via `call` must return to the original directory; success/failure and
+      all supported actions must keep their existing exit-status contract.
+      The regression uses a disposable caller folder with spaces and a
+      real Windows CMD wrapper; no user vault or configuration is accessed.
+      `pushd` failures must exit 2 before running Python. Verify on real
+      Windows CI before claiming this works; rollback by reverting this
+      small caller-cwd patch if shell compatibility regresses.
+
 - [ ] Keep issue #46 open for the **remaining** historical references; do
       not claim a repository-wide migration without a full Markdown inventory.
       Rollback: revert this bounded launcher/docs/test patch if any supported
       interpreter or CI gate regresses.
 
-**Next 1:** verify the four new dispatcher scenarios and all seven CI jobs on
-PR #135's current head, then request an independent review; preserve the
-protected-main required-check blocker #107 and do not bypass it.
-**Next 2:** inventory remaining actionable `py -3.10` references (excluding
-historical evidence), then measure a repeatable clean-clone first recall on
-Windows/macOS/Linux, recording unknowns where testing is unavailable.
+**Next 1 (P0):** verify the new caller-working-directory regression and all
+seven CI jobs on the exact new PR #135 head; keep Draft until complete, and
+preserve the protected-main required-check blocker #107 without bypass.
+**Next 2 (P0/P1):** inventory remaining actionable `py -3.10` references
+(excluding historical evidence), then measure clean-clone first recall on
+Windows/macOS/Linux, recording unmeasured figures as unknown.
 
 ---
 
