@@ -27,6 +27,38 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Refuse a commented-out nightly Python pin (#107; PR #112, 2026-11-17)
+
+- [x] **Reproduction:** `.github/workflows/loop.yml` with only
+  `# python-version: "3.12"` under `setup-python` was misread as a valid
+  interpreter pin by `workflow_matrix()`, so the local CI-floor gate could
+  give a false green. An isolated run of the prior extraction regex returned
+  `["3.12"]` for this disabled setting.
+- [x] **Test first:** extend the existing nightly-loop regression in
+  `tests/test_phase37_ci_python_floor.py` with the commented-only fixture;
+  assert the extracted versions are empty and `check()` refuses them.
+- [x] **Small stdlib fix:** ignore whole-line YAML comments when extracting
+  workflow versions and runners; no workflow, network, branch rule, user data
+  or Python support floor changes.
+- [ ] **Acceptance:** run `python -m unittest discover -s tests -p 'test_phase37_ci_python_floor.py' -v`,
+  `python scripts/ci_floor.py`, full health/unit suite, and verify all **seven**
+  Ubuntu/Windows + backup/restore CI jobs on the final SHA. Focused isolated
+  parser assertions are not equivalent to full-repo tests.
+- [ ] **Merge gate:** protected `main` still references old Ubuntu status
+  names (#107); do not merge or mark Released until an authorized fix and
+  independent review.
+- **Rollback:** revert this test/parser pair if an active supported YAML
+  workflow is wrongly rejected; retain the fail-closed requirement.
+
+**Next 1 (P0):** inspect the exact final-head CI run, investigate any failed
+Windows/Linux matrix job, and complete review without bypassing protection.
+
+**Next 2 (P0/P1):** repair protected-main required check names through authorized
+administration and obtain reproducible clean-checkout first-recall measurements
+on Windows, macOS and Linux; unknown until actually measured.
+
+---
+
 ## P0 — Prove the tested interpreter floor, not commented workflow text (#107; PR #112)
 
 - [x] **S · test-first:** an obsolete `# python-version: ["3.9", "3.12"]`
