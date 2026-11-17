@@ -63,6 +63,11 @@ def workflow_matrix(root, name):
     if not path.is_file():
         return None, None
     text = path.read_text(encoding="utf-8")
+    # Regex extraction must not treat disabled YAML lines as active workflow
+    # configuration. In particular, a commented-out setup-python version
+    # cannot prove the nightly interpreter floor.
+    text = "\n".join(line for line in text.splitlines()
+                     if not line.lstrip().startswith("#"))
     versions = []
     inline = re.search(r'python-version:\s*\[([^\]]*)\]', text)
     if inline:
