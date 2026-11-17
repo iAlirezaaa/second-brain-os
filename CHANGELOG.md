@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #46; Windows launcher exit status; CI verification pending)
+- `start.bat check` and `start.bat test` now capture Python's return code
+  before printing diagnostics, and return it through `endlocal & exit /b`.
+  Previously these launch paths could hide a failing doctor/test command
+  behind a successful batch exit. The existing onboarding unittest performs
+  a real Windows `cmd.exe` invocation from a disposable path with spaces,
+  using synthetic scripts exiting with 0 and 7; non-Windows platforms retain
+  source-level checks. No private files, user settings or dependencies touched.
+  `build`, `all`, `index` and `wiki` exit-code handling remains out of scope.
+
 ### Fixed (issue #46; portable launcher follow-up; CI pending)
 - The legacy Windows `start.bat` launcher no longer requires Python 3.10
   specifically: it uses the documented Python 3.9+ `python` on PATH.
