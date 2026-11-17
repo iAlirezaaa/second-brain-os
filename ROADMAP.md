@@ -27,6 +27,40 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Prove the tested interpreter floor, not commented workflow text (#107; PR #112)
+
+- [x] **S · test-first:** an obsolete `# python-version: ["3.9", "3.12"]`
+  comment in `ci.yml` must not make the floor gate pass when the real
+  `jobs.test` matrix runs only Python 3.11 and 3.12. The broad legacy
+  `workflow_matrix()` regex reads the comment first; the emitted test
+  contexts from `expected_required_test_contexts()` expose the actual
+  versions. Regression added within the existing
+  `test_a_floor_ci_never_installs_is_named` method (no new collected test).
+- [x] **S · implementation:** require the actual `jobs.test` contexts to
+  include `test (OS, 3.9)`. This does not depend on a backup job,
+  commenter text or remote GitHub settings; no packages or I/O added.
+  A mismatched matrix now returns a named nonzero `INVALID` result.
+- [ ] **Acceptance:** `python -m unittest tests.test_phase37_ci_python_floor`
+  and `python scripts/ci_floor.py` pass on a real checkout; GitHub
+  Actions must complete Ubuntu/Windows 3.9/3.12 plus three backup jobs
+  on the **final** head SHA. An isolated predicate repro is not a full
+  repository test. Do not mark Verified or merge until final CI succeeds.
+- [ ] **Still blocked:** protected `main` uses obsolete Ubuntu status
+  names; only an authorized administrator may repair #107 without
+  weakening other protections.
+- **Rollback:** revert this bounded test and gate addition if it rejects
+  a genuinely supported `jobs.test` matrix; preserve protections and
+  do not hide false-green versions by changing Python's declared floor.
+
+**Next 1 (P0):** verify all seven GitHub Actions jobs on this PR's final
+SHA, then request independent review before any merge.
+
+**Next 2 (P0/P1):** repair required-check drift through authorized
+settings and collect real clean-clone first-recall elapsed times with
+synthetic fixtures on Windows/macOS/Linux; unknown until measured.
+
+---
+
 ## P0 — Fail-closed Python-version audit for CI and nightly loop (#107; PR #112, CI pending)
 
 - [ ] **S** A malformed `jobs.test` Python version such as `banana` must
