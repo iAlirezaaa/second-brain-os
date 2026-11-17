@@ -27,6 +27,30 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Portable Windows launcher and bilingual reference commands (issue #46; CI pending)
+
+- [ ] **S** `start.bat` must invoke the supported `python` on PATH, not
+      `py -3.10`, which fails on supported Windows installations without 3.10.
+      `00_START_HERE/GUIDE_FA_EN.md` (English/Persian),
+      `00_START_HERE/PLAN_FA.md`, and `00_START_HERE/DESIGN_v3.md`
+      must agree on Python 3.9+ and explain that console encoding is separate.
+- [ ] Extend the existing `tests/test_portable_python_entrypoints.py`
+      regression to inspect the launcher and all three docs without adding a
+      new counted test; confirm runnable entrypoints on Windows 3.9/3.12 and
+      Ubuntu 3.9/3.12 through the actual seven-job CI matrix. No auto-edit
+      of interpreters, settings, user data or mainline architecture.
+- [ ] Keep issue #46 open for the **remaining** historical references; do
+      not claim a repository-wide migration without a full Markdown inventory.
+      Rollback: revert this bounded launcher/docs/test patch if any supported
+      interpreter or CI gate regresses.
+
+**Next 1:** finish the historical `py -3.10` inventory, separate historical
+quotes from actionable commands, and only then close #46.
+**Next 2:** add an isolated Windows invocation smoke for `start.bat check`
+and check its exit-code propagation on failure before changing launcher flow.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
