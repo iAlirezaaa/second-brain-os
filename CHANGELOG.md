@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; disabled nightly Python pin, PR #112)
+- The stdlib CI-floor workflow reader no longer counts wholly commented-out
+  `python-version` configuration as an active interpreter guarantee. A nightly
+  `setup-python` step with only `# python-version: "3.12"` previously
+  looked like it pinned 3.12 and could pass the local gate; it now reports
+  missing parseable loop interpreter configuration. An existing unittest covers
+  the failure with a disposable YAML fixture. Isolated parser checks passed;
+  full latest-head CI and protected-main review are required before release.
+  Revert the bounded parser/test changes if they reject legitimate active
+  workflow configuration; do not relax the Python floor or branch protection.
+
 ### Fixed (issue #107; commented-out Python floor false-green, PR #112)
 - The CI-floor audit now checks that the **actual** `jobs.test` matrix
   installs the declared Python 3.9 floor. Previously a commented-out
