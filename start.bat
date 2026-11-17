@@ -8,13 +8,26 @@ rem Preserve child status before printing diagnostics.
 set "sbo_exit=0"
 cd /d "%~dp0"
 
-if "%1"=="" goto menu
-goto %1
+rem Dispatch only supported actions; do not jump to arbitrary batch labels.
+if "%~1"=="" goto menu
+if /i "%~1"=="help" goto menu
+if /i "%~1"=="--help" goto menu
+if /i "%~1"=="check" goto check
+if /i "%~1"=="index" goto index
+if /i "%~1"=="build" goto build
+if /i "%~1"=="wiki" goto wiki
+if /i "%~1"=="test" goto test
+if /i "%~1"=="all" goto all
+echo Unknown launcher action. Run start.bat to list supported commands.
+set "sbo_exit=2"
+goto end
 
 :menu
 echo HADES OS v3
 echo   check  - structure + registry verification (doctor)
 echo   build  - index, wiki site
+echo   index  - rebuild the local index
+echo   wiki   - serve the local wiki
 echo   test   - the gate test battery (scratch vaults only, never this vault)
 echo   all    - check + build
 echo.
