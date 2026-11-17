@@ -157,6 +157,11 @@ class TestRefusals(unittest.TestCase):
             problems, _ = ci_floor.check(fixture(tmp, ci=ci))
             self.assertIn("the floor is 3.9 but the ci matrix installs 3.11, 3.12",
                           "\n".join(problems))
+            # Malformed version must be a named refusal, not a TypeError.
+            bad_ci = CI_GOOD.replace('["3.9", "3.12"]', '["banana", "3.12"]')
+            bad_problems, _ = ci_floor.check(fixture(tmp, ci=bad_ci))
+            self.assertIn("ci.yml declares invalid python-version 'banana'",
+                          "\n".join(bad_problems))
 
     def test_a_job_below_the_floor_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -177,6 +182,13 @@ class TestRefusals(unittest.TestCase):
             problems, _ = ci_floor.check(fixture(tmp, loop=LOOP_GOOD.replace("ubuntu-24.04",
                                                                              "ubuntu-latest")))
             self.assertIn("nightly loop", "\n".join(problems))
+            # An invalid scalar used to disappear from regex extraction:
+            # the nightly gate incorrectly called the fixture green.
+            bad_loop = LOOP_GOOD.replace('python-version: "3.12"',
+                                         'python-version: "banana"')
+            bad_problems, _ = ci_floor.check(fixture(tmp, loop=bad_loop))
+            self.assertIn("loop.yml cannot prove a Python version",
+                          "\n".join(bad_problems))
 
     def test_a_missing_loop_workflow_is_a_problem_not_a_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
