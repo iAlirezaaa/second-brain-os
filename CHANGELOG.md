@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; commented-out Python floor false-green, PR #112)
+- The CI-floor audit now checks that the **actual** `jobs.test` matrix
+  installs the declared Python 3.9 floor. Previously a commented-out
+  `python-version: ["3.9", "3.12"]` line could fool the broad workflow
+  version scan even if all real test jobs installed only 3.11/3.12.
+  A test-first regression in the existing CI-floor test detects the
+  false-green result. This is an offline validator-only change, with no
+  dependency, workflow edit, branch-protection change or user-data write.
+  Final-head CI and independent review are still required. Rollback:
+  revert the two code/test commits if the real supported matrix is
+  rejected; do not conceal a failed floor by weakening requirements.
+
+
 ### Fixed (issue #107; malformed CI Python-version guard, PR #112 in review)
 - A malformed `ci.yml` Python version no longer raises a `TypeError` inside
   `scripts/ci_floor.py` during a version comparison; the gate now reports
