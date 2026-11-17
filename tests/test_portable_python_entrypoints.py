@@ -41,6 +41,8 @@ class PortablePythonEntrypoints(unittest.TestCase):
         launcher = (ROOT / "start.bat").read_text(encoding="ascii")
         self.assertIn("python 15_SYSTEM\\scripts\\hades.py doctor", launcher)
         self.assertIn("python 15_SYSTEM\\scripts\\test_hades.py", launcher)
+        self.assertIn('pushd "%~dp0"', launcher)
+        self.assertIn("popd", launcher)
         if sys.platform == "win32":
             self._assert_windows_launcher_exit_codes()
 
@@ -147,6 +149,27 @@ class PortablePythonEntrypoints(unittest.TestCase):
                     self.assertEqual("run: start.bat check" in result.stdout, expect_menu)
                     if args == ("unknown-action",):
                         self.assertIn("Unknown launcher action", result.stdout)
+
+            # Calling the launcher from another working directory must not
+            # silently relocate an interactive user's shell session.
+            caller = fixture / "caller cwd"
+            caller.mkdir()
+            wrapper = caller / "verify_cwd.bat"
+            wrapper.write_text(
+                '@echo off\\n'
+                'call "%~dp0..\\\\start.bat" help\\n'
+                'if errorlevel 1 exit /b %errorlevel%\\n'
+                'echo RETURNED_CWD=%CD%\\n',
+                encoding="ascii",
+            )
+            result = subprocess.run(
+                ["cmd.exe", "/d", "/c", str(wrapper)],
+                cwd=str(caller), capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            lines = [line for line in result.stdout.splitlines() if line.startswith("RETURNED_CWD=")]
+            self.assertEqual(len(lines), 1, result.stdout + result.stderr)
+            self.assertEqual(Path(lines[0].split("=", 1)[1]).resolve(), caller.resolve())
 
     def test_every_agent_host_projection_is_fresh_and_portable(self):
         """Host files are rendered, not independently edited into another law."""
