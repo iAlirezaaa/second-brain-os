@@ -41,6 +41,41 @@ class PortablePythonEntrypoints(unittest.TestCase):
         launcher = (ROOT / "start.bat").read_text(encoding="ascii")
         self.assertIn("python 15_SYSTEM\\scripts\\hades.py doctor", launcher)
         self.assertIn("python 15_SYSTEM\\scripts\\test_hades.py", launcher)
+        if sys.platform == "win32":
+            self._assert_windows_launcher_exit_codes()
+
+    def _assert_windows_launcher_exit_codes(self):
+        """Invoke the actual batch file against disposable Python scripts on Windows.
+
+        The launcher is copied into a path containing spaces to exercise quoting;
+        the real repository and user data are never opened by the synthetic scripts.
+        No Python 3.10 or network access is required.
+        """
+        import subprocess
+        import tempfile
+
+        with tempfile.TemporaryDirectory(prefix="second brain launcher ") as directory:
+            fixture = Path(directory)
+            (fixture / "start.bat").write_bytes((ROOT / "start.bat").read_bytes())
+            scripts = fixture / "15_SYSTEM" / "scripts"
+            scripts.mkdir(parents=True)
+            for action, target in (("check", "hades.py"), ("test", "test_hades.py")):
+                script = scripts / target
+                for expected in (0, 7):
+                    script.write_text(
+                        "import sys\\nprint('SYNTHETIC_LAUNCHER')\\nsys.exit(%d)\\n" % expected,
+                        encoding="ascii",
+                    )
+                    result = subprocess.run(
+                        ["cmd.exe", "/d", "/c", str(fixture / "start.bat"), action],
+                        cwd=str(fixture),
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
+                    )
+                    with self.subTest(action=action, expected=expected):
+                        self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                        self.assertIn("SYNTHETIC_LAUNCHER", result.stdout)
 
     def test_every_agent_host_projection_is_fresh_and_portable(self):
         """Host files are rendered, not independently edited into another law."""
