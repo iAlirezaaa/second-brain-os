@@ -175,7 +175,10 @@ def check(root):
             problems.append("the floor is %s but the ci matrix installs %s"
                             % (floor, ", ".join(sorted(ci_versions))))
         for version in ci_versions:
-            if parse_version(version) < parse_version(floor):
+            parsed = parse_version(version)
+            if parsed is None:
+                problems.append("ci.yml declares invalid python-version %r" % version)
+            elif parsed < parse_version(floor):
                 problems.append("ci.yml installs %s, below the declared floor %s" % (version, floor))
         # Only jobs.test proves the advertised cross-platform Python floor.
         # A backup job running on Ubuntu is not a substitute for Linux unit tests;
@@ -203,8 +206,15 @@ def check(root):
     if loop_versions is None:
         problems.append(".github/workflows/loop.yml is missing — the nightly loop has no door")
     else:
+        # A missing/unparseable scalar was previously invisible to the regex
+        # and made an unverified nightly interpreter look like a green gate.
+        if not loop_versions:
+            problems.append("loop.yml cannot prove a Python version (none parsed)")
         for version in loop_versions:
-            if parse_version(version) < parse_version(floor):
+            parsed = parse_version(version)
+            if parsed is None:
+                problems.append("loop.yml declares invalid python-version %r" % version)
+            elif parsed < parse_version(floor):
                 problems.append("loop.yml runs %s, below the declared floor %s" % (version, floor))
         if UNPINNED_UBUNTU in ubuntu_images(loop_runs):
             problems.append("loop.yml rides the floating `%s` image — the nightly loop is the one "
