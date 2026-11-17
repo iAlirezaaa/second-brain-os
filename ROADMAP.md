@@ -53,17 +53,26 @@ over something it cannot see is a silent gate, not a clean house.
       executes 11 synthetic scenarios with exit codes 0/7 and verifies exact
       command order, without modifying a real vault. Re-check the full seven-job
       CI matrix on the new head SHA before review.
+- [ ] **Windows CLI dispatch safety, issue #46:** the launcher must only
+      dispatch the documented actions. Empty input and `help`/`--help` show
+      the menu and succeed; unsupported actions refuse with exit code 2 and
+      execute no doctor, index, wiki or test command. Avoid unchecked
+      `goto %1` to a user-supplied batch label. Four additional cases live in
+      the existing Windows CMD regression on a disposable space-bearing path.
+      A successful full seven-job CI on the **new** SHA is required; the prior
+      green SHA does not validate this follow-up. Rollback: revert only the
+      dispatcher/test change if compatibility fails.
 - [ ] Keep issue #46 open for the **remaining** historical references; do
       not claim a repository-wide migration without a full Markdown inventory.
       Rollback: revert this bounded launcher/docs/test patch if any supported
       interpreter or CI gate regresses.
 
-**Next 1:** verify all seven CI jobs and the real Windows CMD fail-fast
-smoke on PR #135's latest head SHA; keep Draft for failed/unknown checks and
-respect the required-check blocker #107.
-**Next 2:** inventory remaining executable `py -3.10` references (excluding
-historical evidence), then build a measured clean-clone Windows first-recall
-walkthrough with repeatable timing and documented limitations.
+**Next 1:** verify the four new dispatcher scenarios and all seven CI jobs on
+PR #135's current head, then request an independent review; preserve the
+protected-main required-check blocker #107 and do not bypass it.
+**Next 2:** inventory remaining actionable `py -3.10` references (excluding
+historical evidence), then measure a repeatable clean-clone first recall on
+Windows/macOS/Linux, recording unknowns where testing is unavailable.
 
 ---
 
