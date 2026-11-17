@@ -63,7 +63,7 @@ class PortablePythonEntrypoints(unittest.TestCase):
                 script = scripts / target
                 for expected in (0, 7):
                     script.write_text(
-                        "import sys\\nprint('SYNTHETIC_LAUNCHER')\\nsys.exit(%d)\\n" % expected,
+                        "import sys\nprint('SYNTHETIC_LAUNCHER')\nsys.exit(%d)\n" % expected,
                         encoding="ascii",
                     )
                     result = subprocess.run(
