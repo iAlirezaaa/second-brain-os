@@ -39,15 +39,22 @@ over something it cannot see is a silent gate, not a clean house.
       new counted test; confirm runnable entrypoints on Windows 3.9/3.12 and
       Ubuntu 3.9/3.12 through the actual seven-job CI matrix. No auto-edit
       of interpreters, settings, user data or mainline architecture.
+- [ ] **Windows executable smoke, issue #46:** run the actual `start.bat`
+      `check` and `test` actions inside a disposable path containing spaces,
+      with synthetic scripts returning both 0 and 7. Both codes must propagate
+      to the caller on Windows Python 3.9/3.12; no real vault operations or
+      user data. Prior launcher discarded error status after `endlocal`.
+      The existing test count remains unchanged; local Linux cannot execute
+      CMD, so verify on the real Windows CI jobs before approving.
 - [ ] Keep issue #46 open for the **remaining** historical references; do
       not claim a repository-wide migration without a full Markdown inventory.
       Rollback: revert this bounded launcher/docs/test patch if any supported
       interpreter or CI gate regresses.
 
-**Next 1:** finish the historical `py -3.10` inventory, separate historical
-quotes from actionable commands, and only then close #46.
-**Next 2:** add an isolated Windows invocation smoke for `start.bat check`
-and check its exit-code propagation on failure before changing launcher flow.
+**Next 1:** verify all seven CI jobs on the new head SHA and retain PR #135
+in draft on any failed/unknown Windows smoke, without bypassing #107.
+**Next 2:** inventory remaining executable `py -3.10` references and
+separately test fail-fast/exit statuses for `start.bat all/build/index/wiki`.
 
 ---
 
