@@ -199,6 +199,15 @@ class TestRefusals(unittest.TestCase):
             bad_problems, _ = ci_floor.check(fixture(tmp, loop=bad_loop))
             self.assertIn("loop.yml cannot prove a Python version",
                           "\n".join(bad_problems))
+            # An entirely commented-out setup-python version is not a real
+            # nightly interpreter pin. A broad regex used to count it as green.
+            commented_loop = LOOP_GOOD.replace('python-version: "3.12"',
+                                               '# python-version: "3.12"')
+            root = fixture(tmp, loop=commented_loop)
+            self.assertEqual(ci_floor.workflow_matrix(root, "loop.yml")[0], [])
+            commented_problems, _ = ci_floor.check(root)
+            self.assertIn("loop.yml cannot prove a Python version",
+                          "\n".join(commented_problems))
 
     def test_a_missing_loop_workflow_is_a_problem_not_a_pass(self):
         with tempfile.TemporaryDirectory() as tmp:
