@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; malformed CI Python-version guard, PR #112 in review)
+- A malformed `ci.yml` Python version no longer raises a `TypeError` inside
+  `scripts/ci_floor.py` during a version comparison; the gate now reports
+  the invalid value by name. A nightly `loop.yml` with an unparseable scalar
+  `python-version` also no longer passes via an empty extracted list.
+  Two test-first assertions were added to existing unittest cases, retaining
+  the collected test count. This improves diagnostic integrity only: no
+  workflow, actual protected-branch setting, package, service, persistence
+  or runtime permission is changed. Final-head CI and independent review
+  are required before merge. Rollback: revert the bounded parser guards
+  and their assertions if a supported version syntax is wrongly refused.
+
 ### Fixed (issue #107; test-matrix coverage, pending CI)
 - `scripts/ci_floor.py` now refuses an absent Ubuntu or Windows
   **unit-test** matrix even when a backup job uses that operating system.
