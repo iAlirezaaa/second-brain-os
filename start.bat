@@ -4,6 +4,8 @@ rem A Persian string in a .bat file depends on the console codepage and breaks
 rem silently on cp1252; every human-readable string lives in the UTF-8 docs instead.
 rem Use Python 3.9+ on PATH; avoid hard-coded minor releases.
 setlocal
+rem Preserve child status before printing diagnostics.
+set "sbo_exit=0"
 cd /d "%~dp0"
 
 if "%1"=="" goto menu
@@ -21,7 +23,11 @@ goto end
 
 :check
 python 15_SYSTEM\scripts\hades.py doctor
-if errorlevel 1 echo. & echo DOCTOR REPORTED ERRORS - read the lines above
+set "sbo_exit=%errorlevel%"
+if not "%sbo_exit%"=="0" (
+    echo.
+    echo DOCTOR REPORTED ERRORS - read the lines above
+)
 goto end
 
 :index
@@ -39,6 +45,7 @@ goto end
 
 :test
 python 15_SYSTEM\scripts\test_hades.py
+set "sbo_exit=%errorlevel%"
 goto end
 
 :all
@@ -48,4 +55,4 @@ python 15_SYSTEM\scripts\wiki.py build
 goto end
 
 :end
-endlocal
+endlocal & exit /b %sbo_exit%
