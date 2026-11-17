@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #46; Windows caller working directory; review pending)
+- `start.bat` now uses `pushd`/`popd` so `call start.bat help` and other
+  launcher actions do not silently leave a user's interactive CMD session
+  in the checkout directory. A failed directory switch exits 2 before Python
+  runs. An existing Windows CMD regression uses a disposable caller directory
+  with spaces and checks the returned directory; source-level assertions
+  also guard the stack operations. This is not yet verified by new-head CI.
+  No private data, dependency, network endpoint or host configuration changed.
+  Rollback: revert the caller-cwd test and batch-directory changes if CI
+  detects incompatibility; keep the earlier dispatcher and exit-code fixes.
+
 ### Fixed (issue #46; Windows launcher command dispatch; new CI pending)
 - `start.bat` no longer routes arbitrary input through `goto %1`. Only the
   documented commands are dispatched, `help` and `--help` display the menu,
