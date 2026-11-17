@@ -32,15 +32,20 @@ goto end
 
 :index
 python 15_SYSTEM\scripts\hades.py index
+set "sbo_exit=%errorlevel%"
 goto end
 
 :build
 python 15_SYSTEM\scripts\hades.py index
+set "sbo_exit=%errorlevel%"
+if not "%sbo_exit%"=="0" goto end
 python 15_SYSTEM\scripts\wiki.py build
+set "sbo_exit=%errorlevel%"
 goto end
 
 :wiki
 python 15_SYSTEM\scripts\wiki.py serve
+set "sbo_exit=%errorlevel%"
 goto end
 
 :test
@@ -50,8 +55,13 @@ goto end
 
 :all
 python 15_SYSTEM\scripts\hades.py doctor
+set "sbo_exit=%errorlevel%"
+if not "%sbo_exit%"=="0" goto end
 python 15_SYSTEM\scripts\hades.py index
+set "sbo_exit=%errorlevel%"
+if not "%sbo_exit%"=="0" goto end
 python 15_SYSTEM\scripts\wiki.py build
+set "sbo_exit=%errorlevel%"
 goto end
 
 :end
