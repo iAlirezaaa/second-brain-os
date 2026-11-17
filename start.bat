@@ -6,7 +6,12 @@ rem Use Python 3.9+ on PATH; avoid hard-coded minor releases.
 setlocal
 rem Preserve child status before printing diagnostics.
 set "sbo_exit=0"
-cd /d "%~dp0"
+rem Keep all relative script paths anchored to this launcher, then restore the caller.
+pushd "%~dp0"
+if errorlevel 1 (
+    echo Cannot enter the launcher directory.
+    endlocal & exit /b 2
+)
 
 rem Dispatch only supported actions; do not jump to arbitrary batch labels.
 if "%~1"=="" goto menu
@@ -78,4 +83,5 @@ set "sbo_exit=%errorlevel%"
 goto end
 
 :end
+popd
 endlocal & exit /b %sbo_exit%
