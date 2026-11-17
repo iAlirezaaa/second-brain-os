@@ -243,16 +243,16 @@ PRJ-7C1A9E20
 
 ## ۸) دستورها، دسته‌بندی‌شده
 
-همه از ریشه‌ی والت و با `py -3.10` اجرا می‌شوند. دلیلش: `python` پیش‌فرض این ماشین ۳.۹ است و روی کنسول cp1252 ویندوز، فارسی را می‌شکند.
+دستورها را از ریشهٔ مخزن با `python` (پایتون ۳.۹ یا جدیدتر روی PATH) اجرا کنید؛ پیش از شروع `python --version` را بررسی کنید. اگر ترمینال ویندوز متن فارسی را درست نشان نمی‌دهد، از ترمینال UTF-8 استفاده کنید. شمارهٔ نسخهٔ پایتون به‌تنهایی کدپیج کنسول را اصلاح نمی‌کند.
 
 **بررسی سلامتی**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py doctor
-py -3.10 15_SYSTEM\scripts\hades.py doctor --json
-py -3.10 15_SYSTEM\scripts\hades.py status
-py -3.10 15_SYSTEM\scripts\hades.py index
-py -3.10 15_SYSTEM\scripts\hades.py qc
+python 15_SYSTEM\scripts\hades.py doctor
+python 15_SYSTEM\scripts\hades.py doctor --json
+python 15_SYSTEM\scripts\hades.py status
+python 15_SYSTEM\scripts\hades.py index
+python 15_SYSTEM\scripts\hades.py qc
 ```
 
 `doctor` ناحیه‌ها، مانیفست‌ها، شناسه‌ها، رابطه‌ها، `.gitignore`، رازها، UTF-8، مخزن تودرتو، رکورد قاچاقی داخل `12_RUNTIME` و بهداشت فارسی را می‌خواند. `index` فایل `15_SYSTEM/generated/catalog.json` را از اسکن زنده می‌سازد.
@@ -260,14 +260,14 @@ py -3.10 15_SYSTEM\scripts\hades.py qc
 **ساخت: اول پلان، بعد تأیید**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py plan --kind project --name "پروژه انیمیشن" --description "هدف" --type animation
-py -3.10 15_SYSTEM\scripts\hades.py apply --plan PLAN-XXXXXXXXXXXX --approve
+python 15_SYSTEM\scripts\hades.py plan --kind project --name "پروژه انیمیشن" --description "هدف" --type animation
+python 15_SYSTEM\scripts\hades.py apply --plan PLAN-XXXXXXXXXXXX --approve
 ```
 
 `plan` فقط می‌نویسد چه می‌خواهد بسازد و در `15_SYSTEM/generated/plans/` ذخیره می‌کند. `apply --approve` می‌سازد و **قبل از هر چاپ** مهر `applied` را روی پلان می‌زند؛ اگر چاپ بشکند، رکورد یتیم نمی‌ماند. پلان مصرف‌شده دوباره اجرا نمی‌شود.
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py new --kind organization --name "Example Provider" --url "https://example.com" --approve
+python 15_SYSTEM\scripts\hades.py new --kind organization --name "Example Provider" --url "https://example.com" --approve
 ```
 
 `new` همان plan و apply در یک قدم است و بدون `--approve` رد می‌شود. فیلدهای اختیاری بسته به نوع: `--status`، `--classification`، `--tags`، `--container`، `--parent`، `--depends-on`، `--variant-of`، `--type`، `--url`، `--category`، `--org`، `--model`، `--version`، `--engine`، `--path`، `--project`، `--produced-by`، `--platform`، `--channel`، `--capabilities`، `--agent`، `--transport`، `--endpoint`، `--event`، `--action`، `--invocation`، `--schedule`، `--mode`، `--runtime`، `--isolation`، `--experiment`، `--metric`، `--template-kind`، `--name-slug`.
@@ -275,11 +275,11 @@ py -3.10 15_SYSTEM\scripts\hades.py new --kind organization --name "Example Prov
 **دیدن و پیدا کردن**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py list --kind skill
-py -3.10 15_SYSTEM\scripts\hades.py list --zone 03_PROJECTS
-py -3.10 15_SYSTEM\scripts\hades.py show --id SKL-XXXXXXXX
-py -3.10 15_SYSTEM\scripts\hades.py search --query "انیمیشن" --limit 20
-py -3.10 15_SYSTEM\scripts\hades.py graph
+python 15_SYSTEM\scripts\hades.py list --kind skill
+python 15_SYSTEM\scripts\hades.py list --zone 03_PROJECTS
+python 15_SYSTEM\scripts\hades.py show --id SKL-XXXXXXXX
+python 15_SYSTEM\scripts\hades.py search --query "انیمیشن" --limit 20
+python 15_SYSTEM\scripts\hades.py graph
 ```
 
 `search` همه‌ی کلمات کوئری را با هم می‌خواهد و ناحیه‌های ممنوع را نمی‌خواند. `--machine` این فهرست ممنوع را خاموش می‌کند (پس ۰۹ و ۱۲ و ۱۳ و ۱۴ را هم می‌بیند)؛ آگاهانه استفاده کن. `graph` گراف `mermaid` را در `15_SYSTEM/generated/graph.mmd` می‌نویسد.
@@ -287,8 +287,8 @@ py -3.10 15_SYSTEM\scripts\hades.py graph
 **بسته‌ی context برای ایجنت**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py context --project PRJ-XXXXXXXX
-py -3.10 15_SYSTEM\scripts\hades.py context --project PRJ-XXXXXXXX --max-chars 6000
+python 15_SYSTEM\scripts\hades.py context --project PRJ-XXXXXXXX
+python 15_SYSTEM\scripts\hades.py context --project PRJ-XXXXXXXX --max-chars 6000
 ```
 
 مانیفست پروژه، فایل‌های همان پوشه و رکوردهای وصل‌شده را تا سقف کاراکتر (پیش‌فرض از config: `12000`) جمع می‌کند و در `15_SYSTEM/generated/context/` می‌نویسد. ناحیه‌های ممنوع با برچسب `DENIED` رد می‌شوند، نه ساکت.
@@ -296,7 +296,7 @@ py -3.10 15_SYSTEM\scripts\hades.py context --project PRJ-XXXXXXXX --max-chars 6
 **وصل کردن**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py link --id PRJ-XXXXXXXX --rel depends_on --to MOD-XXXXXXXX
+python 15_SYSTEM\scripts\hades.py link --id PRJ-XXXXXXXX --rel depends_on --to MOD-XXXXXXXX
 ```
 
 اگر مقصد هنوز وجود نداشته باشد، لینک نوشته می‌شود ولی هشدار می‌دهد و `doctor` آن را «آویزان» گزارش می‌کند. نام رابطه باید در config باشد.
@@ -304,8 +304,8 @@ py -3.10 15_SYSTEM\scripts\hades.py link --id PRJ-XXXXXXXX --rel depends_on --to
 **ارتقا**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py promote --id EXP-XXXXXXXX --to candidates --approve
-py -3.10 15_SYSTEM\scripts\hades.py promote --id CAND-XXXXXXXX --to production --approve
+python 15_SYSTEM\scripts\hades.py promote --id EXP-XXXXXXXX --to candidates --approve
+python 15_SYSTEM\scripts\hades.py promote --id CAND-XXXXXXXX --to production --approve
 ```
 
 چهار شرط، هر چهارتا هم‌زمان: `evaluation.passed == true`، `safety_review.passed == true`، `human_approved == true`، و وجود واقعی هر مسیر در `evidence_paths`. اگر یکی نباشد، دستور رد می‌شود و فهرست کمبودها را چاپ می‌کند. منبع در آزمایشگاه می‌ماند؛ داده‌ی آموزشی و checkpoint کپی نمی‌شوند.
@@ -313,7 +313,7 @@ py -3.10 15_SYSTEM\scripts\hades.py promote --id CAND-XXXXXXXX --to production -
 **هارنس و آینه‌ی اسکیل**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py sync --harness HAR-XXXXXXXX
+python 15_SYSTEM\scripts\hades.py sync --harness HAR-XXXXXXXX
 ```
 
 فقط اسکیل‌های `status: approved` که شناسه‌ی هارنس در `approved_for_harness_ids` آن‌ها هست کپی می‌شوند. اسکیل‌هایی که از آینه بیرون می‌افتند پاک می‌شوند. هارنس ناشناس یا بدون `skills_dir` رد می‌شود: آداپتر تأییدنشده یک ادعاست، نه اتصال.
@@ -321,9 +321,9 @@ py -3.10 15_SYSTEM\scripts\hades.py sync --harness HAR-XXXXXXXX
 **ویکی**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\wiki.py build
-py -3.10 15_SYSTEM\scripts\wiki.py build --open
-py -3.10 15_SYSTEM\scripts\wiki.py serve --port 8765
+python 15_SYSTEM\scripts\wiki.py build
+python 15_SYSTEM\scripts\wiki.py build --open
+python 15_SYSTEM\scripts\wiki.py serve --port 8765
 ```
 
 سایت فقط از ناحیه‌های ۰۰ تا ۱۰ ساخته می‌شود. `01_INBOX`، `10_ARCHIVE` و خود `02_WIKI` به‌صورت پیش‌فرض خوانده نمی‌شوند؛ `--include` فقط ناحیه‌ی انسانی می‌پذیرد. هر پیوند داخلی که به لنگر موجود نرسد، ساخت را با خروج غیرصفر می‌ایستد. خروجی `noindex` دارد و سرور فقط روی `127.0.0.1` می‌نشیند.
@@ -331,8 +331,8 @@ py -3.10 15_SYSTEM\scripts\wiki.py serve --port 8765
 **انتشار**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\hades.py export --path 11_CONTROL\skills\SKL-XXXXXXXX-name
-py -3.10 15_SYSTEM\scripts\hades.py publish --path 11_CONTROL\skills\SKL-XXXXXXXX-name --repo OWNER/NAME --approve
+python 15_SYSTEM\scripts\hades.py export --path 11_CONTROL\skills\SKL-XXXXXXXX-name
+python 15_SYSTEM\scripts\hades.py publish --path 11_CONTROL\skills\SKL-XXXXXXXX-name --repo OWNER/NAME --approve
 ```
 
 `export` فقط ممیزی است و چیزی بیرون نمی‌نویسد: symlink، فایل باینری، فایل بزرگ‌تر از ۸ مگابایت، بیش از ۱۰۰۰ فایل و هر الگوی راز، `BLOCKED` می‌شود و یک `BLOCKED` کل انتشار را متوقف می‌کند. `publish` فقط مخزن **تازه و خصوصی** می‌سازد، مخزن موجود را رد می‌کند، و بعد از ساخت visibility را از GitHub دوباره می‌خواند تا «خصوصی» بودن ادعا نماند. هیچ‌چیز خودکار بیرون نمی‌رود.
@@ -340,8 +340,8 @@ py -3.10 15_SYSTEM\scripts\hades.py publish --path 11_CONTROL\skills\SKL-XXXXXXX
 **آزمون گیت‌ها**
 
 ```powershell
-py -3.10 15_SYSTEM\scripts\test_hades.py
-py -3.10 15_SYSTEM\scripts\test_hades.py --keep
+python 15_SYSTEM\scripts\test_hades.py
+python 15_SYSTEM\scripts\test_hades.py --keep
 ```
 
 یک والت موقت در `%TEMP%` می‌سازد، عیب عمدی می‌گذارد و بررسی می‌کند ابزار قرمز شود. روی والت اصلی چیزی نمی‌نویسد.
@@ -356,7 +356,7 @@ start.bat all
 start.bat wiki
 ```
 
-`start.bat` فقط ASCII است (کنسول ویندوز با کدپیج cp1252 متن فارسی داخل `.bat` را می‌شکند) و خودش `py -3.10` را صدا می‌زند.
+`start.bat` فقط ASCII است و پایتون موجود روی PATH را با دستور `python` صدا می‌زند؛ نسخهٔ فرعی مشخصی را اجبار نمی‌کند. برای نمایش فارسی در کنسول ویندوز از محیط UTF-8 استفاده کنید.
 
 **کدهای خروج**
 
@@ -642,7 +642,7 @@ Every other value must be a complete, existing ID. A malformed target is more da
 
 ## 8. Commands
 
-Run everything from the vault root with `py -3.10`. On this machine plain `python` is 3.9 with a cp1252 console and breaks Persian output.
+Run commands from the repository root with Python 3.9+ available as `python` (`python --version` verifies the selected interpreter). Use a UTF-8 terminal if the Windows console cannot display Persian; no Python minor version fixes the console codepage by itself.
 
 Health: `hades.py doctor` (add `--json` for machines), `status`, `index`, `qc`.
 

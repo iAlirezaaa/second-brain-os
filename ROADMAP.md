@@ -27,6 +27,66 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Portable Windows launcher and bilingual reference commands (issue #46; CI pending)
+
+- [ ] **S** `start.bat` must invoke the supported `python` on PATH, not
+      `py -3.10`, which fails on supported Windows installations without 3.10.
+      `00_START_HERE/GUIDE_FA_EN.md` (English/Persian),
+      `00_START_HERE/PLAN_FA.md`, and `00_START_HERE/DESIGN_v3.md`
+      must agree on Python 3.9+ and explain that console encoding is separate.
+- [ ] Extend the existing `tests/test_portable_python_entrypoints.py`
+      regression to inspect the launcher and all three docs without adding a
+      new counted test; confirm runnable entrypoints on Windows 3.9/3.12 and
+      Ubuntu 3.9/3.12 through the actual seven-job CI matrix. No auto-edit
+      of interpreters, settings, user data or mainline architecture.
+- [ ] **Windows executable smoke, issue #46:** run the actual `start.bat`
+      `check` and `test` actions inside a disposable path containing spaces,
+      with synthetic scripts returning both 0 and 7. Both codes must propagate
+      to the caller on Windows Python 3.9/3.12; no real vault operations or
+      user data. Prior launcher discarded error status after `endlocal`.
+      The existing test count remains unchanged; local Linux cannot execute
+      CMD, so verify on the real Windows CI jobs before approving.
+- [ ] **Windows fail-fast follow-up, same issue #46:** `start.bat index`
+      and `wiki` must return their child Python exit status; `build` and
+      `all` must stop immediately when a prerequisite doctor/index step
+      fails, or propagate the final wiki-build status. The Windows regression
+      executes 11 synthetic scenarios with exit codes 0/7 and verifies exact
+      command order, without modifying a real vault. Re-check the full seven-job
+      CI matrix on the new head SHA before review.
+- [ ] **Windows CLI dispatch safety, issue #46:** the launcher must only
+      dispatch the documented actions. Empty input and `help`/`--help` show
+      the menu and succeed; unsupported actions refuse with exit code 2 and
+      execute no doctor, index, wiki or test command. Avoid unchecked
+      `goto %1` to a user-supplied batch label. Four additional cases live in
+      the existing Windows CMD regression on a disposable space-bearing path.
+      A successful full seven-job CI on the **new** SHA is required; the prior
+      green SHA does not validate this follow-up. Rollback: revert only the
+      dispatcher/test change if compatibility fails.
+- [ ] **Windows shell working-directory preservation, issue #46:** the launcher
+      must use a reversible directory stack while executing repo-relative
+      commands. Calling `start.bat help` from an unrelated working directory
+      via `call` must return to the original directory; success/failure and
+      all supported actions must keep their existing exit-status contract.
+      The regression uses a disposable caller folder with spaces and a
+      real Windows CMD wrapper; no user vault or configuration is accessed.
+      `pushd` failures must exit 2 before running Python. Verify on real
+      Windows CI before claiming this works; rollback by reverting this
+      small caller-cwd patch if shell compatibility regresses.
+
+- [ ] Keep issue #46 open for the **remaining** historical references; do
+      not claim a repository-wide migration without a full Markdown inventory.
+      Rollback: revert this bounded launcher/docs/test patch if any supported
+      interpreter or CI gate regresses.
+
+**Next 1 (P0):** verify the new caller-working-directory regression and all
+seven CI jobs on the exact new PR #135 head; keep Draft until complete, and
+preserve the protected-main required-check blocker #107 without bypass.
+**Next 2 (P0/P1):** inventory remaining actionable `py -3.10` references
+(excluding historical evidence), then measure clean-clone first recall on
+Windows/macOS/Linux, recording unmeasured figures as unknown.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

@@ -6,6 +6,50 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #46; Windows caller working directory; review pending)
+- `start.bat` now uses `pushd`/`popd` so `call start.bat help` and other
+  launcher actions do not silently leave a user's interactive CMD session
+  in the checkout directory. A failed directory switch exits 2 before Python
+  runs. An existing Windows CMD regression uses a disposable caller directory
+  with spaces and checks the returned directory; source-level assertions
+  also guard the stack operations. This is not yet verified by new-head CI.
+  No private data, dependency, network endpoint or host configuration changed.
+  Rollback: revert the caller-cwd test and batch-directory changes if CI
+  detects incompatibility; keep the earlier dispatcher and exit-code fixes.
+
+### Fixed (issue #46; Windows launcher command dispatch; new CI pending)
+- `start.bat` no longer routes arbitrary input through `goto %1`. Only the
+  documented commands are dispatched, `help` and `--help` display the menu,
+  and unknown actions exit with code 2 without running any indexing or
+  generation command. The existing Windows `cmd.exe` regression now tests
+  four menu/refusal scenarios in a disposable folder; the earlier seven-job
+  green SHA does not validate this new patch. No user data, permissions,
+  third-party packages or host settings are changed.
+
+### Fixed (issue #46; Windows launcher exit status; CI verification pending)
+- `start.bat check` and `start.bat test` now capture Python's return code
+  before printing diagnostics, and return it through `endlocal & exit /b`.
+  Previously these launch paths could hide a failing doctor/test command
+  behind a successful batch exit. The existing onboarding unittest performs
+  a real Windows `cmd.exe` invocation from a disposable path with spaces,
+  using synthetic scripts exiting with 0 and 7; non-Windows platforms retain
+  source-level checks. No private files, user settings or dependencies touched.
+  A follow-up now also propagates failures from `index` and `wiki`,
+  and stops `build`/`all` at the first failing prerequisite rather than
+  incorrectly reporting success or continuing to mutate generated output.
+  The same disposable Windows CMD fixture exercises 11 success/failure
+  scenarios and verifies exact command order. This is pending CI on the
+  latest PR #135 SHA, not a claim of a green release.
+
+### Fixed (issue #46; portable launcher follow-up; CI pending)
+- The legacy Windows `start.bat` launcher no longer requires Python 3.10
+  specifically: it uses the documented Python 3.9+ `python` on PATH.
+  The bilingual comprehensive guide, planning and design references now
+  show the same portable commands, and no longer present a machine-specific
+  interpreter or console codepage as a universal fact. The existing onboarding
+  regression covers these paths. This does not claim that all historical
+  docs are migrated, or that a particular user's terminal is UTF-8.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
