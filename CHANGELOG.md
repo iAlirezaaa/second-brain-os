@@ -14,7 +14,12 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   a real Windows `cmd.exe` invocation from a disposable path with spaces,
   using synthetic scripts exiting with 0 and 7; non-Windows platforms retain
   source-level checks. No private files, user settings or dependencies touched.
-  `build`, `all`, `index` and `wiki` exit-code handling remains out of scope.
+  A follow-up now also propagates failures from `index` and `wiki`,
+  and stops `build`/`all` at the first failing prerequisite rather than
+  incorrectly reporting success or continuing to mutate generated output.
+  The same disposable Windows CMD fixture exercises 11 success/failure
+  scenarios and verifies exact command order. This is pending CI on the
+  latest PR #135 SHA, not a claim of a green release.
 
 ### Fixed (issue #46; portable launcher follow-up; CI pending)
 - The legacy Windows `start.bat` launcher no longer requires Python 3.10
