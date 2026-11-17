@@ -18,6 +18,10 @@ PUBLIC_ENTRYPOINTS = (
     "CONTRIBUTING.md",
     "skills/first-session/SKILL.md",
     "skills/self-audit/SKILL.md",
+    "00_START_HERE/GUIDE_FA_EN.md",
+    "00_START_HERE/PLAN_FA.md",
+    "00_START_HERE/DESIGN_v3.md",
+    "start.bat",
     "scripts/sync_hosts.py",
 )
 
@@ -34,6 +38,9 @@ class PortablePythonEntrypoints(unittest.TestCase):
         self.assertIn("python 15_SYSTEM", start)
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("python scripts/health.py", readme)
+        launcher = (ROOT / "start.bat").read_text(encoding="ascii")
+        self.assertIn("python 15_SYSTEM\\scripts\\hades.py doctor", launcher)
+        self.assertIn("python 15_SYSTEM\\scripts\\test_hades.py", launcher)
 
     def test_every_agent_host_projection_is_fresh_and_portable(self):
         """Host files are rendered, not independently edited into another law."""
