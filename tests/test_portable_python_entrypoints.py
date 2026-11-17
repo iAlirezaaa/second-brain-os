@@ -156,10 +156,10 @@ class PortablePythonEntrypoints(unittest.TestCase):
             caller.mkdir()
             wrapper = caller / "verify_cwd.bat"
             wrapper.write_text(
-                '@echo off\\n'
-                'call "%~dp0..\\\\start.bat" help\\n'
-                'if errorlevel 1 exit /b %errorlevel%\\n'
-                'echo RETURNED_CWD=%CD%\\n',
+                '@echo off\n'
+                'call "%~dp0..\\\\start.bat" help\n'
+                'if errorlevel 1 exit /b %errorlevel%\n'
+                'echo RETURNED_CWD=%CD%\n',
                 encoding="ascii",
             )
             result = subprocess.run(
