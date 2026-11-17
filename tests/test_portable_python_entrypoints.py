@@ -77,6 +77,54 @@ class PortablePythonEntrypoints(unittest.TestCase):
                         self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
                         self.assertIn("SYNTHETIC_LAUNCHER", result.stdout)
 
+            # All launcher subcommands must preserve failure status. In a
+            # sequence (build/all), a failed gate must prevent later steps.
+            fake_cli = (
+                "import sys\n"
+                "from pathlib import Path\n"
+                "action = sys.argv[1]\n"
+                "with Path('steps.log').open('a', encoding='ascii') as log:\n"
+                "    log.write(action + '\\n')\n"
+                "print('SYNTHETIC_LAUNCHER:' + action)\n"
+                "failure = Path('fail_action.txt').read_text(encoding='ascii').strip()\n"
+                "sys.exit(7 if failure == action else 0)\n"
+            )
+            (scripts / "hades.py").write_text(fake_cli, encoding="ascii")
+            (scripts / "wiki.py").write_text(fake_cli, encoding="ascii")
+            failure_file = fixture / "fail_action.txt"
+            log_file = fixture / "steps.log"
+            scenarios = (
+                ("index", "", ("index",), 0),
+                ("index", "index", ("index",), 7),
+                ("wiki", "", ("serve",), 0),
+                ("wiki", "serve", ("serve",), 7),
+                ("build", "", ("index", "build"), 0),
+                ("build", "index", ("index",), 7),
+                ("build", "build", ("index", "build"), 7),
+                ("all", "", ("doctor", "index", "build"), 0),
+                ("all", "doctor", ("doctor",), 7),
+                ("all", "index", ("doctor", "index"), 7),
+                ("all", "build", ("doctor", "index", "build"), 7),
+            )
+            for action, failure, expected_steps, expected_exit in scenarios:
+                failure_file.write_text(failure, encoding="ascii")
+                log_file.write_text("", encoding="ascii")
+                result = subprocess.run(
+                    ["cmd.exe", "/d", "/c", str(fixture / "start.bat"), action],
+                    cwd=str(fixture),
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                with self.subTest(action=action, failure=failure):
+                    self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
+                    self.assertEqual(
+                        tuple(log_file.read_text(encoding="ascii").splitlines()),
+                        expected_steps,
+                        "A failed preflight must stop later commands; stdout: " + result.stdout,
+                    )
+                    self.assertIn("SYNTHETIC_LAUNCHER", result.stdout)
+
     def test_every_agent_host_projection_is_fresh_and_portable(self):
         """Host files are rendered, not independently edited into another law."""
         for _key, host, rel, needs_mdc in sync_hosts.HOSTS:
