@@ -46,15 +46,24 @@ over something it cannot see is a silent gate, not a clean house.
       user data. Prior launcher discarded error status after `endlocal`.
       The existing test count remains unchanged; local Linux cannot execute
       CMD, so verify on the real Windows CI jobs before approving.
+- [ ] **Windows fail-fast follow-up, same issue #46:** `start.bat index`
+      and `wiki` must return their child Python exit status; `build` and
+      `all` must stop immediately when a prerequisite doctor/index step
+      fails, or propagate the final wiki-build status. The Windows regression
+      executes 11 synthetic scenarios with exit codes 0/7 and verifies exact
+      command order, without modifying a real vault. Re-check the full seven-job
+      CI matrix on the new head SHA before review.
 - [ ] Keep issue #46 open for the **remaining** historical references; do
       not claim a repository-wide migration without a full Markdown inventory.
       Rollback: revert this bounded launcher/docs/test patch if any supported
       interpreter or CI gate regresses.
 
-**Next 1:** verify all seven CI jobs on the new head SHA and retain PR #135
-in draft on any failed/unknown Windows smoke, without bypassing #107.
-**Next 2:** inventory remaining executable `py -3.10` references and
-separately test fail-fast/exit statuses for `start.bat all/build/index/wiki`.
+**Next 1:** verify all seven CI jobs and the real Windows CMD fail-fast
+smoke on PR #135's latest head SHA; keep Draft for failed/unknown checks and
+respect the required-check blocker #107.
+**Next 2:** inventory remaining executable `py -3.10` references (excluding
+historical evidence), then build a measured clean-clone Windows first-recall
+walkthrough with repeatable timing and documented limitations.
 
 ---
 
