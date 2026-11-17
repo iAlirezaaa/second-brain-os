@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #46; Windows launcher command dispatch; new CI pending)
+- `start.bat` no longer routes arbitrary input through `goto %1`. Only the
+  documented commands are dispatched, `help` and `--help` display the menu,
+  and unknown actions exit with code 2 without running any indexing or
+  generation command. The existing Windows `cmd.exe` regression now tests
+  four menu/refusal scenarios in a disposable folder; the earlier seven-job
+  green SHA does not validate this new patch. No user data, permissions,
+  third-party packages or host settings are changed.
+
 ### Fixed (issue #46; Windows launcher exit status; CI verification pending)
 - `start.bat check` and `start.bat test` now capture Python's return code
   before printing diagnostics, and return it through `endlocal & exit /b`.
