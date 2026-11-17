@@ -125,6 +125,29 @@ class PortablePythonEntrypoints(unittest.TestCase):
                     )
                     self.assertIn("SYNTHETIC_LAUNCHER", result.stdout)
 
+            # Dispatch is a public CLI contract: help is safe, and an unknown
+            # action must fail without invoking any doctor/index/wiki step.
+            for args, expected_exit, expect_menu in (
+                ((), 0, True),
+                (("help",), 0, True),
+                (("--help",), 0, True),
+                (("unknown-action",), 2, False),
+            ):
+                log_file.write_text("", encoding="ascii")
+                result = subprocess.run(
+                    ["cmd.exe", "/d", "/c", str(fixture / "start.bat"), *args],
+                    cwd=str(fixture),
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                with self.subTest(args=args):
+                    self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
+                    self.assertEqual(log_file.read_text(encoding="ascii"), "")
+                    self.assertEqual("run: start.bat check" in result.stdout, expect_menu)
+                    if args == ("unknown-action",):
+                        self.assertIn("Unknown launcher action", result.stdout)
+
     def test_every_agent_host_projection_is_fresh_and_portable(self):
         """Host files are rendered, not independently edited into another law."""
         for _key, host, rel, needs_mdc in sync_hosts.HOSTS:
