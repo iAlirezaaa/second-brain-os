@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #46; portable launcher follow-up; CI pending)
+- The legacy Windows `start.bat` launcher no longer requires Python 3.10
+  specifically: it uses the documented Python 3.9+ `python` on PATH.
+  The bilingual comprehensive guide, planning and design references now
+  show the same portable commands, and no longer present a machine-specific
+  interpreter or console codepage as a universal fact. The existing onboarding
+  regression covers these paths. This does not claim that all historical
+  docs are migrated, or that a particular user's terminal is UTF-8.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
