@@ -145,7 +145,7 @@
 ### اثبات
 
 ```powershell
-py -3.10 15_SYSTEM/scripts/test_hades.py
+python 15_SYSTEM/scripts/test_hades.py
 ```
 
 هر گیت با یک تست منفی می‌آید. شمارش را خودِ اجرا چاپ می‌کند (`checks: N | passed: N | failed: 0`)؛ عدد در سند، ادعاست. والت تست در `%TEMP%` ساخته و پاک می‌شود و به والت اصلی دست نمی‌زند.
