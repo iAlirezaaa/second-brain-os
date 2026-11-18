@@ -27,6 +27,32 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P2 — Phase-19 evidence fixture lifecycle (issue #58; Draft; 2026-11-18)
+
+- [x] **S** The three phase-19 tests that created their own `tempfile.mkdtemp()`
+      directories now take ownership with `TemporaryDirectory` registered through
+      `unittest.addCleanup`. Cleanup executes after test failure too; a subsequent
+      cleanup assertion verifies that fixture directories did not survive the test.
+      Existing test-method count is unchanged; no application code or user data changes.
+- [ ] Independent full-suite / health and all seven CI jobs on the final PR head
+      must succeed before merge. The local sandbox cannot clone GitHub due to DNS;
+      a standalone Python 3.11 cleanup-lifecycle regression passed 1/1, but it
+      does **not** certify the repo's tests. Issue #58 remains open for other sites.
+- [ ] P0 merge gate remains the protected-main required-context drift in issue
+      #107; do not bypass old required Ubuntu check names or publish a release.
+
+Acceptance: all three affected tests still pass; their temporary folders are absent
+immediately after unittest cleanups, including an assertion failure; unrelated
+fixtures are untouched. Rollback: revert the phase-19 test-only commit and these
+notes if CI exposes platform-specific cleanup behavior.
+
+**Next 1 (P0):** repair protected-main check-context drift in #107 through a
+legitimate administrator rules update, then recheck blocked green PRs.
+**Next 2 (P2):** measure and clean the remaining #58 fixture sites in a
+separate, non-overlapping slice, beginning with an actual before/after temp count.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
