@@ -347,18 +347,14 @@ def resolve_note(rows, ref, root):
         ])
     if matches:
         return matches[0]
-    name = clean_ref(ref)
+    # Never stat the requested path: the caller may name a protected zone or
+    # an out-of-root ../ path. An existence-dependent refusal leaks file presence
+    # even when the corpus itself correctly excludes that file.
     lines = ["REFUSED --related %r: the index does not hold that note" % ref]
-    if (Path(root) / name).is_file() or (Path(root) / (name + ".md")).is_file():
-        lines.append("  the file is here, but the corpus rule does not index it: the machine "
-                     "plane (11-15), the agent doors and vault-template/ are not corpus")
-        lines.append("  refusing is the honest answer — a note this tool never read cannot "
-                     "have measured neighbours")
-    else:
-        lines.append("  %d note(s) indexed, none of them that one; no neighbour list is "
-                     "printed for a note the index does not hold" % len(rows))
-        lines.append("  if the note is new, rebuild what it should be in: "
-                     "python scripts/kb.py ingest")
+    lines.append("  the corpus rule does not index this name (it may be absent, excluded, "
+                 "or newer than the last ingest); no file existence check was made")
+    lines.append("  if this is an eligible new note, rebuild the index: "
+                 "python scripts/kb.py ingest")
     raise RelatedError(lines)
 
 
