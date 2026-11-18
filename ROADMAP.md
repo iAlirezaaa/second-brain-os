@@ -46,11 +46,27 @@ over something it cannot see is a silent gate, not a clean house.
       Require all seven CI jobs and independent review before merge.
 - [ ] **CI follow-up (2026-11-18):** [run #44353234128](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44353234128) failed its four Ubuntu/Windows unit-test jobs (1126 tests, one failure each): Phase-44's schema-stamp test froze the derived KB index version at `"2"`, blocking the deliberate v3 privacy re-index. The assertion is now based on the current numeric SQLite version and still refuses a JSON contract claiming that version. The isolated regex invariant was exercised (2/2 on Python 3.13); **full tests, health and seven exact-head jobs are pending**. No permission or note data changed by this test repair.
 
+- [ ] **P0 privacy follow-up (2026-11-18; same issue #140):** `kb.py --related`
+      previously probed `Path.is_file()` on any unindexed reference, including
+      `09_OPERATIONS/decisions/...` and `../` outside the served root. Its
+      refusal said whether a protected file existed even though it never
+      returned the file body. An isolated synthetic pre-fix reproduction
+      confirmed different refusal messages for absent vs present files; no
+      exploitation or actual user-data access was observed. The bounded fix
+      makes both cases return the same indexed-only refusal and never stats
+      the requested unindexed file. An existing Phase-44 test method now
+      checks operational, machine and outside-root synthetic paths (no change
+      to discovered method count). Full exact-head CI must pass before merge;
+      this is not an OS-level access-control claim.
+- [x] All seven jobs in [CI #44374913000](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44374913000)
+      passed on prior SHA `49fd7363635e7c3afb506ea74942010fcfcc5e29`.
+      The additional side-channel changes require a new full CI run.
+
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
 `python scripts/kb.py ingest`. No private user data should be committed.
 
-**Next 1 (P0):** complete all seven CI jobs on the repaired PR #141 head,
+**Next 1 (P0):** confirm the seven CI jobs on the new side-channel fix head,
 independently review the privacy boundary, then reconcile protected-main required
 checks in issue #107 without bypassing branch protection.
 **Next 2 (P0 to P1):** repeat the under-five-minute first-recall onboarding
