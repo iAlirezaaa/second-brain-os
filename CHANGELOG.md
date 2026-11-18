@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #140; PR review, CI pending)
+- Align the default MCP/toolkit read boundary with the declared
+  `09_OPERATIONS` exclusion and omit its Markdown from the derived,
+  local keyword KB. The previous default could search operational notes
+  outside `clients_metadata_only` despite the zone's
+  `denied_for_default_context` policy. Synthetic existing-test regressions
+  cover both access routes and the permitted `02_WIKI` path. This does not
+  enforce an operating-system ACL, migrate user data or connect to a network.
+
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
