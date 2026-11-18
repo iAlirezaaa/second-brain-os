@@ -41,9 +41,16 @@ PREFIXES = tuple("%s/" % plane for plane in PLANES)
 KEY = b"four-word-phrase-that-nobody-typed-into-argv\n"
 
 
+def _owned_temp_root(prefix):
+    """Keep each fixture alive until unittest performs its module cleanups."""
+    holder = tempfile.TemporaryDirectory(prefix=prefix)
+    unittest.addModuleCleanup(holder.cleanup)
+    return Path(holder.name)
+
+
 def sandbox(planes=PLANES, hold=()):
     """A repo-shaped sandbox: a config, and the private planes only if someone held them."""
-    root = Path(tempfile.mkdtemp(prefix="proof-sandbox-"))
+    root = _owned_temp_root("proof-sandbox-")
     config = root / vault.CONFIG
     config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text(json.dumps({"private_planes": list(planes),
@@ -58,7 +65,7 @@ def sandbox(planes=PLANES, hold=()):
 
 def outside():
     """Where a passphrase, an envelope or a destination may live: never inside the repo."""
-    return Path(tempfile.mkdtemp(prefix="proof-outside-"))
+    return _owned_temp_root("proof-outside-")
 
 
 def run(argv, root=None):
