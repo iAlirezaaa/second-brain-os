@@ -563,6 +563,25 @@ class TheHouseWiring(unittest.TestCase):
             self.assertEqual([], list(shelf.glob("priv-*" + vault.SUFFIX)))
         self.assertFalse(common.is_repo_checkout(fixture()),
                          "a sandbox must not read as a checkout")
+        # Issue #58: even a failed vault test must not leave synthetic notes or
+        # passphrase files on disk. Capture module cleanups and execute them here
+        # so the contract is observable before the full unittest module exits.
+        with patch.object(unittest, "addModuleCleanup") as register:
+            sandbox = fixture()
+            key_path = keyfile()
+            try:
+                self.assertEqual(2, register.call_count,
+                                 "both synthetic fixture factories must own cleanup")
+                for call in register.call_args_list:
+                    call.args[0](*call.args[1:], **call.kwargs)
+                self.assertFalse(sandbox.exists(), "synthetic vault survived cleanup")
+                self.assertFalse(key_path.parent.exists(), "test passphrase survived cleanup")
+            finally:
+                # This guard also cleans the pre-fix reproduction when its
+                # missing cleanup registration makes the assertion fail.
+                import shutil
+                shutil.rmtree(str(sandbox), ignore_errors=True)
+                shutil.rmtree(str(key_path.parent), ignore_errors=True)
 
     def test_the_bench_measures_a_seal_without_touching_the_vault(self):
         measured = vault.bench(4096)
