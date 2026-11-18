@@ -8,6 +8,7 @@ allowed to live in different files with nothing comparing them.
 
 `scripts/ci_floor.py` compares them; each class below is red on the state of the repo before it.
 """
+import json
 import sys
 import tempfile
 import unittest
@@ -31,6 +32,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
 """
 
 LOOP_GOOD = """name: loop
@@ -90,9 +93,65 @@ class TestParsing(unittest.TestCase):
 class TestRefusals(unittest.TestCase):
     def test_a_workspace_where_everything_agrees_is_green(self):
         with tempfile.TemporaryDirectory() as tmp:
-            problems, floor = ci_floor.check(fixture(tmp))
+            root = fixture(tmp)
+            problems, floor = ci_floor.check(root)
             self.assertEqual(problems, [])
             self.assertEqual(floor, "3.9")
+            # Issue #107: green CI must not be called mergeable when protected
+            # main still requires obsolete ubuntu-latest matrix check names.
+            wanted = [
+                "test (ubuntu-24.04, 3.12)", "test (ubuntu-24.04, 3.9)",
+                "test (windows-latest, 3.12)", "test (windows-latest, 3.9)",
+            ]
+            self.assertEqual(ci_floor.expected_required_test_contexts(root), wanted)
+            snapshot = {"protected": True, "protection": {
+                "required_status_checks": {"contexts": list(wanted)}}}
+            self.assertEqual(ci_floor.required_status_context_problems(root, snapshot), [])
+            # Exercise the public CLI in strictly offline replay mode too;
+            # the helper passing alone would not prove its flags are wired.
+            (root / ".git").mkdir()
+            snapshot_path = root / "protected-branch-fixture.json"
+            snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+            argv = [sys.executable, str(ROOT / "scripts" / "ci_floor.py"),
+                    "--root", str(root), "--branch-json", str(snapshot_path)]
+            good = common.run_utf8(argv, cwd=str(ROOT))
+            self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
+            snapshot["protection"]["required_status_checks"]["contexts"] = [
+                name.replace("ubuntu-24.04", "ubuntu-latest") for name in wanted]
+            stale = "\n".join(ci_floor.required_status_context_problems(root, snapshot))
+            self.assertIn("test (ubuntu-24.04, 3.9)", stale)
+            self.assertIn("test (ubuntu-latest, 3.9)", stale)
+            self.assertIn("test (ubuntu-24.04, 3.12)", stale)
+            snapshot_path.write_text(json.dumps(snapshot), encoding="utf-8")
+            blocked = common.run_utf8(argv, cwd=str(ROOT))
+            self.assertEqual(blocked.returncode, 1, blocked.stdout + blocked.stderr)
+            self.assertIn("obsolete/unmatched required test check", blocked.stdout)
+            for bad in ({}, {"protected": False},
+                        {"protected": True, "protection": {}}):
+                self.assertTrue(ci_floor.required_status_context_problems(root, bad),
+                                "unknown/absent protection must not look green")
+
+    def test_floor_refuses_linux_only_in_backup(self):
+        """Issue #107: an Ubuntu backup job cannot stand in for a Linux test job."""
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("os: [ubuntu-24.04, windows-latest]",
+                                 "os: [windows-latest]")
+            ci += "\n  backup-seal:\n    runs-on: ubuntu-24.04\n"
+            problems, _ = ci_floor.check(fixture(tmp, ci=ci))
+            self.assertIn("jobs.test has no Ubuntu runner", "\n".join(problems))
+
+    def test_floor_refuses_no_windows_test_runner(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("os: [ubuntu-24.04, windows-latest]",
+                                 "os: [ubuntu-24.04]")
+            problems, _ = ci_floor.check(fixture(tmp, ci=ci))
+            self.assertIn("jobs.test has no Windows runner", "\n".join(problems))
+
+    def test_floor_refuses_unrecognized_test_job_before_claiming_health(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("  test:\n", "  smoke:\n")
+            problems, _ = ci_floor.check(fixture(tmp, ci=ci))
+            self.assertIn("cannot derive jobs.test matrix", "\n".join(problems))
 
     def test_a_floor_ci_never_installs_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -100,6 +159,96 @@ class TestRefusals(unittest.TestCase):
             problems, _ = ci_floor.check(fixture(tmp, ci=ci))
             self.assertIn("the floor is 3.9 but the ci matrix installs 3.11, 3.12",
                           "\n".join(problems))
+            # Malformed version must be a named refusal, not a TypeError.
+            bad_ci = CI_GOOD.replace('["3.9", "3.12"]', '["banana", "3.12"]')
+            bad_problems, _ = ci_floor.check(fixture(tmp, ci=bad_ci))
+            self.assertIn("ci.yml declares invalid python-version 'banana'",
+                          "\n".join(bad_problems))
+            # A commented-out floor must not substitute for the actual
+            # jobs.test interpreter matrix: Ubuntu and Windows would never
+            # install 3.9, despite the first regex match claiming it does.
+            commented_ci = CI_GOOD.replace(
+                '        python-version: ["3.9", "3.12"]',
+                '        # python-version: ["3.9", "3.12"]\n'
+                '        python-version: ["3.11", "3.12"]')
+            commented_problems, _ = ci_floor.check(fixture(tmp, ci=commented_ci))
+            self.assertIn("jobs.test does not install declared floor 3.9",
+                          "\n".join(commented_problems))
+            # Issue #107: matrix exclusions change which CI checks actually run.
+            # A Cartesian-product parser must not invent a green Linux 3.9 job
+            # when GitHub Actions explicitly excludes that combination.
+            excluded_ci = CI_GOOD.replace(
+                '        python-version: ["3.9", "3.12"]',
+                '        python-version: ["3.9", "3.12"]\n'
+                '        exclude:\n'
+                '          - os: ubuntu-24.04\n'
+                '            python-version: "3.9"')
+            excluded_root = fixture(tmp, ci=excluded_ci)
+            with self.assertRaisesRegex(ValueError, "include/exclude"):
+                ci_floor.expected_required_test_contexts(excluded_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(excluded_root)[0]))
+            # Matrix labels alone do not prove which machine or interpreter
+            # executed them. Add negative fixtures without increasing the
+            # collected test count (doc_report measures that count).
+            pinned_runner_ci = CI_GOOD.replace(
+                "runs-on: ${{ matrix.os }}", "runs-on: ubuntu-24.04")
+            pinned_runner_root = fixture(tmp, ci=pinned_runner_ci)
+            with self.assertRaisesRegex(ValueError, "matrix.os"):
+                ci_floor.expected_required_test_contexts(pinned_runner_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(pinned_runner_root)[0]))
+            pinned_python_ci = CI_GOOD.replace(
+                "python-version: ${{ matrix.python-version }}", 'python-version: "3.12"')
+            pinned_python_root = fixture(tmp, ci=pinned_python_ci)
+            with self.assertRaisesRegex(ValueError, "matrix.python-version"):
+                ci_floor.expected_required_test_contexts(pinned_python_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(pinned_python_root)[0]))
+            # A matrix that schedules four OS/Python legs but never executes
+            # the unit suite cannot substantiate the CI assurance either.
+            missing_tests_ci = CI_GOOD.replace(
+                "      - name: Unit tests\n"
+                "        run: python -m unittest discover -s tests -v\n", "")
+            missing_tests_root = fixture(tmp, ci=missing_tests_ci)
+            with self.assertRaisesRegex(ValueError, "Unit tests"):
+                ci_floor.expected_required_test_contexts(missing_tests_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(missing_tests_root)[0]))
+            no_op_tests_ci = CI_GOOD.replace(
+                "run: python -m unittest discover -s tests -v",
+                "run: echo tests skipped")
+            no_op_root = fixture(tmp, ci=no_op_tests_ci)
+            with self.assertRaisesRegex(ValueError, "Unit tests"):
+                ci_floor.expected_required_test_contexts(no_op_root)
+            muted_tests_ci = CI_GOOD.replace(
+                "        run: python -m unittest discover -s tests -v",
+                "        run: python -m unittest discover -s tests -v\n"
+                "        continue-on-error: true")
+            muted_root = fixture(tmp, ci=muted_tests_ci)
+            with self.assertRaisesRegex(ValueError, "continue-on-error"):
+                ci_floor.expected_required_test_contexts(muted_root)
+            # A green status is not proof of coverage if GitHub Actions
+            # skips the whole job or silently skips only the Unit tests step.
+            # Both are valid YAML layouts; neither executes the advertised suite.
+            skipped_job_ci = CI_GOOD.replace(
+                "    runs-on: ${{ matrix.os }}",
+                "    if: false\n    runs-on: ${{ matrix.os }}")
+            skipped_job_root = fixture(tmp, ci=skipped_job_ci)
+            with self.assertRaisesRegex(ValueError, "condition"):
+                ci_floor.expected_required_test_contexts(skipped_job_root)
+            skipped_tests_ci = CI_GOOD.replace(
+                "        run: python -m unittest discover -s tests -v",
+                "        run: python -m unittest discover -s tests -v\n"
+                "        if: false")
+            skipped_tests_root = fixture(tmp, ci=skipped_tests_ci)
+            with self.assertRaisesRegex(ValueError, "condition"):
+                ci_floor.expected_required_test_contexts(skipped_tests_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(skipped_job_root)[0]))
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(skipped_tests_root)[0]))
+
 
     def test_a_job_below_the_floor_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -120,6 +269,22 @@ class TestRefusals(unittest.TestCase):
             problems, _ = ci_floor.check(fixture(tmp, loop=LOOP_GOOD.replace("ubuntu-24.04",
                                                                              "ubuntu-latest")))
             self.assertIn("nightly loop", "\n".join(problems))
+            # An invalid scalar used to disappear from regex extraction:
+            # the nightly gate incorrectly called the fixture green.
+            bad_loop = LOOP_GOOD.replace('python-version: "3.12"',
+                                         'python-version: "banana"')
+            bad_problems, _ = ci_floor.check(fixture(tmp, loop=bad_loop))
+            self.assertIn("loop.yml cannot prove a Python version",
+                          "\n".join(bad_problems))
+            # An entirely commented-out setup-python version is not a real
+            # nightly interpreter pin. A broad regex used to count it as green.
+            commented_loop = LOOP_GOOD.replace('python-version: "3.12"',
+                                               '# python-version: "3.12"')
+            root = fixture(tmp, loop=commented_loop)
+            self.assertEqual(ci_floor.workflow_matrix(root, "loop.yml")[0], [])
+            commented_problems, _ = ci_floor.check(root)
+            self.assertIn("loop.yml cannot prove a Python version",
+                          "\n".join(commented_problems))
 
     def test_a_missing_loop_workflow_is_a_problem_not_a_pass(self):
         with tempfile.TemporaryDirectory() as tmp:

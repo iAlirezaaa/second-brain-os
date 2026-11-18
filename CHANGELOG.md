@@ -6,6 +6,112 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; PR #112 conditional required tests; pending exact-head CI)
+- The stdlib-only Python-floor/required-context auditor now refuses to call
+  mandatory CI test coverage verified when a `jobs.test` job or the `Unit tests`
+  step has a conditional `if:` that could skip execution. The previous
+  narrow parser accepted synthetic `if: false` placements (including after
+  the test command), potentially treating skipped jobs as coverage.
+  The existing Python-floor unittest includes both negative fixtures without
+  adding a collected test method. The repository workflow, protected-branch
+  rules, dependencies, host permissions and private data are unchanged.
+  This is a conservative static analysis refusal, not an allegation that
+  production CI contains such a condition. Full health, exact-head CI and
+  review are required; rollback is a focused revert followed by reviewed
+  support for legitimate conditional execution.
+
+
+### Fixed (issue #107; PR #112 unittest execution gate, under review)
+- The offline required-check auditor now refuses four apparently valid OS/Python
+  contexts if the test job lacks the active `python -m unittest discover -s tests -v`
+  command, replaces it with a no-op, or allows failures with an unknown/truthy
+  `continue-on-error`. Three synthetic regression assertions extend the existing
+  unittest method. This conservative stdlib-only static check does not modify
+  the workflow, GitHub rules, user files, or dependencies. Exact-head CI, independent
+  review and authorized #107 repair are still required. Rollback: revert the
+  focused guard and fixtures rather than relaxing the real test requirement.
+
+### Fixed (issue #107; PR #112 test-matrix assignment guard, under review)
+- The read-only Python-floor audit now refuses to assert OS/Python test coverage
+  when a GitHub Actions jobs.test matrix lists Windows/3.9 but its actual
+  runs-on runner is hardcoded to Linux, or when its setup-python step
+  installs a constant Python version. Two synthetic regression cases test
+  nonzero refusal. Existing CI behavior and all user data remain unchanged;
+  this is a stdlib-only diagnostic guard, not a claim that those misconfigs
+  currently exist. Final-head CI verification and authorized protection
+  repair (#107) are prerequisites for merge. Rollback: revert the focused
+  test/validator commits and review newly supported workflow syntax.
+
+### Fixed (issue #107; PR #112 excluded matrix audit, pending full CI)
+- The read-only CI-floor audit no longer invents required `test (os, version)`
+  checks when GitHub Actions `jobs.test.strategy.matrix` declares
+  `include` or `exclude` exceptions. Previously excluding Ubuntu 24.04 /
+  Python 3.9 still yielded the fictitious `test (ubuntu-24.04, 3.9)`
+  context and could hide a missing floor test. The parser now fails closed
+  with an explicit matrix exception diagnostic rather than claim a green
+  check. Regression extends an existing unittest with a synthetic exclusion.
+  Isolated old/new parser reproductions passed; full repository tests and
+  final-head GitHub Actions are pending. This changes no CI workflow,
+  protected-main settings, dependencies, host permissions or user data.
+  Rollback: revert the focused parser/test pair if valid unsupported YAML
+  requires an explicit compatibility upgrade; do not waive the floor.
+
+### Fixed (issue #107; disabled nightly Python pin, PR #112)
+- The stdlib CI-floor workflow reader no longer counts wholly commented-out
+  `python-version` configuration as an active interpreter guarantee. A nightly
+  `setup-python` step with only `# python-version: "3.12"` previously
+  looked like it pinned 3.12 and could pass the local gate; it now reports
+  missing parseable loop interpreter configuration. An existing unittest covers
+  the failure with a disposable YAML fixture. Isolated parser checks passed;
+  full latest-head CI and protected-main review are required before release.
+  Revert the bounded parser/test changes if they reject legitimate active
+  workflow configuration; do not relax the Python floor or branch protection.
+
+### Fixed (issue #107; commented-out Python floor false-green, PR #112)
+- The CI-floor audit now checks that the **actual** `jobs.test` matrix
+  installs the declared Python 3.9 floor. Previously a commented-out
+  `python-version: ["3.9", "3.12"]` line could fool the broad workflow
+  version scan even if all real test jobs installed only 3.11/3.12.
+  A test-first regression in the existing CI-floor test detects the
+  false-green result. This is an offline validator-only change, with no
+  dependency, workflow edit, branch-protection change or user-data write.
+  Final-head CI and independent review are still required. Rollback:
+  revert the two code/test commits if the real supported matrix is
+  rejected; do not conceal a failed floor by weakening requirements.
+
+
+### Fixed (issue #107; malformed CI Python-version guard, PR #112 in review)
+- A malformed `ci.yml` Python version no longer raises a `TypeError` inside
+  `scripts/ci_floor.py` during a version comparison; the gate now reports
+  the invalid value by name. A nightly `loop.yml` with an unparseable scalar
+  `python-version` also no longer passes via an empty extracted list.
+  Two test-first assertions were added to existing unittest cases, retaining
+  the collected test count. This improves diagnostic integrity only: no
+  workflow, actual protected-branch setting, package, service, persistence
+  or runtime permission is changed. Final-head CI and independent review
+  are required before merge. Rollback: revert the bounded parser guards
+  and their assertions if a supported version syntax is wrongly refused.
+
+### Fixed (issue #107; test-matrix coverage, pending CI)
+- `scripts/ci_floor.py` now refuses an absent Ubuntu or Windows
+  **unit-test** matrix even when a backup job uses that operating system.
+  It also fails closed if the `jobs.test` matrix cannot be derived.
+  Three offline regression cases cover this false-green path; no CI runner,
+  required branch status, runtime permissions or external settings change.
+
+### Added (issue #107; P0 check audit in review)
+- The existing `scripts/ci_floor.py` can optionally compare GitHub's **actual**
+  protected-main required status names against the current `jobs.test` matrix,
+  with either `--live-protection` (explicit public read-only HTTPS) or
+  `--branch-json` (offline fixture). It fails closed on absent protection,
+  missing checks, obsolete runner names or unreadable responses and never edits
+  GitHub settings. The existing CI-floor regression covers current, stale and
+  unverifiable protection snapshots without changing test counts.
+  `00_START_HERE/BRANCH_PROTECTION.md` documents the necessary **manual
+  administrator** update. This does not itself unblock PR merges or certify
+  branch-rule compliance; issue #107 remains open pending that action.
+
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

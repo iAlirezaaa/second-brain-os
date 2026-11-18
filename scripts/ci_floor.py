@@ -22,8 +22,10 @@ there: the gate says so in one stated line and exits 0. A checkout missing the m
 defect and still refuses.
 """
 import argparse
+import json
 import re
 import sys
+import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -61,6 +63,11 @@ def workflow_matrix(root, name):
     if not path.is_file():
         return None, None
     text = path.read_text(encoding="utf-8")
+    # Regex extraction must not treat disabled YAML lines as active workflow
+    # configuration. In particular, a commented-out setup-python version
+    # cannot prove the nightly interpreter floor.
+    text = "\n".join(line for line in text.splitlines()
+                     if not line.lstrip().startswith("#"))
     versions = []
     inline = re.search(r'python-version:\s*\[([^\]]*)\]', text)
     if inline:
@@ -78,6 +85,120 @@ def workflow_matrix(root, name):
 
 def ubuntu_images(runs):
     return [image for image in (runs or []) if image.startswith("ubuntu")]
+
+
+def expected_required_test_contexts(root):
+    """Derive the four `test (os, version)` check names from the actual CI matrix.
+
+    Read only the `test` job: backup jobs and the nightly loop are separate
+    checks, and treating their versions as a second matrix would create a lie.
+    Refuse an unfamiliar layout or custom job name rather than guess.
+    """
+    path = Path(root) / ".github/workflows/ci.yml"
+    if not path.is_file():
+        raise ValueError("ci.yml is missing")
+    source = path.read_text(encoding="utf-8")
+    match = re.search(r"(?ms)^  test:\s*\n(.*?)(?=^  [\w-]+:\s*(?:\n|$)|\Z)", source)
+    if not match:
+        raise ValueError("ci.yml has no recognizable jobs.test matrix")
+    block = match.group(1)
+    # A matrix include/exclude makes the emitted jobs differ from its bare
+    # os × python-version Cartesian product. Unless those exceptions are
+    # modeled, claiming every required test context exists is unsafe.
+    # Fail closed rather than invent a check that GitHub Actions never runs.
+    if re.search(r"(?m)^        (?:include|exclude):", block):
+        raise ValueError("jobs.test matrix include/exclude needs explicit context review")
+    if re.search(r"(?m)^    name:\s*", block):
+        raise ValueError("jobs.test has a custom name; inspect emitted check names manually")
+
+    # The matrix names alone do not prove what ran. A fixed runs-on would
+    # label a Windows matrix leg while executing it on Ubuntu; a fixed
+    # setup-python pin would label 3.9 while actually installing only 3.12.
+    # Recognize only the simple, shipped layout; other layouts need a
+    # reviewed parser change rather than a falsely green status audit.
+    selected_runners = re.findall(
+        r"(?m)^    runs-on:[ \t]*(.+?)[ \t]*$", block)
+    if selected_runners != ["${{ matrix.os }}"]:
+        raise ValueError("jobs.test runs-on must use matrix.os, not a fixed runner")
+    selected_versions = re.findall(
+        r"(?m)^      - uses:[ \t]*actions/setup-python@[\w.-]+[ \t]*\n"
+        r"        with:[ \t]*\n"
+        r"          python-version:[ \t]*(.+?)[ \t]*$", block)
+    if selected_versions != ["${{ matrix.python-version }}"]:
+        raise ValueError("jobs.test setup-python must use matrix.python-version")
+
+    # Status contexts by themselves do not prove that the corresponding jobs
+    # run tests. Keep the parser narrow: recognize the shipped, active unittest
+    # step and refuse a missing/no-op test command instead of validating a
+    # four-leg matrix that merely checks out the repository.
+    active_block = "\n".join(
+        line for line in block.splitlines() if not line.lstrip().startswith("#"))
+    unit_step = (r"(?m)^      - name: Unit tests[ \t]*\n"
+                 r"        run: python -m unittest discover -s tests -v[ \t]*$")
+    if len(re.findall(unit_step, active_block)) != 1:
+        raise ValueError("jobs.test Unit tests step must run the actual unittest suite")
+
+    # GitHub may mark a job or step skipped when its 'if' condition is false.
+    # A skipped suite cannot prove the required Python/OS support floor,
+    # regardless of whether the skipped check appears green in the UI.
+    # Refuse conditional execution instead of evaluating arbitrary expressions.
+    if re.search(r"(?m)^    if:[ \t]*", active_block):
+        raise ValueError("jobs.test job condition can skip required tests")
+    test_step = re.search(
+        r"(?ms)^      - name: Unit tests[ \t]*\n(.*?)(?=^      - |\Z)",
+        active_block)
+    if test_step and re.search(r"(?m)^        if:[ \t]*", test_step.group(1)):
+        raise ValueError("jobs.test Unit tests step condition can skip required tests")
+    # A successful runner that ignores a failing unit suite is not evidence.
+    # Unknown expressions and truthy YAML flags fail closed. Explicit false
+    # is permitted for jobs that choose to spell out the safe default.
+    soft_fail = re.findall(
+        r"(?m)^[ \t]*continue-on-error:[ \t]*([^#\n]+)", active_block)
+    if any(value.strip().lower() not in ("false", "no", "off", "0")
+           for value in soft_fail):
+        raise ValueError("jobs.test continue-on-error can hide test failures")
+
+    def values(key):
+        fields = re.findall(r"(?m)^\s+" + re.escape(key) +
+                            r":\s*\[([^\]\n]+)\]\s*$", block)
+        if len(fields) != 1:
+            raise ValueError("jobs.test must have one inline %s matrix" % key)
+        parsed = [item.strip().strip("'\"") for item in fields[0].split(",")]
+        if not parsed or any(not item for item in parsed) or len(set(parsed)) != len(parsed):
+            raise ValueError("jobs.test %s matrix contains empty/duplicate values" % key)
+        return parsed
+
+    images, versions = values("os"), values("python-version")
+    return sorted("test (%s, %s)" % (image, version)
+                  for image in images for version in versions)
+
+
+def required_status_context_problems(root, branch):
+    """Compare public branches/main metadata to the actual jobs, fail closed.
+
+    Branch metadata is read-only data; this audit never edits protection or
+    treats a green Actions job as permission to bypass an obsolete requirement.
+    """
+    if not isinstance(branch, dict) or branch.get("protected") is not True:
+        return ["main protection is absent or unverifiable"]
+    protection = branch.get("protection")
+    checks = protection.get("required_status_checks") if isinstance(protection, dict) else None
+    contexts = checks.get("contexts") if isinstance(checks, dict) else None
+    if not isinstance(contexts, list) or not contexts or not all(
+            isinstance(item, str) and item for item in contexts):
+        return ["main required check contexts are absent or unverifiable"]
+    try:
+        expected = set(expected_required_test_contexts(root))
+    except (OSError, ValueError) as exc:
+        return ["cannot derive the CI test matrix: %s" % exc]
+    current = set(contexts)
+    problems = []
+    for name in sorted(expected - current):
+        problems.append("required check missing: %s" % name)
+    for name in sorted(current - expected):
+        if name.startswith("test ("):
+            problems.append("obsolete/unmatched required test check: %s" % name)
+    return problems
 
 
 def documented_floor_rows(root):
@@ -112,8 +233,29 @@ def check(root):
             problems.append("the floor is %s but the ci matrix installs %s"
                             % (floor, ", ".join(sorted(ci_versions))))
         for version in ci_versions:
-            if parse_version(version) < parse_version(floor):
+            parsed = parse_version(version)
+            if parsed is None:
+                problems.append("ci.yml declares invalid python-version %r" % version)
+            elif parsed < parse_version(floor):
                 problems.append("ci.yml installs %s, below the declared floor %s" % (version, floor))
+        # Only jobs.test proves the advertised cross-platform Python floor.
+        # A backup job running on Ubuntu is not a substitute for Linux unit tests;
+        # workflow_matrix() deliberately also sees backup-job runners.
+        try:
+            contexts = expected_required_test_contexts(root)
+        except (OSError, ValueError) as exc:
+            problems.append("ci.yml cannot derive jobs.test matrix: %s" % exc)
+        else:
+            if not any(name.startswith("test (ubuntu-") for name in contexts):
+                problems.append("ci.yml jobs.test has no Ubuntu runner for the Python floor")
+            if not any(name.startswith("test (windows-") for name in contexts):
+                problems.append("ci.yml jobs.test has no Windows runner for the Python floor")
+            # Verify the real test matrix, not a commented-out or backup-job
+            # python-version matched by the broad workflow regex above.
+            # A healthy Python 3.9+ claim requires the unit-test job itself
+            # to install 3.9 on its declared operating systems.
+            if not any(name.endswith(", %s)" % floor) for name in contexts):
+                problems.append("ci.yml jobs.test does not install declared floor %s" % floor)
         ubuntu = ubuntu_images(ci_runs)
         floating = [image for image in ubuntu if image == UNPINNED_UBUNTU]
         if floating:
@@ -128,8 +270,15 @@ def check(root):
     if loop_versions is None:
         problems.append(".github/workflows/loop.yml is missing — the nightly loop has no door")
     else:
+        # A missing/unparseable scalar was previously invisible to the regex
+        # and made an unverified nightly interpreter look like a green gate.
+        if not loop_versions:
+            problems.append("loop.yml cannot prove a Python version (none parsed)")
         for version in loop_versions:
-            if parse_version(version) < parse_version(floor):
+            parsed = parse_version(version)
+            if parsed is None:
+                problems.append("loop.yml declares invalid python-version %r" % version)
+            elif parsed < parse_version(floor):
                 problems.append("loop.yml runs %s, below the declared floor %s" % (version, floor))
         if UNPINNED_UBUNTU in ubuntu_images(loop_runs):
             problems.append("loop.yml rides the floating `%s` image — the nightly loop is the one "
@@ -148,8 +297,17 @@ def check(root):
 def main():
     parser = argparse.ArgumentParser(description="the python floor: one number, four places")
     parser.add_argument("--root", default=None, help="repo root override (tests)")
+    parser.add_argument("--branch-json", default=None,
+                        help="offline exported GitHub GET /branches/main response (read-only)")
+    parser.add_argument("--live-protection", action="store_true",
+                        help="opt-in public GitHub API read; no token, config write or bypass")
     args = parser.parse_args()
+    if args.branch_json and args.live_protection:
+        parser.error("choose --branch-json OR --live-protection")
     root = Path(args.root) if args.root else find_root(Path(__file__))
+    if not is_repo_checkout(root) and (args.branch_json or args.live_protection):
+        print("REFUSED: CI protection can only be audited from a repository checkout")
+        return 1
     if not is_repo_checkout(root):
         print("OK — no floor to prove in %s: this folder is an installed brain home, not a repo "
               "checkout (no .git, no pyproject.toml), and the promise this gate inspects is the "
@@ -162,6 +320,31 @@ def main():
             print("INVALID  %s" % problem)
         print("REFUSED: this folder promises a python floor it does not prove")
         return 1
+    if args.branch_json or args.live_protection:
+        try:
+            if args.branch_json:
+                branch = json.loads(Path(args.branch_json).read_text(encoding="utf-8"))
+            else:
+                url = ("https://api.github.com/repos/"
+                       "iAlirezaaa/second-brain-os/branches/main")
+                request = urllib.request.Request(
+                    url, headers={"Accept": "application/vnd.github+json",
+                                  "User-Agent": "second-brain-os-ci-protection-audit"})
+                with urllib.request.urlopen(request, timeout=10) as response:
+                    branch = json.loads(response.read(262145).decode("utf-8"))
+            problems = required_status_context_problems(root, branch)
+        except (OSError, ValueError, UnicodeError) as exc:
+            print("REFUSED: cannot inspect required checks (%s: %s)" %
+                  (type(exc).__name__, exc))
+            return 1
+        if problems:
+            for problem in problems:
+                print("INVALID  %s" % problem)
+            print("REFUSED: protected main requires checks the current CI cannot emit")
+            return 1
+        print("OK — required protected-main test checks match ci.yml; "
+              "this does not certify other branch rules or authorize a merge")
+        return 0
     ci_versions, ci_runs = workflow_matrix(root, "ci.yml")
     loop_versions, _ = workflow_matrix(root, "loop.yml")
     print("OK — python floor %s: pyproject agrees, ci installs %s on %s, the nightly loop runs "
