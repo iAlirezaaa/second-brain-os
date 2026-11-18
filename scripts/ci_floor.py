@@ -142,12 +142,12 @@ def expected_required_test_contexts(root):
     # A skipped suite cannot prove the required Python/OS support floor,
     # regardless of whether the skipped check appears green in the UI.
     # Refuse conditional execution instead of evaluating arbitrary expressions.
-    if re.search(r"(?m)^    if:[ \\t]*", active_block):
+    if re.search(r"(?m)^    if:[ \t]*", active_block):
         raise ValueError("jobs.test job condition can skip required tests")
     test_step = re.search(
-        r"(?ms)^      - name: Unit tests[ \\t]*\\n(.*?)(?=^      - |\\Z)",
+        r"(?ms)^      - name: Unit tests[ \t]*\n(.*?)(?=^      - |\Z)",
         active_block)
-    if test_step and re.search(r"(?m)^        if:[ \\t]*", test_step.group(1)):
+    if test_step and re.search(r"(?m)^        if:[ \t]*", test_step.group(1)):
         raise ValueError("jobs.test Unit tests step condition can skip required tests")
     # A successful runner that ignores a failing unit suite is not evidence.
     # Unknown expressions and truthy YAML flags fail closed. Explicit false
