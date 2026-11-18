@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; PR #112 unittest execution gate, under review)
+- The offline required-check auditor now refuses four apparently valid OS/Python
+  contexts if the test job lacks the active `python -m unittest discover -s tests -v`
+  command, replaces it with a no-op, or allows failures with an unknown/truthy
+  `continue-on-error`. Three synthetic regression assertions extend the existing
+  unittest method. This conservative stdlib-only static check does not modify
+  the workflow, GitHub rules, user files, or dependencies. Exact-head CI, independent
+  review and authorized #107 repair are still required. Rollback: revert the
+  focused guard and fixtures rather than relaxing the real test requirement.
+
 ### Fixed (issue #107; PR #112 test-matrix assignment guard, under review)
 - The read-only Python-floor audit now refuses to assert OS/Python test coverage
   when a GitHub Actions jobs.test matrix lists Windows/3.9 but its actual
