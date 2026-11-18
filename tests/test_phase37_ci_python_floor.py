@@ -188,6 +188,29 @@ class TestRefusals(unittest.TestCase):
                           "\n".join(ci_floor.check(excluded_root)[0]))
 
 
+    def test_real_test_runner_must_follow_matrix_os(self):
+        # A matrix can declare Windows while runs-on pins every job to Linux.
+        # The status names may be emitted, but no Windows runner was tested.
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("runs-on: ${{ matrix.os }}",
+                                 "runs-on: ubuntu-24.04")
+            root = fixture(tmp, ci=ci)
+            with self.assertRaisesRegex(ValueError, "matrix.os"):
+                ci_floor.expected_required_test_contexts(root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(root)[0]))
+
+    def test_setup_python_must_follow_matrix_python_version(self):
+        # Declaring 3.9 in the matrix is not proof it gets installed.
+        with tempfile.TemporaryDirectory() as tmp:
+            ci = CI_GOOD.replace("python-version: ${{ matrix.python-version }}",
+                                 'python-version: "3.12"')
+            root = fixture(tmp, ci=ci)
+            with self.assertRaisesRegex(ValueError, "matrix.python-version"):
+                ci_floor.expected_required_test_contexts(root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(root)[0]))
+
     def test_a_job_below_the_floor_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
             ci = CI_GOOD.replace('["3.9", "3.12"]', '["3.8", "3.12"]')
