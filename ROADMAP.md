@@ -27,6 +27,19 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Require active, failure-propagating unittests in CI (#107; PR #112; 2026-11-18)
+
+- [x] **Baseline (S):** the required-context audit validated matrix assignments but still accepted a test job that never ran the unit suite, replaced it with a successful no-op, or muted failure using `continue-on-error: true`. These are synthetic negative fixtures, not failures observed in deployed CI.
+- [x] **Test-first:** three new negative assertions extend the existing CI-floor unittest without altering the collected test count (commit `12e3ed4`).
+- [x] **Bounded fix:** stdlib-only static audit now requires the active `Unit tests` command `python -m unittest discover -s tests -v` and rejects unknown/truthy `continue-on-error` (commit `c880f43`). Unsupported layouts require review; CI workflow, user data and permissions are unchanged.
+- [ ] **Acceptance:** focused Python 3.9+ test, complete unit suite, health gates, all seven exact-head CI jobs, independent review and authorized #107 protected-main check repair before merge.
+- **Rollback:** revert only the focused guard/test pair if a legitimate updated workflow layout is rejected; never waive actual CI validation or repository protection.
+
+**Next 1 (P0):** verify seven exact-head Actions jobs and request independent review.
+**Next 2 (P0/P1):** authorized admin aligns Ubuntu required contexts; measure clean first recall on Windows/macOS/Linux before a sub-five-minute claim.
+
+---
+
 ## P0 — Ensure CI matrix labels match actual runners/interpreters (#107; PR #112, 2026-11-18)
 
 - [x] **Observed failure mode (S):** an inline jobs.test matrix could
