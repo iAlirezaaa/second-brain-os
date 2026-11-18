@@ -27,6 +27,39 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Default operational-data exclusion from recall (issue #140; in review)
+
+- [ ] **S** The declared `09_OPERATIONS` human zone has
+      `denied_for_default_context: true` in `15_SYSTEM/config/system.json`,
+      but the MCP read boundary in `15_SYSTEM/scripts/backend/access.py` only
+      denied its `clients_metadata_only` subfolder. Make the entire zone
+      ineligible for default `vault_search` and tool reads; do not claim an
+      OS-enforced ACL or authorize access through a client.
+- [ ] Also exclude that zone from `scripts/kb.py` local keyword indexing,
+      including derived indexes after a new ingest. Preserve ordinary
+      `02_WIKI` indexing and direct user ownership of files. No database
+      schema migration or package dependency is needed.
+- [ ] Existing synthetic regressions in `tests/test_access_boundary.py`
+      and `tests/test_kb_corpus_symlink_boundary.py` must fail on the old
+      code, pass after the fix, and leave measured unittest counts unchanged.
+      Require all seven CI jobs and independent review before merge.
+
+**Rollback:** revert the isolated filter change if a legitimate query
+regresses; the KB SQLite cache is derived and rebuildable using
+`python scripts/kb.py ingest`. No private user data should be committed.
+
+**Next 1 (P0):** reconcile protected-main required checks in issue #107
+without bypassing branch protection; clear review-ready PRs only after
+matching CI and human review.
+**Next 2 (P0 to P1):** repeat the under-five-minute first-recall onboarding
+measurement in issue #93 on Windows/macOS/Linux, then test installed
+Claude Code/Codex/OpenCode MCP clients with synthetic data and approval gates.
+P2 optional inspection UI and P3 Mem0/Basic Memory/Letta/OpenMemory research
+remain proposals until independent benchmarks, permissions and rollback
+criteria are documented.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
