@@ -114,6 +114,15 @@ class InstalledHome(unittest.TestCase):
             self.assertIn("older corpus rule", str(caught.exception))
             kb.ingest(tmp)
             self.assertEqual("20_Notes/a.md", kb.find(tmp, "backup", 1)[0]["path"])
+            # v2 caches could still hold operational data after a code upgrade.
+            # Search must fail closed until the owner re-ingests using v3 rules.
+            with closing(sqlite3.connect(str(Path(tmp) / ".kb" / "kb.sqlite"))) as conn:
+                conn.execute("UPDATE kb_meta SET value='2' WHERE key='schema'")
+                conn.commit()
+            with self.assertRaisesRegex(RuntimeError, "older corpus rule"):
+                kb.find(tmp, "backup")
+            kb.ingest(tmp)
+            self.assertEqual("20_Notes/a.md", kb.find(tmp, "backup", 1)[0]["path"])
 
 
 class RelevanceOutranksRecency(unittest.TestCase):
