@@ -102,6 +102,12 @@ def expected_required_test_contexts(root):
     if not match:
         raise ValueError("ci.yml has no recognizable jobs.test matrix")
     block = match.group(1)
+    # A matrix include/exclude makes the emitted jobs differ from its bare
+    # os × python-version Cartesian product. Unless those exceptions are
+    # modeled, claiming every required test context exists is unsafe.
+    # Fail closed rather than invent a check that GitHub Actions never runs.
+    if re.search(r"(?m)^        (?:include|exclude):", block):
+        raise ValueError("jobs.test matrix include/exclude needs explicit context review")
     if re.search(r"(?m)^    name:\s*", block):
         raise ValueError("jobs.test has a custom name; inspect emitted check names manually")
 
