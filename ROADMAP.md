@@ -25,6 +25,38 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+
+---
+
+## P2 — Own Phase-53 backup-proof test fixtures (issue #58; PR pending review)
+
+- [ ] **S** In `tests/test_phase53_cross_machine_restore.py`, both synthetic
+      fixture factories (`sandbox` and `outside`) must register a
+      `TemporaryDirectory.cleanup` with `unittest.addModuleCleanup`.
+      Previously all 35 tests could leave `proof-sandbox-*` and
+      `proof-outside-*` directories, including generated test passphrases,
+      in the OS temporary folder after the test process completed.
+      Keep all synthetic proof behavior and the test method count unchanged.
+- [ ] Acceptance: the existing test method checks that both factories
+      register a callback that actually removes the directory; focused
+      `python -m unittest discover -s tests -p 'test_phase53_cross_machine_restore.py' -v`
+      and full health/unit tests must pass on the repository, followed by all
+      seven CI jobs on the final SHA. A local isolated standard-library
+      reproduction confirmed that the old factory registers no cleanup and
+      the new factory's callback removes its root; **full repository tests
+      remain unverified until CI**.
+- [ ] Keep this independent of the open Phase-19, Phase-20 and Phase-29
+      fixture-cleanup PRs. No user-data, production backup code, permissions,
+      dependencies or protected branches are altered. Rollback: revert the
+      scoped test and documentation commits; prior test behavior is restored.
+
+**Next 1 (P0):** verify this PR and reconcile obsolete protected-main required
+checks (#107) without bypassing branch protection.
+
+**Next 2 (P2):** measure remaining unmanaged fixture roots after the already
+open #58 slices are reconciled, then address one non-overlapping helper
+with regression coverage and actual before/after counts.
+
 ---
 
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
