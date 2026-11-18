@@ -27,6 +27,34 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P2 — Own Phase-52 synthetic vault and key fixtures (issue #58; draft review)
+
+- [ ] **S** Make every synthetic fixture root created by
+      `tests/test_phase52_vault_seals_the_private_plane.py` disposable via
+      stdlib `TemporaryDirectory` and `unittest.addModuleCleanup`,
+      including restore destinations and outside-repository test passphrases.
+      No change to production vault, encryption, authorization, or real data.
+- [ ] Acceptance: the existing Phase-52 regression verifies both factories
+      register working cleanup callbacks and neither synthetic vault nor
+      passphrase survives an invoked cleanup. No new unittest method and no
+      dependency. The isolated Python check reproduced zero registrations
+      before and two effective cleanups after; full runner CI is pending.
+- [ ] Run repository health and full Python 3.9/3.12 Ubuntu/Windows CI before
+      merge; do not call this verified merely because isolated stdlib passes.
+- [ ] Rollback: revert this isolated test-only branch if a platform's test
+      holds an open handle that prevents `TemporaryDirectory.cleanup()`;
+      retain the baseline and reopen the issue subset, without deleting user data.
+
+**Next 1 (P0):** Reconcile protected-main required-check drift in issue #107
+without bypassing branch protection, then independently review the privacy
+boundary in #140 and the CI result for this change.
+
+**Next 2 (P1/P2):** Measure first real recall and cleanup under a pristine
+clone on Windows/macOS/Linux (issue #93), then audit the next unowned fixture
+in #58. P3 competitor work stays research-only until measured and licensed.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
