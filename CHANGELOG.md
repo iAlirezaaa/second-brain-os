@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; PR #112 test-matrix assignment guard, under review)
+- The read-only Python-floor audit now refuses to assert OS/Python test coverage
+  when a GitHub Actions jobs.test matrix lists Windows/3.9 but its actual
+  runs-on runner is hardcoded to Linux, or when its setup-python step
+  installs a constant Python version. Two synthetic regression cases test
+  nonzero refusal. Existing CI behavior and all user data remain unchanged;
+  this is a stdlib-only diagnostic guard, not a claim that those misconfigs
+  currently exist. Final-head CI verification and authorized protection
+  repair (#107) are prerequisites for merge. Rollback: revert the focused
+  test/validator commits and review newly supported workflow syntax.
+
 ### Fixed (issue #107; PR #112 excluded matrix audit, pending full CI)
 - The read-only CI-floor audit no longer invents required `test (os, version)`
   checks when GitHub Actions `jobs.test.strategy.matrix` declares
