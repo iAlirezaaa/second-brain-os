@@ -27,6 +27,41 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Ensure CI matrix labels match actual runners/interpreters (#107; PR #112, 2026-11-18)
+
+- [x] **Observed failure mode (S):** an inline jobs.test matrix could
+  claim Windows + Python 3.9 while runs-on was hardcoded to Ubuntu or
+  actions/setup-python was hardcoded to 3.12. The former audit derived
+  four check names from the matrix, without verifying those assignments.
+  These are synthetic negative fixtures, **not** changes observed in
+  the repository's real CI configuration.
+- [x] **Test first:** two regressions in
+  `tests/test_phase37_ci_python_floor.py` require the read-only audit and
+  offline floor gate to reject a fixed runner and fixed Python pin
+  (commit `82e9b4a`).
+- [x] **Bounded fix:** `scripts/ci_floor.py` now accepts only the
+  deployed matrix.os runner selection and setup-python matrix.python-version
+  pin. Unrecognized layouts fail closed and need independent review rather
+  than a false matrix coverage claim (commit `7aa0268`). No YAML dependency,
+  workflow edit, runtime agent change, network request or permission change.
+- [ ] **Acceptance:** focused Python 3.9+ unit tests, full `health.py`,
+  and all seven exact-head Actions jobs (Ubuntu + Windows Python 3.9/3.12,
+  backup seal/restore). No merge while #107's protected-main checks are
+  obsolete or independent review is absent.
+- **Rollback:** revert the validator/test pair if a real supported workflow
+  layout is incorrectly rejected; never relax the floor or branch protection
+  merely to obtain a green check.
+
+**Next 1 (P0):** verify seven CI jobs at this head; an authorized administrator
+then aligns protected-main Ubuntu required contexts without removing Windows
+or review requirements (issue #107).
+
+**Next 2 (P0/P1):** measure clean-checkout first recall with synthetic notes
+on Windows, macOS and Linux, recording durations, hardware and repeat counts
+before publishing any sub-five-minute claim.
+
+---
+
 ## P0 — Do not invent excluded GitHub Actions checks (#107; PR #112, 2026-11-18)
 
 - [x] **Baseline:** an active `jobs.test.strategy.matrix.exclude` for
