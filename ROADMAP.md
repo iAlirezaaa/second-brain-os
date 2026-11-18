@@ -48,7 +48,7 @@ over something it cannot see is a silent gate, not a clean house.
 
 - [ ] **P0 privacy follow-up (2026-11-18; same issue #140):** `kb.py --related`
       previously probed `Path.is_file()` on any unindexed reference, including
-      `09_OPERATIONS/decisions/...` and `../` outside the served root. Its
+      `09_OPERATIONS/decisions/...` and parent-directory traversal outside the served root. Its
       refusal said whether a protected file existed even though it never
       returned the file body. An isolated synthetic pre-fix reproduction
       confirmed different refusal messages for absent vs present files; no
