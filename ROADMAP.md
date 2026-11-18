@@ -50,9 +50,9 @@ over something it cannot see is a silent gate, not a clean house.
 regresses; the KB SQLite cache is derived and rebuildable using
 `python scripts/kb.py ingest`. No private user data should be committed.
 
-**Next 1 (P0):** reconcile protected-main required checks in issue #107
-without bypassing branch protection; clear review-ready PRs only after
-matching CI and human review.
+**Next 1 (P0):** complete all seven CI jobs on the repaired PR #141 head,
+independently review the privacy boundary, then reconcile protected-main required
+checks in issue #107 without bypassing branch protection.
 **Next 2 (P0 to P1):** repeat the under-five-minute first-recall onboarding
 measurement in issue #93 on Windows/macOS/Linux, then test installed
 Claude Code/Codex/OpenCode MCP clients with synthetic data and approval gates.
