@@ -115,6 +115,34 @@ class TestProbe(unittest.TestCase):
             self.assertEqual(result.returncode, 1, declared)
             self.assertIn("REFUSED", result.stdout, declared)
 
+        # A lexical scripts/ prefix is not enough if a file or parent is linked
+        # outside the checkout. Never run the outside fixture as a probe.
+        with tempfile.TemporaryDirectory() as external:
+            external_root = Path(external)
+            marker = external_root / "outside-was-executed"
+            outside_script = external_root / "external.py"
+            outside_script.write_text(
+                "from pathlib import Path\nPath(%r).write_text('ran')\n" % str(marker),
+                encoding="utf-8")
+            scripts = self.tmp / "scripts"
+            links = ((scripts / "linked-file.py", outside_script, False,
+                      "scripts/linked-file.py"),
+                     (scripts / "linked-parent", external_root, True,
+                      "scripts/linked-parent/external.py"))
+            for link, target, is_dir, declared in links:
+                try:
+                    link.symlink_to(target, target_is_directory=is_dir)
+                except (OSError, NotImplementedError):
+                    self.skipTest("creating symlinks is unavailable on this host")
+                result = run_probe(self.tmp, candidate(fm(declared), self.tmp))
+                self.assertFalse(marker.exists(), "outside probe was executed: " + declared)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn("REFUSED", result.stdout, declared)
+            # The traversal spelling must not get normalized into an allowed path.
+            result = run_probe(self.tmp, candidate(fm("../scripts/quiet.py"), self.tmp))
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertIn("REFUSED", result.stdout)
+
     def test_the_installer_is_reserved_because_it_writes_outside_the_repo(self):
         scripts = self.tmp / "scripts"
         (scripts / "install.py").write_text(QUIET_SCRIPT, encoding="utf-8")
