@@ -44,6 +44,7 @@ over something it cannot see is a silent gate, not a clean house.
       and `tests/test_kb_corpus_symlink_boundary.py` must fail on the old
       code, pass after the fix, and leave measured unittest counts unchanged.
       Require all seven CI jobs and independent review before merge.
+- [ ] **CI follow-up (2026-11-18):** [run #44353234128](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44353234128) failed its four Ubuntu/Windows unit-test jobs (1126 tests, one failure each): Phase-44's schema-stamp test froze the derived KB index version at `"2"`, blocking the deliberate v3 privacy re-index. The assertion is now based on the current numeric SQLite version and still refuses a JSON contract claiming that version. The isolated regex invariant was exercised (2/2 on Python 3.13); **full tests, health and seven exact-head jobs are pending**. No permission or note data changed by this test repair.
 
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
