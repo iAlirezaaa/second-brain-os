@@ -29,7 +29,7 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## P0 — Confine untrusted candidate probes to checked-out scripts (issue #138; draft PR, 2026-11-18)
 
-- [x] **S / security, test-first:** extend the existing `tests/test_phase12_probe.py` command-refusal test (same discovered test count) with synthetic external file and parent-directory symlinks. A marker makes unintended execution observable; also reject `../scripts/quiet.py` rather than silently removing traversal with `lstrip("./")`.
+- [x] **S / security, test-first:** extend the existing `tests/test_phase12_probe.py` command-refusal test (same discovered test count) with synthetic external file and parent-directory symlinks. A marker makes unintended execution observable; also reject a leading parent-directory traversal before normalizing a harmless optional dot prefix.
 - [x] **S / production:** `scripts/probe.py` refuses paths whose resolved target escapes the repository and paths containing any symlink component, before invoking a subprocess; ordinary local `scripts/*.py` probes still use the existing allowlist. Python 3.9 stdlib only; no settings/permission/data changes.
 - [ ] **Acceptance:** the focused Phase-12 suite, `python scripts/health.py`, full unittest discovery, and seven GitHub Actions OS/backup jobs must pass on the final head. Confirm the PR diff, no overlap with parallel PRs, and branch-protection checks before merge. These results are **pending**, not implied by a synthetic local reproduction.
 - **Rollback:** revert the narrow probe/test/doc commits; no persisted user data or schema migrations are involved.
