@@ -108,7 +108,8 @@ def corpus(root):
     real_root = root.resolve()
     for path in iter_markdown(root):
         rel = path.relative_to(root).as_posix()
-        if rel in DOORS or rel.startswith(NOT_CORPUS) or rel.startswith(MACHINE_PLANE):
+        if (rel in DOORS or rel.startswith(NOT_CORPUS) or rel.startswith(MACHINE_PLANE)
+                or rel.startswith(DEFAULT_DENIED_HUMAN)):
             continue
         if any(part.startswith(".") for part in rel.split("/")[:-1]):
             continue  # host folders (.github, .cursor, ...) are configuration, not notes
