@@ -11,8 +11,10 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   `09_OPERATIONS` exclusion and omit its Markdown from the derived,
   local keyword KB. The previous default could search operational notes
   outside `clients_metadata_only` despite the zone's
-  `denied_for_default_context` policy. Synthetic existing-test regressions
-  cover both access routes and the permitted `02_WIKI` path. This does not
+  `denied_for_default_context` policy. The KB corpus version advances to
+  refuse pre-fix caches until the user re-runs `kb.py ingest`.
+  Synthetic existing-test regressions cover both access routes, stale caches
+  and the permitted `02_WIKI` path. This does not
   enforce an operating-system ACL, migrate user data or connect to a network.
 
 
