@@ -87,8 +87,9 @@ remove any older aliases from your derived index. Default keyword recall also
 excludes the entire `09_OPERATIONS/` zone, which is reserved for operational
 and client data, rather than silently exposing those notes to agent search.
 This filter is not an OS-enforced filesystem permission or a guarantee against
-an agent with direct disk access. Re-run `python scripts/kb.py ingest` to
-rebuild any pre-existing local index under the corrected scope. In your own installed brain,
+an agent with direct disk access. An index built using the previous corpus rule
+is refused until you run `python scripts/kb.py ingest` to rebuild its derived
+cache under the corrected scope. In your own installed brain,
 index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
 
