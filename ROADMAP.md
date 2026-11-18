@@ -25,6 +25,39 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+
+---
+
+## P0 — Refuse conditionally skipped mandatory CI tests (#107; PR #112; 2026-11-18)
+
+- [x] **P0 failure mode (S, synthetic):** a `jobs.test.if: false` condition
+  or a `Unit tests` step with `if: false` after its `run:` line could
+  be accepted by the read-only required-check audit even though the test
+  suite never executes. This is a negative fixture, not an assertion that
+  the live CI currently skips tests.
+- [x] **Test first:** extend the existing
+  `tests/test_phase37_ci_python_floor.py` test (commit `920b543`) with
+  job-level and step-level skip cases, without inflating collected test counts.
+- [x] **Bounded stdlib fix:** `scripts/ci_floor.py` now refuses `if:`
+  conditions on mandatory test jobs/steps; unsupported conditional layouts
+  require explicit review, rather than a false test-coverage claim.
+  No workflow runner, branch permission, dependency or user-data change.
+- [ ] **Acceptance:** the focused Python-floor unittest, full unittest suite,
+  `python scripts/health.py`, and seven exact-head Actions jobs must pass;
+  independent review and authorized repair of required-context drift in #107
+  remain prerequisites for merge.
+- **Rollback:** revert the condition guard and regression additions if a
+  justified conditional test layout is introduced; replace this narrow
+  parser with a separately reviewed behavior-preserving audit, not a waived
+  CI requirement.
+
+**Next 1 (P0):** inspect final-head seven-job CI and independently review PR #112,
+then align protected-main required checks via an authorized administrator.
+
+**Next 2 (P0/P1):** measure true clean-checkout first successful retrieval on
+Windows/macOS/Linux using synthetic data and published repeatable commands
+before asserting a sub-five-minute setup time.
+
 ---
 
 ## P0 — Require active, failure-propagating unittests in CI (#107; PR #112; 2026-11-18)
