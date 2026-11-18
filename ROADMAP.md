@@ -36,7 +36,7 @@ over something it cannot see is a silent gate, not a clean house.
       Existing test-method count is unchanged; no application code or user data changes.
 - [ ] Independent full-suite / health and all seven CI jobs on the final PR head
       must succeed before merge. The local sandbox cannot clone GitHub due to DNS;
-      a standalone Python 3.11 cleanup-lifecycle regression passed 1/1, but it
+      a standalone Python 3.13.5 cleanup-lifecycle regression passed 1/1, but it
       does **not** certify the repo's tests. Issue #58 remains open for other sites.
 - [ ] P0 merge gate remains the protected-main required-context drift in issue
       #107; do not bypass old required Ubuntu check names or publish a release.
