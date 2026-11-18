@@ -6,6 +6,9 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #138; probe execution boundary; verification pending)
+- Candidate probes now refuse executable files under symlinked script paths (including linked parent directories and targets outside the checkout), rather than trusting a lexical `scripts/` prefix. The parser also refuses `../` traversal before normalizing an optional `./`. Existing Phase-12 tests cover harmless external synthetic targets without increasing test count. No evidence of exploitation, user-data migration, dependency or external service. CI and independent review remain pending; not yet released.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
