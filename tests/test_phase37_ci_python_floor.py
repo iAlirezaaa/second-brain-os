@@ -186,30 +186,24 @@ class TestRefusals(unittest.TestCase):
                 ci_floor.expected_required_test_contexts(excluded_root)
             self.assertIn("cannot derive jobs.test matrix",
                           "\n".join(ci_floor.check(excluded_root)[0]))
-
-
-    def test_real_test_runner_must_follow_matrix_os(self):
-        # A matrix can declare Windows while runs-on pins every job to Linux.
-        # The status names may be emitted, but no Windows runner was tested.
-        with tempfile.TemporaryDirectory() as tmp:
-            ci = CI_GOOD.replace("runs-on: ${{ matrix.os }}",
-                                 "runs-on: ubuntu-24.04")
-            root = fixture(tmp, ci=ci)
+            # Matrix labels alone do not prove which machine or interpreter
+            # executed them. Add negative fixtures without increasing the
+            # collected test count (doc_report measures that count).
+            pinned_runner_ci = CI_GOOD.replace(
+                "runs-on: ${{ matrix.os }}", "runs-on: ubuntu-24.04")
+            pinned_runner_root = fixture(tmp, ci=pinned_runner_ci)
             with self.assertRaisesRegex(ValueError, "matrix.os"):
-                ci_floor.expected_required_test_contexts(root)
+                ci_floor.expected_required_test_contexts(pinned_runner_root)
             self.assertIn("cannot derive jobs.test matrix",
-                          "\n".join(ci_floor.check(root)[0]))
-
-    def test_setup_python_must_follow_matrix_python_version(self):
-        # Declaring 3.9 in the matrix is not proof it gets installed.
-        with tempfile.TemporaryDirectory() as tmp:
-            ci = CI_GOOD.replace("python-version: ${{ matrix.python-version }}",
-                                 'python-version: "3.12"')
-            root = fixture(tmp, ci=ci)
+                          "\n".join(ci_floor.check(pinned_runner_root)[0]))
+            pinned_python_ci = CI_GOOD.replace(
+                "python-version: ${{ matrix.python-version }}", 'python-version: "3.12"')
+            pinned_python_root = fixture(tmp, ci=pinned_python_ci)
             with self.assertRaisesRegex(ValueError, "matrix.python-version"):
-                ci_floor.expected_required_test_contexts(root)
+                ci_floor.expected_required_test_contexts(pinned_python_root)
             self.assertIn("cannot derive jobs.test matrix",
-                          "\n".join(ci_floor.check(root)[0]))
+                          "\n".join(ci_floor.check(pinned_python_root)[0]))
+
 
     def test_a_job_below_the_floor_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
