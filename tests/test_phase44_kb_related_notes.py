@@ -376,7 +376,7 @@ class TheRefusals(IndexFixture):
         for name in ("15_SYSTEM/private.md", "09_OPERATIONS/decisions/client.md"):
             with self.subTest(path=name):
                 absent = self.related(name)
-                write_notes(self.root, {name: "# Hidden\\ngate refuse run check print\\n"})
+                write_notes(self.root, {name: "# Hidden\ngate refuse run check print\n"})
                 present = self.related(name)
                 self.assertEqual(1, absent.returncode, absent.stdout + absent.stderr)
                 self.assertEqual(1, present.returncode, present.stdout + present.stderr)
@@ -393,7 +393,7 @@ class TheRefusals(IndexFixture):
         self.addCleanup(lambda: outside.unlink(missing_ok=True))
         ref = "../" + outside.name
         absent = self.related(ref)
-        outside.write_text("# Synthetic external note\\n", encoding="utf-8")
+        outside.write_text("# Synthetic external note\n", encoding="utf-8")
         present = self.related(ref)
         self.assertEqual(1, absent.returncode, absent.stdout + absent.stderr)
         self.assertEqual(1, present.returncode, present.stdout + present.stderr)
