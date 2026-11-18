@@ -20,6 +20,7 @@ import hashlib
 import io
 import json
 import platform
+import shutil
 import sys
 import tempfile
 import unittest
@@ -106,6 +107,22 @@ def plane_files(directory):
 
 class TheFixtureIsSynthetic(unittest.TestCase):
     def test_the_fixture_writes_only_its_own_generated_bytes(self):
+        # Contract: helper-owned roots are released by unittest module cleanup,
+        # even when no test explicitly removes them. Keep test method count stable.
+        for make_root in (sandbox, outside):
+            with self.subTest(factory=make_root.__name__):
+                with patch.object(unittest, "addModuleCleanup") as register:
+                    disposable = make_root()
+                    try:
+                        register.assert_called_once()
+                        # Run the registered cleanup now to test its observable
+                        # effect; production runs it after the module finishes.
+                        cleanup = register.call_args.args[0]
+                        cleanup()
+                        self.assertFalse(disposable.exists(),
+                                         "fixture survives its registered cleanup")
+                    finally:
+                        shutil.rmtree(disposable, ignore_errors=True)
         root, _key, _envelope, _out = sealed()
         written = plane_files(root)
         self.assertEqual(2 * len(backup_proof.FIXTURE_LEAVES), len(written))
