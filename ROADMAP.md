@@ -27,6 +27,44 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Do not invent excluded GitHub Actions checks (#107; PR #112, 2026-11-18)
+
+- [x] **Baseline:** an active `jobs.test.strategy.matrix.exclude` for
+      Ubuntu 24.04 / Python 3.9 made the old Cartesian-product parser
+      manufacture `test (ubuntu-24.04, 3.9)` despite that combination
+      never being scheduled. An isolated copy of the prior extraction
+      reproduced the false emitted check; no real workflow was changed.
+- [x] **Test first:** extend the existing
+      `tests/test_phase37_ci_python_floor.py` refusal case with a synthetic
+      excluded matrix; require an explicit ValueError and nonzero health
+      problem. Test commit `c4c7a03`; no new test method or count claim.
+- [x] **Fix:** `scripts/ci_floor.py` rejects unmodeled `include` or
+      `exclude` test-matrix exceptions rather than deriving fictitious
+      required check contexts. Implementation commit `723ec66`. This
+      conservative gate does **not** add full YAML parsing, new dependencies,
+      hosted settings access or change runner behavior.
+- [ ] **Acceptance:** `python -m unittest discover -s tests -p
+      'test_phase37_ci_python_floor.py' -v`, `python scripts/health.py`,
+      full unittest discovery, and all seven final-head GitHub CI jobs pass.
+      Only isolated old/new extraction assertions were run locally; DNS
+      prevented full-clone verification. Validate supported YAML layouts
+      before widening the parser.
+- [ ] **Merge blocker:** administrator must reconcile stale required Ubuntu
+      check contexts on protected `main` without weakening protections;
+      independent review remains required.
+- **Rollback:** revert only the new test and fail-closed guard if a legitimate
+  workflow becomes unrecognized; preserve the prohibition on claiming
+  nonexistent matrix jobs and keep the branch protected.
+
+**Next 1 (P0):** independently verify the latest SHA's seven CI jobs, then
+resolve the admin-only required-check drift tracked in issue #107.
+
+**Next 2 (P0/P1):** add a separately proposed, test-first matrix-exception
+expander if real workflows need `include/exclude`; otherwise retain the
+safe refusal and measure clean-clone first recall across supported OSes.
+
+---
+
 ## P0 — Refuse a commented-out nightly Python pin (#107; PR #112, 2026-11-17)
 
 - [x] **Reproduction:** `.github/workflows/loop.yml` with only
