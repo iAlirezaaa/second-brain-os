@@ -7,6 +7,13 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 ## [Unreleased]
 
 ### Fixed (issue #140; PR review, CI pending)
+### Tests (issue #140; follow-up to CI run #44353234128)
+- Keep the Phase-44 JSON-stamp-versus-SQLite-index independence check, but
+  read the current numeric derived-index version instead of hard-coding `2`.
+  This unblocks intentional privacy-driven cache invalidation without changing
+  the JSON contract, runtime access policy, or user notes. Full CI recheck is
+  pending; this test repair is not a release claim.
+
 - Align the default MCP/toolkit read boundary with the declared
   `09_OPERATIONS` exclusion and omit its Markdown from the derived,
   local keyword KB. The previous default could search operational notes
