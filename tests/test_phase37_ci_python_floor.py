@@ -228,6 +228,26 @@ class TestRefusals(unittest.TestCase):
             muted_root = fixture(tmp, ci=muted_tests_ci)
             with self.assertRaisesRegex(ValueError, "continue-on-error"):
                 ci_floor.expected_required_test_contexts(muted_root)
+            # A green status is not proof of coverage if GitHub Actions
+            # skips the whole job or silently skips only the Unit tests step.
+            # Both are valid YAML layouts; neither executes the advertised suite.
+            skipped_job_ci = CI_GOOD.replace(
+                "    runs-on: ${{ matrix.os }}",
+                "    if: false\n    runs-on: ${{ matrix.os }}")
+            skipped_job_root = fixture(tmp, ci=skipped_job_ci)
+            with self.assertRaisesRegex(ValueError, "condition"):
+                ci_floor.expected_required_test_contexts(skipped_job_root)
+            skipped_tests_ci = CI_GOOD.replace(
+                "        run: python -m unittest discover -s tests -v",
+                "        run: python -m unittest discover -s tests -v\n"
+                "        if: false")
+            skipped_tests_root = fixture(tmp, ci=skipped_tests_ci)
+            with self.assertRaisesRegex(ValueError, "condition"):
+                ci_floor.expected_required_test_contexts(skipped_tests_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(skipped_job_root)[0]))
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(skipped_tests_root)[0]))
 
 
     def test_a_job_below_the_floor_is_named(self):
