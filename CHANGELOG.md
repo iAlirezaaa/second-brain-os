@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-53 backup-proof fixture cleanup; PR under review)
+- The synthetic backup-proof tests now keep their temporary sandbox and
+  outside-repository key/envelope directories alive only until unittest's
+  module cleanup, rather than leaving them behind indefinitely. The existing
+  regression asserts that both factories register an effective cleanup;
+  no new test methods, production backup logic, permissions, user data or
+  dependencies changed. An isolated standard-library test reproduced the
+  missing registration before the change and a removed directory after it.
+  Full repository tests and CI on this SHA are pending; this is not released.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
