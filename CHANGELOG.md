@@ -6,6 +6,20 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; PR #112 excluded matrix audit, pending full CI)
+- The read-only CI-floor audit no longer invents required `test (os, version)`
+  checks when GitHub Actions `jobs.test.strategy.matrix` declares
+  `include` or `exclude` exceptions. Previously excluding Ubuntu 24.04 /
+  Python 3.9 still yielded the fictitious `test (ubuntu-24.04, 3.9)`
+  context and could hide a missing floor test. The parser now fails closed
+  with an explicit matrix exception diagnostic rather than claim a green
+  check. Regression extends an existing unittest with a synthetic exclusion.
+  Isolated old/new parser reproductions passed; full repository tests and
+  final-head GitHub Actions are pending. This changes no CI workflow,
+  protected-main settings, dependencies, host permissions or user data.
+  Rollback: revert the focused parser/test pair if valid unsupported YAML
+  requires an explicit compatibility upgrade; do not waive the floor.
+
 ### Fixed (issue #107; disabled nightly Python pin, PR #112)
 - The stdlib CI-floor workflow reader no longer counts wholly commented-out
   `python-version` configuration as an active interpreter guarantee. A nightly
