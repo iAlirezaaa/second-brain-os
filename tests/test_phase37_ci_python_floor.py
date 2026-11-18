@@ -172,6 +172,21 @@ class TestRefusals(unittest.TestCase):
             commented_problems, _ = ci_floor.check(fixture(tmp, ci=commented_ci))
             self.assertIn("jobs.test does not install declared floor 3.9",
                           "\n".join(commented_problems))
+            # Issue #107: matrix exclusions change which CI checks actually run.
+            # A Cartesian-product parser must not invent a green Linux 3.9 job
+            # when GitHub Actions explicitly excludes that combination.
+            excluded_ci = CI_GOOD.replace(
+                '        python-version: ["3.9", "3.12"]',
+                '        python-version: ["3.9", "3.12"]\n'
+                '        exclude:\n'
+                '          - os: ubuntu-24.04\n'
+                '            python-version: "3.9"')
+            excluded_root = fixture(tmp, ci=excluded_ci)
+            with self.assertRaisesRegex(ValueError, "include/exclude"):
+                ci_floor.expected_required_test_contexts(excluded_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(excluded_root)[0]))
+
 
     def test_a_job_below_the_floor_is_named(self):
         with tempfile.TemporaryDirectory() as tmp:
