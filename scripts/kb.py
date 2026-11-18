@@ -54,6 +54,10 @@ SCHEMA = "2"
 # Machine plane: written by tools, not by a person. Indexing it would let generated
 # reports and the quarantined shelf outrank the notes they are about.
 MACHINE_PLANE = ("11_CONTROL/", "12_RUNTIME/", "13_LAB/", "14_CANDIDATES/", "15_SYSTEM/")
+# This human zone holds client/operational data and is explicitly excluded
+# from the default agent context (system.json: denied_for_default_context).
+# A derived local search index must not silently turn it into agent-readable text.
+DEFAULT_DENIED_HUMAN = ("09_OPERATIONS/",)
 # The template is the shape a note takes, not knowledge this brain has. An installed
 # home has already lost the folder: install.py copies it to the root, where its notes
 # are ordinary corpus.
