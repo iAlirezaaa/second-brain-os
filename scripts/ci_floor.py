@@ -127,6 +127,25 @@ def expected_required_test_contexts(root):
     if selected_versions != ["${{ matrix.python-version }}"]:
         raise ValueError("jobs.test setup-python must use matrix.python-version")
 
+    # Status contexts by themselves do not prove that the corresponding jobs
+    # run tests. Keep the parser narrow: recognize the shipped, active unittest
+    # step and refuse a missing/no-op test command instead of validating a
+    # four-leg matrix that merely checks out the repository.
+    active_block = "\n".join(
+        line for line in block.splitlines() if not line.lstrip().startswith("#"))
+    unit_step = (r"(?m)^      - name: Unit tests[ \t]*\n"
+                 r"        run: python -m unittest discover -s tests -v[ \t]*$")
+    if len(re.findall(unit_step, active_block)) != 1:
+        raise ValueError("jobs.test Unit tests step must run the actual unittest suite")
+    # A successful runner that ignores a failing unit suite is not evidence.
+    # Unknown expressions and truthy YAML flags fail closed. Explicit false
+    # is permitted for jobs that choose to spell out the safe default.
+    soft_fail = re.findall(
+        r"(?m)^[ \t]*continue-on-error:[ \t]*([^#\n]+)", active_block)
+    if any(value.strip().lower() not in ("false", "no", "off", "0")
+           for value in soft_fail):
+        raise ValueError("jobs.test continue-on-error can hide test failures")
+
     def values(key):
         fields = re.findall(r"(?m)^\s+" + re.escape(key) +
                             r":\s*\[([^\]\n]+)\]\s*$", block)
