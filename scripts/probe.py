@@ -63,15 +63,34 @@ def resolve_command(root, candidate_fm):
     raw = candidate_fm.get("probe")
     if not raw:
         return [], "candidate declares no `probe:` command — a behaviour claim with no execution behind it"
-    rel = str(raw).replace("\\", "/").lstrip("./")
+    # Inspect unmodified path components before stripping the optional ./ prefix:
+    # lstrip("./") would turn ../scripts/foo.py into an apparently safe path.
+    rel = str(raw).replace("\\", "/")
     if rel.startswith("/") or ".." in Path(rel).parts:
         return [], "probe must be a repo-relative path, got %s" % raw
+    if rel.startswith("./"):
+        rel = rel[2:]
     if not rel.endswith(".py"):
         return [], "probe must be a .py script (no shell, no interpreter guessing): %s" % rel
     if not any(rel.startswith(d + "/") for d in ALLOWED_DIRS):
         return [], "probe %s is outside the allowlisted script dirs %s" % (rel, list(ALLOWED_DIRS))
-    if not (root / rel).is_file():
+    path = root / rel
+    if not path.is_file():
         return [], "probe script does not exist: %s" % rel
+    # Lexical allowlists are insufficient: both the script and any ancestor
+    # may be symlinks to executable code outside the checked-out repository.
+    try:
+        checkout = root.resolve(strict=True)
+        target = path.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return [], "probe script cannot be safely resolved: %s" % rel
+    if checkout not in target.parents:
+        return [], "probe script escapes the checkout: %s" % rel
+    current = root
+    for part in Path(rel).parts:
+        current = current / part
+        if current.is_symlink():
+            return [], "probe script uses a symbolic link: %s" % rel
     for refused, why in REFUSED_PROBES.items():
         if rel == refused:
             return [], "probe %s is reserved: %s" % (rel, why)
