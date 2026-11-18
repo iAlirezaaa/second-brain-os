@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; phase-19 evidence-test fixture cleanup; PR review pending)
+- The three phase-19 evidence tests no longer abandon `mkdtemp()` folders
+  on disk. A shared unittest-owned `TemporaryDirectory` helper registers
+  cleanup even after failed assertions and verifies the folder is gone.
+  No added test methods, changed application behavior, new dependencies or
+  modification to source/user data. A standalone Python 3.13.5 cleanup
+  lifecycle test and an intentional-failure cleanup probe passed locally;
+  the complete repository tests and seven CI jobs still require verification.
+  Other issue #58 fixture leaks are not claimed resolved.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

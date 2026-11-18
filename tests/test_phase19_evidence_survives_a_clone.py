@@ -31,6 +31,19 @@ from common import run_utf8  # noqa: E402
 CHECK = str(SCRIPTS / "candidate_check.py")
 
 
+def owned_temporary_directory(case):
+    """Give every mkdtemp-style fixture a unittest-owned, assertion-checked lifetime.
+
+    Cleanups run last-in-first-out: remove the directory, then assert that even
+    an early test failure left no fixture bytes in the system temp folder.
+    """
+    holder = tempfile.TemporaryDirectory(prefix="sbo-evidence-fixture-")
+    case.addCleanup(lambda: case.assertFalse(Path(holder.name).exists(),
+                                             "fixture holder leaked after cleanup"))
+    case.addCleanup(holder.cleanup)
+    return Path(holder.name)
+
+
 class TestTheBoundaryIsKnown(unittest.TestCase):
     def test_the_helper_and_gitignore_agree_on_the_named_folders(self):
         """Two lists that describe one law will drift; this test is the tie between them."""
@@ -41,7 +54,7 @@ class TestTheBoundaryIsKnown(unittest.TestCase):
                             "%s must not read as clone-safe" % folder)
 
     def test_a_file_that_exists_here_can_still_be_unreadable_there(self):
-        tmp = Path(tempfile.mkdtemp())
+        tmp = owned_temporary_directory(self)
         (tmp / ".kb").mkdir()
         db = tmp / ".kb" / "kb.sqlite"
         db.write_text("local state", encoding="utf-8")
@@ -148,7 +161,7 @@ class TestTheLoopStopsWritingThem(unittest.TestCase):
         import loop as loop_mod
         rows = loop_mod.candidates(self.metrics(""), [])
         gap = [row for row in rows if row["cue"].startswith("a search in the index")][0]
-        tmp = Path(tempfile.mkdtemp())
+        tmp = owned_temporary_directory(self)
         shelf = tmp / "14_CANDIDATES" / "loop"
         shelf.mkdir(parents=True)
         written = loop_mod.write_rows(tmp, [("cand-2026-01-01-t-02", gap)],
@@ -160,7 +173,7 @@ class TestTheLoopStopsWritingThem(unittest.TestCase):
 
     def test_write_rows_drops_evidence_a_clone_cannot_open(self):
         import loop as loop_mod
-        tmp = Path(tempfile.mkdtemp())
+        tmp = owned_temporary_directory(self)
         shelf = tmp / "14_CANDIDATES" / "loop"
         shelf.mkdir(parents=True)
         (tmp / ".kb").mkdir()
