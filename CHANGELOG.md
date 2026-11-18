@@ -6,6 +6,21 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #107; PR #112 conditional required tests; pending exact-head CI)
+- The stdlib-only Python-floor/required-context auditor now refuses to call
+  mandatory CI test coverage verified when a `jobs.test` job or the `Unit tests`
+  step has a conditional `if:` that could skip execution. The previous
+  narrow parser accepted synthetic `if: false` placements (including after
+  the test command), potentially treating skipped jobs as coverage.
+  The existing Python-floor unittest includes both negative fixtures without
+  adding a collected test method. The repository workflow, protected-branch
+  rules, dependencies, host permissions and private data are unchanged.
+  This is a conservative static analysis refusal, not an allegation that
+  production CI contains such a condition. Full health, exact-head CI and
+  review are required; rollback is a focused revert followed by reviewed
+  support for legitimate conditional execution.
+
+
 ### Fixed (issue #107; PR #112 unittest execution gate, under review)
 - The offline required-check auditor now refuses four apparently valid OS/Python
   contexts if the test job lacks the active `python -m unittest discover -s tests -v`
