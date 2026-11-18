@@ -39,6 +39,13 @@ claim to have verified GitHub's remote settings.
 
 ## Local cross-platform matrix integrity
 
+The offline audit also requires the active, failure-propagating `Unit tests` step
+running `python -m unittest discover -s tests -v`. Missing or no-op tests,
+and truthy/unknown `continue-on-error` in the test job, fail closed. This is a
+narrow static check for the current workflow, not proof of actual runner execution
+or a substitute for seven exact-head GitHub Actions results. Different legitimate
+test commands need reviewed, test-first compatibility updates.
+
 The same `ci_floor.py` offline gate also verifies that `jobs.test`
 contains **both Ubuntu and Windows**. Other jobs (including the separate
 Ubuntu backup-seal job) cannot prove that unit tests ran on Linux. Missing
