@@ -122,7 +122,7 @@ class TestProbe(unittest.TestCase):
             marker = external_root / "outside-was-executed"
             outside_script = external_root / "external.py"
             outside_script.write_text(
-                "from pathlib import Path\\nPath(%r).write_text('ran')\\n" % str(marker),
+                "from pathlib import Path\nPath(%r).write_text('ran')\n" % str(marker),
                 encoding="utf-8")
             scripts = self.tmp / "scripts"
             links = ((scripts / "linked-file.py", outside_script, False,
