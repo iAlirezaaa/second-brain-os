@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #140; unindexed related-note privacy, in review)
+- `kb.py --related` no longer stats an unindexed note's user-supplied path
+  to distinguish an existing protected file from an absent file. The old
+  refusal revealed the existence of `09_OPERATIONS` and other excluded files,
+  and could probe a `../` path outside the vault. The new refusal is based
+  only on what the local index holds; it still exits nonzero and explains how
+  to rebuild an eligible note. An existing Phase-44 regression method checks
+  synthetic absent/present cases for operations, machine and outside-root
+  paths. No filesystem ACL, user data, schema or dependency was changed;
+  full CI on this additional change is required before merge.
+
 ### Fixed (issue #140; PR review, CI pending)
 - Align the default MCP/toolkit read boundary with the declared
   `09_OPERATIONS` exclusion and omit its Markdown from the derived,
