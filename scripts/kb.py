@@ -49,7 +49,7 @@ except AttributeError:
     pass
 
 KB = Path(".kb") / "kb.sqlite"
-SCHEMA = "2"
+SCHEMA = "3"  # bump: prior caches may contain default-denied 09_OPERATIONS notes
 
 # Machine plane: written by tools, not by a person. Indexing it would let generated
 # reports and the quarantined shelf outrank the notes they are about.
