@@ -40,8 +40,16 @@ class KbCorpusAliases(unittest.TestCase):
         return {rel for rel, _path in kb.corpus(self.root)}
 
     def test_ordinary_markdown_is_still_indexed_and_searchable(self):
+        # Operations is a human zone but denied to the default agent context.
+        # A local keyword index must not accidentally make its client data searchable.
+        private = self.root / "09_OPERATIONS" / "decisions" / "client.md"
+        private.parent.mkdir(parents=True)
+        private.write_text("# Private operation\nONLY_OPERATIONS_CANARY stays private.\n",
+                           encoding="utf-8")
         self.assertIn("02_WIKI/real.md", self.indexed())
+        self.assertNotIn("09_OPERATIONS/decisions/client.md", self.indexed())
         self.assertEqual(0, kb.ingest(self.root))
+        self.assertEqual([], kb.find(self.root, "ONLY_OPERATIONS_CANARY"))
         self.assertEqual(["02_WIKI/real.md"],
                          [hit["path"] for hit in kb.find(self.root, "LOCALORCHID")])
 
