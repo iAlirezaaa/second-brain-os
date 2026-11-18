@@ -111,6 +111,22 @@ def expected_required_test_contexts(root):
     if re.search(r"(?m)^    name:\s*", block):
         raise ValueError("jobs.test has a custom name; inspect emitted check names manually")
 
+    # The matrix names alone do not prove what ran. A fixed runs-on would
+    # label a Windows matrix leg while executing it on Ubuntu; a fixed
+    # setup-python pin would label 3.9 while actually installing only 3.12.
+    # Recognize only the simple, shipped layout; other layouts need a
+    # reviewed parser change rather than a falsely green status audit.
+    selected_runners = re.findall(
+        r"(?m)^    runs-on:[ \t]*(.+?)[ \t]*$", block)
+    if selected_runners != ["${{ matrix.os }}"]:
+        raise ValueError("jobs.test runs-on must use matrix.os, not a fixed runner")
+    selected_versions = re.findall(
+        r"(?m)^      - uses:[ \t]*actions/setup-python@[\w.-]+[ \t]*\n"
+        r"        with:[ \t]*\n"
+        r"          python-version:[ \t]*(.+?)[ \t]*$", block)
+    if selected_versions != ["${{ matrix.python-version }}"]:
+        raise ValueError("jobs.test setup-python must use matrix.python-version")
+
     def values(key):
         fields = re.findall(r"(?m)^\s+" + re.escape(key) +
                             r":\s*\[([^\]\n]+)\]\s*$", block)
