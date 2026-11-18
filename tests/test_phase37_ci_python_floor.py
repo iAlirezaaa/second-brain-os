@@ -32,6 +32,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
 """
 
 LOOP_GOOD = """name: loop
@@ -203,6 +205,29 @@ class TestRefusals(unittest.TestCase):
                 ci_floor.expected_required_test_contexts(pinned_python_root)
             self.assertIn("cannot derive jobs.test matrix",
                           "\n".join(ci_floor.check(pinned_python_root)[0]))
+            # A matrix that schedules four OS/Python legs but never executes
+            # the unit suite cannot substantiate the CI assurance either.
+            missing_tests_ci = CI_GOOD.replace(
+                "      - name: Unit tests\n"
+                "        run: python -m unittest discover -s tests -v\n", "")
+            missing_tests_root = fixture(tmp, ci=missing_tests_ci)
+            with self.assertRaisesRegex(ValueError, "Unit tests"):
+                ci_floor.expected_required_test_contexts(missing_tests_root)
+            self.assertIn("cannot derive jobs.test matrix",
+                          "\n".join(ci_floor.check(missing_tests_root)[0]))
+            no_op_tests_ci = CI_GOOD.replace(
+                "run: python -m unittest discover -s tests -v",
+                "run: echo tests skipped")
+            no_op_root = fixture(tmp, ci=no_op_tests_ci)
+            with self.assertRaisesRegex(ValueError, "Unit tests"):
+                ci_floor.expected_required_test_contexts(no_op_root)
+            muted_tests_ci = CI_GOOD.replace(
+                "        run: python -m unittest discover -s tests -v",
+                "        run: python -m unittest discover -s tests -v\n"
+                "        continue-on-error: true")
+            muted_root = fixture(tmp, ci=muted_tests_ci)
+            with self.assertRaisesRegex(ValueError, "continue-on-error"):
+                ci_floor.expected_required_test_contexts(muted_root)
 
 
     def test_a_job_below_the_floor_is_named(self):
