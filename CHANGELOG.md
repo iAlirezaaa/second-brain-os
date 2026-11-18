@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-52 synthetic backup fixtures; draft PR)
+- Test-only vault/restore fixture roots and synthetic outside-repository
+  passphrase directories now belong to `unittest.addModuleCleanup` through
+  Python's `TemporaryDirectory` instead of surviving full-suite runs. The
+  existing Phase-52 regression checks that both fixture factories register
+  cleanup and that invoking it removes both paths. An isolated standard-library
+  check reproduced zero registrations before and two effective cleanups after.
+  Full GitHub CI is required before merge; this is not released. No production
+  vault, encryption, permission, external service, or user-data change.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
