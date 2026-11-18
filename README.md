@@ -83,7 +83,12 @@ which is gitignored, and the commands need no network or API key. This is
 **keyword-based retrieval**, not semantic memory. Symlinked Markdown files and notes reached through
 symlinked directories are excluded from the index to avoid aliases crossing
 knowledge boundaries. Re-run `python scripts/kb.py ingest` after updating to
-remove any older aliases from your derived index. In your own installed brain,
+remove any older aliases from your derived index. Default keyword recall also
+excludes the entire `09_OPERATIONS/` zone, which is reserved for operational
+and client data, rather than silently exposing those notes to agent search.
+This filter is not an OS-enforced filesystem permission or a guarantee against
+an agent with direct disk access. Re-run `python scripts/kb.py ingest` to
+rebuild any pre-existing local index under the corrected scope. In your own installed brain,
 index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
 
