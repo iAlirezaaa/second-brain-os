@@ -37,8 +37,9 @@ and the same measure over the files a clone actually carries (`git ls-files "*.j
 
 Two of the stamped ones (`15_SYSTEM/config/system.json`, `15_SYSTEM/generated/catalog.json`) were
 written by `hades.py`; `catalog.json` is gitignored, so a fresh clone carried exactly one stamped
-JSON file out of thirty-four. `scripts/kb.py`'s `SCHEMA = "2"` is *not* this kind of stamp: it is
-the version of a sqlite index rebuilt from scratch, and no JSON file reads it.
+JSON file out of thirty-four. `scripts/kb.py`'s numeric `SCHEMA` is *not* this kind of stamp: it is
+the version of a disposable SQLite index rebuilt from source notes. Its value
+can advance when the corpus boundary changes, and no JSON contract reads it.
 
 The debt was then paid by this file's own command, which refuses to paint a number over a shape it
 cannot check:
