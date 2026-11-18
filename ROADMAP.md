@@ -37,8 +37,9 @@ over something it cannot see is a silent gate, not a clean house.
       OS-enforced ACL or authorize access through a client.
 - [ ] Also exclude that zone from `scripts/kb.py` local keyword indexing,
       including derived indexes after a new ingest. Preserve ordinary
-      `02_WIKI` indexing and direct user ownership of files. No database
-      schema migration or package dependency is needed.
+      `02_WIKI` indexing and direct user ownership of files. Bump the derived
+      SQLite KB corpus version so old indexes containing operational notes
+      fail closed until re-ingest; no user-data migration or package is needed.
 - [ ] Existing synthetic regressions in `tests/test_access_boundary.py`
       and `tests/test_kb_corpus_symlink_boundary.py` must fail on the old
       code, pass after the fix, and leave measured unittest counts unchanged.
