@@ -3,6 +3,7 @@
 Each fixture is disposable; the outside sentinel is synthetic, never user data.
 """
 import os
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -59,6 +60,17 @@ class KbCorpusAliases(unittest.TestCase):
         self.assertEqual([], kb.find(self.root, "ENV_NOTE_CANARY"))
         self.assertEqual(["02_WIKI/real.md"],
                          [hit["path"] for hit in kb.find(self.root, "LOCALORCHID")])
+        # A pre-fix cache could already hold the .env.-named note. Merely
+        # changing the next ingest does not stop reads from that old cache.
+        with sqlite3.connect(str(self.root / ".kb" / "kb.sqlite")) as conn:
+            conn.execute("UPDATE kb_meta SET value = '3' WHERE key = 'schema'")
+            conn.execute("INSERT OR REPLACE INTO notes VALUES (?,?,?,?,?,?)",
+                         ("02_WIKI/.env.private.md", "Old private cache", "02_WIKI",
+                          "ENV_NOTE_CANARY", "env_note_canary", "2026-11-19"))
+        with self.assertRaisesRegex(RuntimeError, "older corpus rule"):
+            kb.find(self.root, "ENV_NOTE_CANARY")
+        self.assertEqual(0, kb.ingest(self.root))
+        self.assertEqual([], kb.find(self.root, "ENV_NOTE_CANARY"))
 
     def test_external_file_symlink_is_never_ingested(self):
         outside = self.base / "outside.md"
