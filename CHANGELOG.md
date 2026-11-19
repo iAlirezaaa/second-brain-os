@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58; PR #142, review pending; 2026-11-19)
+- Phase-45 synthetic roadmap-check fixtures now release their temporary checkout
+  if setup fails before the caller can reach a `finally` block. The fixture's
+  normal `close()` also uses `TemporaryDirectory.cleanup()`; an existing
+  unittest asserts the injected failure leaves no root. A reconstructed,
+  isolated Python 3.13.5 smoke covered legacy leak, failure cleanup and normal
+  cleanup (3/3); the full repository CI result on the final commit remains
+  separate and unverified at the time of this entry. No product runtime, user
+  memory, dependencies, permission boundary or release behavior changed.
+
 ### Fixed (issue #58 partial; Phase-44 schema fixture setup failure; CI/review pending)
 - Four schema-version test classes in `tests/test_phase44_schema_version.py`
   now register a standard-library `TemporaryDirectory` cleanup before
