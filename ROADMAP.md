@@ -91,6 +91,24 @@ over something it cannot see is a silent gate, not a clean house.
       lifetime change if any independently verified regression appears; do not
       roll back the privacy exclusion to make CI green.
 
+- [ ] **P0 case-fold parity (2026-11-19; issue #140, PR #141, in review):**
+      The default MCP read boundary denies operational and machine zones and
+      secret-bearing directory names independent of case. On a case-sensitive
+      checkout, local KB indexing instead compared zone prefixes and the
+      clone-readability secret segment with case-sensitive spelling. Synthetic
+      mixed-case operations, runtime and Secrets-directory notes could therefore
+      enter keyword search although default tool reads refused them. An added
+      regression within the existing KB corpus test method requires the three
+      notes to be absent from corpus enumeration and search while an ordinary
+      wiki note stays searchable. KB corpus now folds those prefixes and
+      clone-readability checks before ingest. No third-party dependency, source
+      note rewrite, permission expansion or derived-cache migration is needed:
+      existing indexes still require a deliberate re-ingest under schema v4.
+      Evidence: a local isolated predicate reproduction showed old accepted
+      3/3 denied case variants and new refused 3/3; full repository tests
+      and all seven **exact-head** CI jobs must confirm before merge. Rollback
+      only this scoped predicate change if cross-platform indexing regresses.
+
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
 `python scripts/kb.py ingest`. No private user data should be committed.
