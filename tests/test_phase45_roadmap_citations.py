@@ -125,7 +125,7 @@ class TestClosedRowsMustResolve(unittest.TestCase):
             with mock.patch.object(tempfile, "gettempdir", return_value=parent):
                 with mock.patch.object(Path, "mkdir", side_effect=OSError("injected setup failure")):
                     with self.assertRaisesRegex(OSError, "injected setup failure"):
-                        Fixture("- [x] **S** `scripts/loop.py` is checked.\\n")
+                        Fixture("- [x] **S** `scripts/loop.py` is checked.\n")
             self.assertEqual(list(Path(parent).iterdir()), [],
                              "failed Fixture() leaked a repository under %s" % parent)
 
