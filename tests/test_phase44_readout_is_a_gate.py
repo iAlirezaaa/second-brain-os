@@ -78,6 +78,10 @@ class TestTheReadoutIsAVerdict(unittest.TestCase):
         self.assertEqual(len(ok), 1, "health counts one OK line per gate: %r" % code.stdout)
         self.assertIn("notes scanned: 2", code.stdout,
                       "the denominator has to be the notes it scanned")
+        # A completed test must not leave the synthetic link-graph vault behind.
+        self.doCleanups()
+        self.assertFalse(self.vault.exists(),
+                         "a synthetic readout vault survived its unittest cleanup")
 
     def test_an_escalated_edge_refuses_the_readout(self):
         """A colliding stem binds a link by accident; the graph gate must not call that healthy."""
