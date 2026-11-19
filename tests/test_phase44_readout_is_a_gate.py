@@ -39,8 +39,11 @@ NOTE = "---\nid: {stem}\ntype: note\ntitle: \"{stem}\"\nstatus: raw\nowner: agen
        "topics: [fixture]\ncreated: 2026-11-02\nupdated: 2026-11-02\n---\n\n# {stem}\n\n"
 
 
-def vault_with(files):
-    home = Path(tempfile.mkdtemp(prefix="readout-vault-"))
+def vault_with(files, owner):
+    """Register cleanup before writing synthetic graph notes, including setup failures."""
+    holder = tempfile.TemporaryDirectory(prefix="readout-vault-")
+    owner.addCleanup(holder.cleanup)
+    home = Path(holder.name)
     for relpath, body in files.items():
         p = home / relpath
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -65,7 +68,7 @@ ESCALATED.update({
 
 class TestTheReadoutIsAVerdict(unittest.TestCase):
     def setUp(self):
-        self.vault = vault_with(CLEAN)
+        self.vault = vault_with(CLEAN, self)
 
     def tearDown(self):
         shutil.rmtree(self.vault, ignore_errors=True)
@@ -85,7 +88,7 @@ class TestTheReadoutIsAVerdict(unittest.TestCase):
 
     def test_an_escalated_edge_refuses_the_readout(self):
         """A colliding stem binds a link by accident; the graph gate must not call that healthy."""
-        vault = vault_with(ESCALATED)
+        vault = vault_with(ESCALATED, self)
         try:
             code = run(vault, "--readout")
             self.assertEqual(code.returncode, 1, code.stdout + code.stderr)
@@ -98,7 +101,7 @@ class TestTheReadoutIsAVerdict(unittest.TestCase):
 
     def test_a_broken_link_still_refuses_the_default_gate(self):
         vault = vault_with(dict(CLEAN, **{"e/orphan.md": NOTE.format(stem="orphan")
-                                          + "[[nowhere]]\n"}))
+                                          + "[[nowhere]]\n"}), self)
         try:
             code = run(vault)
             self.assertEqual(code.returncode, 1, code.stdout + code.stderr)
@@ -113,7 +116,7 @@ class TestTheLinkGateShowsItsOwnShape(unittest.TestCase):
             shutil.rmtree(self.vault, ignore_errors=True)
 
     def test_the_default_verdict_line_is_unchanged_and_the_shape_rides_with_it(self):
-        self.vault = vault_with(CLEAN)
+        self.vault = vault_with(CLEAN, self)
         code = run(self.vault)
         self.assertEqual(code.returncode, 0, code.stdout + code.stderr)
         self.assertRegex(code.stdout, r"^OK — 0 broken links in ", code.stdout)
@@ -123,7 +126,7 @@ class TestTheLinkGateShowsItsOwnShape(unittest.TestCase):
                           % token)
 
     def test_an_ambiguous_graph_is_visible_in_the_default_run_before_it_is_refused_anywhere(self):
-        vault = vault_with(ESCALATED)
+        vault = vault_with(ESCALATED, self)
         try:
             code = run(vault)
             self.assertIn("1 ambiguous", code.stdout,
@@ -132,7 +135,7 @@ class TestTheLinkGateShowsItsOwnShape(unittest.TestCase):
             shutil.rmtree(vault, ignore_errors=True)
 
     def test_both_modes_agree_because_they_are_one_pass(self):
-        self.vault = vault_with(ESCALATED)
+        self.vault = vault_with(ESCALATED, self)
         data = graph_readout(self.vault)
         shape = run(self.vault).stdout
         readout = run(self.vault, "--readout").stdout
