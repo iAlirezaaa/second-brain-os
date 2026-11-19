@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-43 synthetic reviewer fixture ownership; CI pending)
+- Goldfish-review test fixtures previously used unowned `mkdtemp()` roots. A
+  failure in setup or before a test's explicit teardown could leave fake
+  reviewer files behind on a developer machine or CI runner. `house(owner)`
+  registers a stdlib `TemporaryDirectory` cleanup *before* copying fixture
+  files; existing test cases pass their owner. The existing persona test
+  now exercises `doCleanups()` and asserts the fixture path disappears,
+  without adding a test method or changing production code. An isolated
+  stdlib before/after cleanup check passed locally; complete exact-head CI
+  is still required before release. No user files, registry or permissions
+  were modified.
+
 ### Fixed (issue #58 partial; PR #142 Windows cleanup follow-up; CI pending)
 - Windows CI #44433337877 exposed a false-green fixture cleanup: both Windows
   jobs failed the existing no-origin regression because a Git temp directory
