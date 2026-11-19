@@ -75,11 +75,26 @@ over something it cannot see is a silent gate, not a clean house.
       file names, without claiming an OS ACL or reading real secrets.
       Full exact-head CI and review are required before merge.
 
+- [ ] **P0 CI stabilization (2026-11-19, issue #143; privacy PR #141):**
+      [CI #44462043435](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44462043435)
+      completed with 3/4 OS/Python unit-test jobs green but Windows Python 3.12
+      failed in `tests/test_kb_corpus_symlink_boundary.py` after 1126 tests:
+      `PermissionError: [WinError 32]` when deleting the disposable `.kb/kb.sqlite`.
+      Cause: `with sqlite3.connect(...)` commits/rolls back but does **not** close
+      the SQLite handle. A test-first assertion now requires the connection to
+      reject another query after its transaction; `contextlib.closing` releases
+      it before the fixture directory is cleaned. Isolated stdlib repro on
+      Python 3.13.5: old handle remained open; explicit close rejected use.
+      This is not a Windows CI pass; **require all seven exact-head jobs** and
+      independent privacy review before release. Rollback only the test-side
+      lifetime change if any independently verified regression appears; do not
+      roll back the privacy exclusion to make CI green.
+
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
 `python scripts/kb.py ingest`. No private user data should be committed.
 
-**Next 1 (P0):** confirm the seven CI jobs on the new side-channel fix head,
+**Next 1 (P0):** confirm all seven jobs on the latest privacy/SQLite lifetime fix head,
 independently review the privacy boundary, then reconcile protected-main required
 checks in issue #107 without bypassing branch protection.
 **Next 2 (P0 to P1):** repeat the under-five-minute first-recall onboarding
