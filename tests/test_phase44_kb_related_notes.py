@@ -371,14 +371,35 @@ class TheRefusals(IndexFixture):
             self.assertEqual(before, conn.execute("SELECT COUNT(*) FROM search_gaps").fetchone()[0])
 
     def test_a_file_the_corpus_rule_excludes_is_refused_by_that_rule(self):
-        # Machine plane: it is on disk, `ingest` never indexed it, and --related says so instead
-        # of answering "no neighbours" about a note it never read.
-        write_notes(self.root, {"15_SYSTEM/private.md": "# Hidden\ngate refuse run check print\n"})
-        result = self.related("15_SYSTEM/private.md")
-        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
-        self.assertIn("REFUSED", result.stdout, result.stdout)
-        self.assertIn("does not index", result.stdout, result.stdout)
-        self.assertEqual([], neighbours(result.stdout), result.stdout)
+        # A default agent must not learn whether a protected file exists just by
+        # asking --related for an unindexed path. All fixtures are synthetic.
+        for name in ("15_SYSTEM/private.md", "09_OPERATIONS/decisions/client.md"):
+            with self.subTest(path=name):
+                absent = self.related(name)
+                write_notes(self.root, {name: "# Hidden\ngate refuse run check print\n"})
+                present = self.related(name)
+                self.assertEqual(1, absent.returncode, absent.stdout + absent.stderr)
+                self.assertEqual(1, present.returncode, present.stdout + present.stderr)
+                self.assertEqual(absent.stdout, present.stdout,
+                                 "unindexed existence was disclosed by --related")
+                self.assertEqual(absent.stderr, present.stderr)
+                self.assertIn("REFUSED", present.stdout, present.stdout)
+                self.assertIn("does not index", present.stdout, present.stdout)
+                self.assertNotIn("file is here", present.stdout)
+                self.assertEqual([], neighbours(present.stdout))
+
+        # A traversal spelling must not probe the parent directory either.
+        outside = self.root.parent / ("sbo-related-" + self.root.name + ".md")
+        self.addCleanup(lambda: outside.unlink(missing_ok=True))
+        ref = "../" + outside.name
+        absent = self.related(ref)
+        outside.write_text("# Synthetic external note\n", encoding="utf-8")
+        present = self.related(ref)
+        self.assertEqual(1, absent.returncode, absent.stdout + absent.stderr)
+        self.assertEqual(1, present.returncode, present.stdout + present.stderr)
+        self.assertEqual(absent.stdout, present.stdout,
+                         "outside-file existence was disclosed by --related")
+        self.assertEqual(absent.stderr, present.stderr)
 
     def test_an_ambiguous_name_is_refused_not_guessed(self):
         write_notes(self.root, {"02_WIKI/dup/twin.md": "# First twin\nclone shape pair\n",

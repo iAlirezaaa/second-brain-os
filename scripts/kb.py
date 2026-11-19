@@ -49,11 +49,15 @@ except AttributeError:
     pass
 
 KB = Path(".kb") / "kb.sqlite"
-SCHEMA = "2"
+SCHEMA = "5"  # v2: operations; v3: .env.*; v4: mixed-case denied paths
 
 # Machine plane: written by tools, not by a person. Indexing it would let generated
 # reports and the quarantined shelf outrank the notes they are about.
 MACHINE_PLANE = ("11_CONTROL/", "12_RUNTIME/", "13_LAB/", "14_CANDIDATES/", "15_SYSTEM/")
+# This human zone holds client/operational data and is explicitly excluded
+# from the default agent context (system.json: denied_for_default_context).
+# A derived local search index must not silently turn it into agent-readable text.
+DEFAULT_DENIED_HUMAN = ("09_OPERATIONS/",)
 # The template is the shape a note takes, not knowledge this brain has. An installed
 # home has already lost the folder: install.py copies it to the root, where its notes
 # are ordinary corpus.
@@ -61,6 +65,11 @@ NOT_CORPUS = ("vault-template/",)
 # Agent doors are rendered copies of AGENTS.md (`sync_hosts.py --check` owns them).
 # Indexing the copies would return the same paragraph five times under five names.
 DOORS = {rel for _key, _name, rel, _mdc in HOSTS}
+# The default MCP boundary folds path components before checking denied zones.
+# Do the same here: on case-sensitive filesystems 09_operations/ and
+# 12_runtime/ must not become searchable merely because of their spelling.
+CORPUS_DENIED_PREFIXES = tuple(
+    prefix.casefold() for prefix in NOT_CORPUS + MACHINE_PLANE + DEFAULT_DENIED_HUMAN)
 
 
 def normalise(text):
@@ -104,11 +113,17 @@ def corpus(root):
     real_root = root.resolve()
     for path in iter_markdown(root):
         rel = path.relative_to(root).as_posix()
-        if rel in DOORS or rel.startswith(NOT_CORPUS) or rel.startswith(MACHINE_PLANE):
+        if rel in DOORS or rel.casefold().startswith(CORPUS_DENIED_PREFIXES):
             continue
         if any(part.startswith(".") for part in rel.split("/")[:-1]):
             continue  # host folders (.github, .cursor, ...) are configuration, not notes
-        if not clone_readable(rel):
+        # The default MCP read law denies .env.* even when the name ends in
+        # .md. Clone-readability alone does not enforce this filename rule.
+        if path.name.casefold().startswith(".env."):
+            continue
+        # clone_readable's /secrets/ segment rule is case-sensitive, while
+        # the MCP reader denies Secrets/ and secrets/ alike. Fold for parity.
+        if not clone_readable(rel.casefold()):
             continue
         if not _regular_contained_note(root, path, real_root):
             continue
@@ -342,18 +357,14 @@ def resolve_note(rows, ref, root):
         ])
     if matches:
         return matches[0]
-    name = clean_ref(ref)
+    # Never stat the requested path: the caller may name a protected zone or
+    # an out-of-root ../ path. An existence-dependent refusal leaks file presence
+    # even when the corpus itself correctly excludes that file.
     lines = ["REFUSED --related %r: the index does not hold that note" % ref]
-    if (Path(root) / name).is_file() or (Path(root) / (name + ".md")).is_file():
-        lines.append("  the file is here, but the corpus rule does not index it: the machine "
-                     "plane (11-15), the agent doors and vault-template/ are not corpus")
-        lines.append("  refusing is the honest answer — a note this tool never read cannot "
-                     "have measured neighbours")
-    else:
-        lines.append("  %d note(s) indexed, none of them that one; no neighbour list is "
-                     "printed for a note the index does not hold" % len(rows))
-        lines.append("  if the note is new, rebuild what it should be in: "
-                     "python scripts/kb.py ingest")
+    lines.append("  the corpus rule does not index this name (it may be absent, excluded, "
+                 "or newer than the last ingest); no file existence check was made")
+    lines.append("  if this is an eligible new note, rebuild the index: "
+                 "python scripts/kb.py ingest")
     raise RelatedError(lines)
 
 

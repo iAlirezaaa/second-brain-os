@@ -28,6 +28,8 @@ class AccessBoundary(unittest.TestCase):
             root = Path(tmp)
             paths = ['02_WIKI/public.md', '14_CANDIDATES/private.md',
                      '09_OPERATIONS/clients_metadata_only/private.md',
+                     '09_OPERATIONS/decisions/private.md',
+                     '09_OPERATIONS/tasks/private.md',
                      '15_SYSTEM/generated/private.md', '12_RUNTIME/private.md']
             for name in paths:
                 p = root / name

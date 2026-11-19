@@ -476,8 +476,13 @@ class TestTheTableIsNotTwoTruths(unittest.TestCase):
     def test_the_sqlite_index_version_is_not_this_kind_of_stamp(self):
         """kb.py's SCHEMA is a rebuilt index's shape tag; conflating them would fake coverage."""
         kb = (SCRIPTS / "kb.py").read_text(encoding="utf-8")
-        self.assertRegex(kb, r'SCHEMA\s*=\s*"2"')
-        self.assertEqual([], [c.name for c in schema_stamp.CONTRACTS if c.version == "2"],
+        # The local KB's derived SQLite index can legitimately advance (e.g. to
+        # invalidate a cache that held default-denied notes). Test the independent
+        # numeric schema tag, not a frozen migration value.
+        versions = re.findall(r'(?m)^SCHEMA\s*=\s*"([1-9][0-9]*)"', kb)
+        self.assertEqual(1, len(versions), "KB needs one explicit numeric index version")
+        self.assertEqual([], [c.name for c in schema_stamp.CONTRACTS
+                              if str(c.version) == versions[0]],
                          "a JSON contract now stamps the sqlite index's number")
 
 

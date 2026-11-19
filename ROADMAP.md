@@ -27,6 +27,107 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Default operational-data exclusion from recall (issue #140; in review)
+
+- [ ] **S** The declared `09_OPERATIONS` human zone has
+      `denied_for_default_context: true` in `15_SYSTEM/config/system.json`,
+      but the MCP read boundary in `15_SYSTEM/scripts/backend/access.py` only
+      denied its `clients_metadata_only` subfolder. Make the entire zone
+      ineligible for default `vault_search` and tool reads; do not claim an
+      OS-enforced ACL or authorize access through a client.
+- [ ] Also exclude that zone from `scripts/kb.py` local keyword indexing,
+      including derived indexes after a new ingest. Preserve ordinary
+      `02_WIKI` indexing and direct user ownership of files. Bump the derived
+      SQLite KB corpus version so old indexes containing operational notes
+      fail closed until re-ingest; no user-data migration or package is needed.
+- [ ] Existing synthetic regressions in `tests/test_access_boundary.py`
+      and `tests/test_kb_corpus_symlink_boundary.py` must fail on the old
+      code, pass after the fix, and leave measured unittest counts unchanged.
+      Require all seven CI jobs and independent review before merge.
+- [ ] **CI follow-up (2026-11-18):** [run #44353234128](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44353234128) failed its four Ubuntu/Windows unit-test jobs (1126 tests, one failure each): Phase-44's schema-stamp test froze the derived KB index version at `"2"`, blocking the deliberate v3 privacy re-index. The assertion is now based on the current numeric SQLite version and still refuses a JSON contract claiming that version. The isolated regex invariant was exercised (2/2 on Python 3.13); **full tests, health and seven exact-head jobs are pending**. No permission or note data changed by this test repair.
+
+- [ ] **P0 privacy follow-up (2026-11-18; same issue #140):** `kb.py --related`
+      previously probed `Path.is_file()` on any unindexed reference, including
+      `09_OPERATIONS/decisions/...` and parent-directory traversal outside the served root. Its
+      refusal said whether a protected file existed even though it never
+      returned the file body. An isolated synthetic pre-fix reproduction
+      confirmed different refusal messages for absent vs present files; no
+      exploitation or actual user-data access was observed. The bounded fix
+      makes both cases return the same indexed-only refusal and never stats
+      the requested unindexed file. An existing Phase-44 test method now
+      checks operational, machine and outside-root synthetic paths (no change
+      to discovered method count). Full exact-head CI must pass before merge;
+      this is not an OS-level access-control claim.
+- [x] All seven jobs in [CI #44374913000](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44374913000)
+      passed on prior SHA `49fd7363635e7c3afb506ea74942010fcfcc5e29`.
+      The additional side-channel changes require a new full CI run.
+
+- [ ] **P0 privacy parity follow-up (2026-11-19; same #140):** The local KB
+      corpus previously accepted a synthetic Markdown note whose basename began
+      `.env.`, even though the default MCP read rule refused that filename.
+      The test-first regression in `tests/test_kb_corpus_symlink_boundary.py`
+      requires both corpus enumeration and keyword search to exclude such notes;
+      `scripts/kb.py` now declines them while still indexing ordinary wiki notes.
+      **Derived cache version 4** refuses previously built v3 indexes (which
+      could retain such a note) until an explicit re-ingest. The synthetic test
+      seeds a stale cache entry, verifies refusal, then verifies re-ingest
+      removes it. This closes a second local retrieval path for secret-bearing
+      file names, without claiming an OS ACL or reading real secrets.
+      Full exact-head CI and review are required before merge.
+
+- [ ] **P0 CI stabilization (2026-11-19, issue #143; privacy PR #141):**
+      [CI #44462043435](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44462043435)
+      completed with 3/4 OS/Python unit-test jobs green but Windows Python 3.12
+      failed in `tests/test_kb_corpus_symlink_boundary.py` after 1126 tests:
+      `PermissionError: [WinError 32]` when deleting the generated KB SQLite
+      database (a disposable artifact not committed to the repository).
+      Cause: `with sqlite3.connect(...)` commits/rolls back but does **not** close
+      the SQLite handle. A test-first assertion now requires the connection to
+      reject another query after its transaction; `contextlib.closing` releases
+      it before the fixture directory is cleaned. Isolated stdlib repro on
+      Python 3.13.5: old handle remained open; explicit close rejected use.
+      This is not a Windows CI pass; **require all seven exact-head jobs** and
+      independent privacy review before release. Rollback only the test-side
+      lifetime change if any independently verified regression appears; do not
+      roll back the privacy exclusion to make CI green.
+
+- [ ] **P0 case-fold parity (2026-11-19; issue #140, PR #141, in review):**
+      The default MCP read boundary denies operational and machine zones and
+      secret-bearing directory names independent of case. On a case-sensitive
+      checkout, local KB indexing instead compared zone prefixes and the
+      clone-readability secret segment with case-sensitive spelling. Synthetic
+      mixed-case operations, runtime and Secrets-directory notes could therefore
+      enter keyword search although default tool reads refused them. An added
+      regression within the existing KB corpus test method requires the three
+      notes to be absent from corpus enumeration and search while an ordinary
+      wiki note stays searchable. KB corpus now folds those prefixes and
+      clone-readability checks before ingest. No third-party dependency, source
+      note rewrite or permission expansion is needed. Derived KB schema is
+      bumped from v4 to v5 so an existing index holding forbidden case
+      variants fails closed until explicit re-ingest. The regression seeds
+      a stale v4 index and verifies refusal plus safe rebuild. Evidence:
+      an isolated predicate reproduction found all 3/3 case variants
+      accepted before and refused after the rule; full repository tests
+      and all seven **exact-head** CI jobs must confirm before merge.
+      Rollback is code-only; the cached index is rebuildable, but reverting
+      this privacy rule would reintroduce denied content into default search.
+
+**Rollback:** revert the isolated filter change if a legitimate query
+regresses; the KB SQLite cache is derived and rebuildable using
+`python scripts/kb.py ingest`. No private user data should be committed.
+
+**Next 1 (P0):** confirm all seven jobs on the exact mixed-case privacy + v5 index head,
+independently review default read parity, then reconcile protected-main required
+checks in issue #107 without bypassing branch protection.
+**Next 2 (P0 to P1):** repeat the under-five-minute first-recall onboarding
+measurement in issue #93 on Windows/macOS/Linux, then test installed
+Claude Code/Codex/OpenCode MCP clients with synthetic data and approval gates.
+P2 optional inspection UI and P3 Mem0/Basic Memory/Letta/OpenMemory research
+remain proposals until independent benchmarks, permissions and rollback
+criteria are documented.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

@@ -5,7 +5,9 @@ from pathlib import Path
 DENIED = (
     ('12_RUNTIME',), ('13_LAB',), ('14_CANDIDATES',), ('.kb',), ('.brain-data',),
     ('15_SYSTEM', 'generated'), ('15_SYSTEM', 'backups'),
-    ('09_OPERATIONS', 'clients_metadata_only'),
+    # Entire operations zone is excluded from default agent context by system.json.
+    # It is a human zone, not a public read surface or an OS-level ACL.
+    ('09_OPERATIONS',),
 )
 
 

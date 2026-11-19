@@ -6,6 +6,69 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #140; mixed-case default-read parity, PR #141 in review)
+- The local keyword KB now applies case-insensitive comparisons to excluded
+  machine/operational zone prefixes and to the clone-readability secret-directory
+  rule. On case-sensitive filesystems, mixed-case spellings could previously
+  become searchable even though the default MCP tool boundary rejected them.
+  The existing synthetic corpus test adds three negative fixtures plus a
+  permitted wiki control. A synthetic stale v4 cache containing a forbidden
+  mixed-case note must refuse search until a fresh ingest; the derived KB
+  schema advances to v5 for that fail-closed guarantee. No original notes,
+  dependencies or access permissions changed. All seven CI jobs on the final
+  PR head and independent review remain required before this is released.
+
+### Fixed (issue #143; privacy PR #141 CI, in review)
+- The synthetic KB privacy regression now explicitly closes its SQLite
+  connection after committing its stale-index fixture. Python's SQLite
+  transaction context manager does not close the database; Windows CI
+  [run #44462043435](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44462043435)
+  hit `WinError 32` deleting `.kb/kb.sqlite` when the handle remained open.
+  The existing test now asserts the handle is closed, without changing test
+  count or any production logic, stored notes, permissions or dependencies.
+  A stdlib-only Python 3.13.5 reproduction confirmed old-open/new-closed;
+  all seven exact-head CI jobs and an independent privacy review are still
+  required before merge.
+
+### Fixed (issue #140; .env-named Markdown in derived KB, in review)
+- Match the existing default MCP read rule for `.env.*` basenames in the local
+  keyword corpus. Previously an `.env.`-prefixed Markdown filename inside an
+  otherwise searchable wiki folder could enter the derived index. The existing
+  synthetic KB regression now tests both exclusion from enumeration and
+  negative search, while keeping a normal note searchable. The derived KB
+  schema tag advances from 3 to 4 so stale indexes refuse reads until re-ingest;
+  a synthetic stale-v3 row is rejected and discarded on rebuild. No private
+  notes, host settings, runtime ACLs or dependencies changed. Full CI is pending.
+
+### Fixed (issue #140; unindexed related-note privacy, in review)
+- `kb.py --related` no longer stats an unindexed note's user-supplied path
+  to distinguish an existing protected file from an absent file. The old
+  refusal revealed the existence of `09_OPERATIONS` and other excluded files,
+  and could probe a `../` path outside the vault. The new refusal is based
+  only on what the local index holds; it still exits nonzero and explains how
+  to rebuild an eligible note. An existing Phase-44 regression method checks
+  synthetic absent/present cases for operations, machine and outside-root
+  paths. No filesystem ACL, user data, schema or dependency was changed;
+  full CI on this additional change is required before merge.
+
+### Fixed (issue #140; PR review, CI pending)
+- Align the default MCP/toolkit read boundary with the declared
+  `09_OPERATIONS` exclusion and omit its Markdown from the derived,
+  local keyword KB. The previous default could search operational notes
+  outside `clients_metadata_only` despite the zone's
+  `denied_for_default_context` policy. The KB corpus version advances to
+  refuse pre-fix caches until the user re-runs `kb.py ingest`.
+  Synthetic existing-test regressions cover both access routes, stale caches
+  and the permitted `02_WIKI` path. This does not
+  enforce an operating-system ACL, migrate user data or connect to a network.
+
+### Tests (issue #140; follow-up to CI run #44353234128)
+- Keep the Phase-44 JSON-stamp-versus-SQLite-index independence check, but
+  read the current numeric derived-index version instead of hard-coding `2`.
+  This unblocks intentional privacy-driven cache invalidation without changing
+  the JSON contract, runtime access policy, or user notes. Full CI recheck is
+  pending; this test repair is not a release claim.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
