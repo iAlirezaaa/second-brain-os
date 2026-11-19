@@ -83,7 +83,9 @@ which is gitignored, and the commands need no network or API key. This is
 **keyword-based retrieval**, not semantic memory. Symlinked Markdown files and notes reached through
 symlinked directories are excluded from the index to avoid aliases crossing
 knowledge boundaries. Markdown files with `.env.`-prefixed basenames are also
-excluded, matching the default read boundary's secret-filename rule. An
+excluded, matching the default read boundary's secret-filename rule. Excluded
+zone prefixes and `Secrets` folder names are filtered regardless of letter
+case, including on case-sensitive filesystems. An
 older local index may still contain previously indexed files: search refuses
 stale index versions until you rebuild with `python scripts/kb.py ingest`.
 Re-run that command after updating to remove previous aliases and secret-name
