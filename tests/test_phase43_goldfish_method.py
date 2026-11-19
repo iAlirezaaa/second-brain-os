@@ -285,6 +285,13 @@ class ThePersonaeAreData(unittest.TestCase):
             self.assertTrue(egm.as_list(fm.get("vectors")), "%s has nothing to look for" % name)
             self.assertTrue(egm.as_list(fm.get("reads")), "%s has no bounded reading list" % name)
 
+        # The synthetic house must be deleted even if a later test assertion fails.
+        owner = unittest.TestCase()
+        house_root = house(owner)
+        self.assertTrue(house_root.is_dir())
+        owner.doCleanups()
+        self.assertFalse(house_root.exists(), "goldfish test fixture survived cleanup")
+
     def test_the_required_stages_have_no_gap(self):
         covered = set()
         for fm in self.personae.values():
