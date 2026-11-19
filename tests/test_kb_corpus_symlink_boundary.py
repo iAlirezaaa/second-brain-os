@@ -76,6 +76,32 @@ class KbCorpusAliases(unittest.TestCase):
         self.assertEqual(0, kb.ingest(self.root))
         self.assertEqual([], kb.find(self.root, "ENV_NOTE_CANARY"))
 
+        # Case-insensitive default access policy forbids these paths on every OS.
+        # A case-sensitive corpus filter must not silently publish their contents.
+        case_root = self.base / "casefold-policy"
+        visible = case_root / "02_WIKI" / "visible.md"
+        visible.parent.mkdir(parents=True)
+        visible.write_text("# Visible\\nVISIBLECASE_CANARY is synthetic.\\n",
+                           encoding="utf-8")
+        secret_cases = (
+            ("02_WIKI/SeCrEtS/private.md", "SECRETS_CASE_CANARY"),
+            ("09_operations/decisions/private.md", "OPS_CASE_CANARY"),
+            ("12_runtime/private.md", "MACHINE_CASE_CANARY"),
+        )
+        for rel, marker in secret_cases:
+            note = case_root / rel
+            note.parent.mkdir(parents=True, exist_ok=True)
+            note.write_text("# Protected\\n" + marker + " is synthetic.\\n",
+                            encoding="utf-8")
+        self.assertEqual({"02_WIKI/visible.md"},
+                         {rel for rel, _note in kb.corpus(case_root)})
+        self.assertEqual(0, kb.ingest(case_root))
+        for _rel, marker in secret_cases:
+            with self.subTest(marker=marker):
+                self.assertEqual([], kb.find(case_root, marker))
+        self.assertEqual(["02_WIKI/visible.md"],
+                         [hit["path"] for hit in kb.find(case_root, "VISIBLECASE_CANARY")])
+
     def test_external_file_symlink_is_never_ingested(self):
         outside = self.base / "outside.md"
         outside.write_text("# Outside\nEXTERNALCANARY synthetic only.\n", encoding="utf-8")
