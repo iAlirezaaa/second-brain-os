@@ -68,9 +68,12 @@ over something it cannot see is a silent gate, not a clean house.
       The test-first regression in `tests/test_kb_corpus_symlink_boundary.py`
       requires both corpus enumeration and keyword search to exclude such notes;
       `scripts/kb.py` now declines them while still indexing ordinary wiki notes.
-      This closes a second local retrieval path for secret-bearing file names,
-      without claiming an OS ACL or reading real secrets. Full exact-head CI and
-      review are required before merge.
+      **Derived cache version 4** refuses previously built v3 indexes (which
+      could retain such a note) until an explicit re-ingest. The synthetic test
+      seeds a stale cache entry, verifies refusal, then verifies re-ingest
+      removes it. This closes a second local retrieval path for secret-bearing
+      file names, without claiming an OS ACL or reading real secrets.
+      Full exact-head CI and review are required before merge.
 
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
