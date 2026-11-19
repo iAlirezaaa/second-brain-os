@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -62,7 +63,7 @@ class KbCorpusAliases(unittest.TestCase):
                          [hit["path"] for hit in kb.find(self.root, "LOCALORCHID")])
         # A pre-fix cache could already hold the .env.-named note. Merely
         # changing the next ingest does not stop reads from that old cache.
-        with sqlite3.connect(str(self.root / ".kb" / "kb.sqlite")) as conn:
+        with closing(sqlite3.connect(str(self.root / ".kb" / "kb.sqlite"))) as conn, conn:
             conn.execute("UPDATE kb_meta SET value = '3' WHERE key = 'schema'")
             conn.execute("INSERT OR REPLACE INTO notes VALUES (?,?,?,?,?,?)",
                          ("02_WIKI/.env.private.md", "Old private cache", "02_WIKI",
