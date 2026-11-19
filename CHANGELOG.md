@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #143; privacy PR #141 CI, in review)
+- The synthetic KB privacy regression now explicitly closes its SQLite
+  connection after committing its stale-index fixture. Python's SQLite
+  transaction context manager does not close the database; Windows CI
+  [run #44462043435](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44462043435)
+  hit `WinError 32` deleting `.kb/kb.sqlite` when the handle remained open.
+  The existing test now asserts the handle is closed, without changing test
+  count or any production logic, stored notes, permissions or dependencies.
+  A stdlib-only Python 3.13.5 reproduction confirmed old-open/new-closed;
+  all seven exact-head CI jobs and an independent privacy review are still
+  required before merge.
+
 ### Fixed (issue #140; .env-named Markdown in derived KB, in review)
 - Match the existing default MCP read rule for `.env.*` basenames in the local
   keyword corpus. Previously an `.env.`-prefixed Markdown filename inside an
