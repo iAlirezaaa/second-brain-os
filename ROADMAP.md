@@ -27,6 +27,34 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P2 — Own Phase-44 link-readout test vaults (issue #58; PR #142 draft)
+
+- [ ] **S** The `tests/test_phase44_readout_is_a_gate.py` fixture factory
+      previously used unowned `mkdtemp()` and relied on `tearDown()` or
+      test-local `finally` blocks. A `setUp()` error can skip `tearDown()`;
+      suppressed removal errors can leave synthetic Markdown on the host.
+      Replace this with `TemporaryDirectory` and register
+      `unittest.TestCase.addCleanup` **before** writing test notes.
+      All six fixture users explicitly supply their owner; production code,
+      private vaults and permissions stay unchanged.
+- [ ] Acceptance: the existing successful-readout test explicitly executes
+      `doCleanups()` and proves its throwaway vault no longer exists; the
+      old unowned factory fails this regression. The discovered test-method
+      count must not increase. No dependency additions.
+- [ ] Validation: isolated Python before/after fixture checks observed an
+      unowned vault survive cleanup, then the new owned vault disappear both
+      after a normal assertion and after a simulated setup failure. This is
+      **not** a full suite pass; require exact-head GitHub Actions matrix,
+      Vault health, and cross-machine backup jobs before merge.
+
+**Next 1 (P0):** reconcile the seven exact-head CI results and protected-main
+required-check names in issue #107 without bypass or force-push.
+**Next 2 (P1):** run the real clean-clone → first local recall procedure on
+Windows, macOS and Linux, measuring time and provenance separately from the
+synthetic `scripts/first_success.py` probe; leave missing measurements unknown.
+
+---
+
 ## P2 — Own Phase-52 backup and Phase-44 registry test fixtures (issue #58; draft review)
 
 - [ ] **S** Make every synthetic fixture root created by
