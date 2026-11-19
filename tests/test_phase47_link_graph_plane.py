@@ -127,13 +127,11 @@ class TestRealTreeWithARecordedBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._tmp = tempfile.mkdtemp(prefix="sb-real-tree-")
-        cls.clone = Path(cls._tmp) / "repo"
+        # Class cleanups run even when setUpClass fails before finishing the copy.
+        cls._tempdir = tempfile.TemporaryDirectory(prefix="sb-real-tree-")
+        cls.addClassCleanup(cls._tempdir.cleanup)
+        cls.clone = Path(cls._tempdir.name) / "repo"
         shutil.copytree(ROOT, cls.clone, ignore=shutil.ignore_patterns(".git", "__pycache__"))
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls._tmp, ignore_errors=True)
 
     def test_recording_a_base_into_the_real_tree_leaves_the_readout_settled(self):
         tree = self.clone / "02_WIKI" / "indexes" / "reference-maps.md"
