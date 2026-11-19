@@ -42,9 +42,10 @@ def git(repo_dir, *args):
                           text=True, encoding="utf-8", errors="replace")
 
 
-def git_repo(with_origin=True):
-    """A throwaway code repo with one commit on `main`, optionally an origin remote."""
+def git_repo(test_case, with_origin=True):
+    """A throwaway git repo owned by its calling unittest case, even on failure."""
     home = Path(tempfile.mkdtemp(prefix="code-repo-"))
+    test_case.addCleanup(shutil.rmtree, home, True)
     git(home, "init", "-q", "-b", "main")
     git(home, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
         "commit", "-q", "--allow-empty", "-m", "first")
@@ -102,7 +103,7 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         self.vault.close()
 
     def test_code_repo_records_what_the_folders_git_says(self):
-        code = git_repo()
+        code = git_repo(self)
         try:
             _code, out = self.vault.hades("new", "--kind", "project", "--name", "Demo Service",
                                           "--description", "a program with real code",
@@ -123,6 +124,7 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
 
     def test_a_folder_with_no_git_is_refused_and_writes_no_record(self):
         plain = Path(tempfile.mkdtemp(prefix="not-a-repo-"))
+        self.addCleanup(shutil.rmtree, plain, True)
         before = len(self.vault.paths())
         before_plans = len(self.vault.paths("15_SYSTEM/generated/plans/PLAN-*.json"))
         code, out = self.vault.hades("new", "--kind", "project", "--name", "No Git Here",
@@ -153,7 +155,7 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         self.assertFalse(code.exists(), "a synthetic git repo survived its test cleanup")
 
     def test_a_kind_without_a_repo_block_is_refused_not_silently_ignored(self):
-        code = git_repo()
+        code = git_repo(self)
         before = len(self.vault.paths())
         c, out = self.vault.hades("new", "--kind", "organization", "--name", "No Repo Org",
                                   "--description", "fixture", "--code-repo", str(code),
