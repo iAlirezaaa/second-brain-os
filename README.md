@@ -82,7 +82,8 @@ second prints matching file paths and excerpts. Your index lives at `.kb/kb.sqli
 which is gitignored, and the commands need no network or API key. This is
 **keyword-based retrieval**, not semantic memory. Symlinked Markdown files and notes reached through
 symlinked directories are excluded from the index to avoid aliases crossing
-knowledge boundaries. Re-run `python scripts/kb.py ingest` after updating to
+knowledge boundaries. Markdown files with `.env.`-prefixed basenames are also
+excluded, matching the default read boundary's secret-filename rule. Re-run `python scripts/kb.py ingest` after updating to
 remove any older aliases from your derived index. Default keyword recall also
 excludes the entire `09_OPERATIONS/` zone, which is reserved for operational
 and client data, rather than silently exposing those notes to agent search.
