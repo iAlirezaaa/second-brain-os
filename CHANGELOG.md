@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; class-fixture cleanup on failed link-graph setup; CI pending)
+- `tests/test_phase47_link_graph_plane.py` now owns its temporary
+  clone via `TemporaryDirectory` and `addClassCleanup` registered
+  **before** `shutil.copytree`. Unlike `tearDownClass`, class cleanups
+  run after a failed `setUpClass`, preventing synthetic repo copies from
+  accumulating during local tests. An existing test injects a copy error and
+  asserts that running class cleanups removes the directory; no new test
+  method or dependency. Isolated Python 3.13.5 failure-path reproduction
+  showed old cleanup leaked and new cleanup removed the tree.
+  The full repository suite and exact-head seven-job CI remain required;
+  no shipped product, encryption, permissions, or real data changed.
+
 ### Fixed (issue #58 partial; Phase-44 readout test fixture ownership; CI pending)
 - The synthetic link-graph vault helper in
   `tests/test_phase44_readout_is_a_gate.py` now registers a test-owned
