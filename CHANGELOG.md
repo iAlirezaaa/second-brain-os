@@ -6,6 +6,20 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-28 synthetic schedule fixtures; CI pending)
+- `tests/test_phase28_schedule_seam.py` now registers stdlib
+  `TemporaryDirectory` cleanup before writing synthetic schedule/history data.
+  Previously a fixture factory failure before the caller's `addCleanup` could
+  strand a temporary directory; the empty-record fixture used the same
+  manually cleaned `mkdtemp` pattern. All schedule test callers now supply
+  the owning `unittest.TestCase`. An existing CLI contract test verifies
+  effective directory removal, including a synthetic early mkdir failure,
+  without increasing the test-method count. An isolated Python 3.13.5
+  ownership/failure-path reproduction passed (2/2); full exact-head CI
+  and independent review are still required. This is test-only: no change
+  to production scheduling, permissions, data, dependencies or user settings.
+
+
 ### Fixed (issue #58 partial; class-fixture cleanup on failed link-graph setup; CI pending)
 - `tests/test_phase47_link_graph_plane.py` now owns its temporary
   clone via `TemporaryDirectory` and `addClassCleanup` registered
