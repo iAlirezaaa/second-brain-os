@@ -42,6 +42,36 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P2 — Phase-28 schedule test fixture ownership (issue #58; PR #142)
+
+- [ ] **S / test-only:** `tests/test_phase28_schedule_seam.py` previously created
+      synthetic schedule roots with `mkdtemp()`. Normal tests removed them
+      later, but a failure inside the fixture factory, before it returned,
+      could strand the directory. The empty-record case also used a manual
+      delete after allocation.
+- [ ] **Acceptance:** a `unittest.TestCase` explicitly owns every schedule
+      fixture through `TemporaryDirectory`, and registers cleanup **before**
+      writing a schedule/history record. The existing read-only CLI test
+      verifies its directory disappears after `doCleanups()`, and injects an
+      early `Path.mkdir` failure to verify cleanup despite failed setup. No
+      additional dependencies, test methods, runtime permissions or changes
+      to user data. The isolated Python 3.13.5 reproduction passed two
+      success/failure-path scenarios; this is not full-repo verification.
+- [ ] **CI/release gate:** require health, full unittest discovery and all
+      seven Ubuntu/Windows/backup jobs on the exact final PR head. Leave PR
+      #142 in Draft while any job, independent review or branch-protection
+      requirement is missing. Roll back by reverting this test-only slice;
+      no stored data migration is involved.
+
+**Next 1 (P0):** reconcile GitHub protected-main check-name drift (#107)
+without relaxing protection; independently review security PR #141.
+
+**Next 2 (P1):** measure clean-clone to first source-cited local retrieval on
+Windows, macOS and Linux, including failure/refusal cases and elapsed time;
+do not infer host compatibility from synthetic-only smoke tests.
+
+---
+
 ## P2 — Own Phase-44 link-readout test vaults (issue #58; PR #142 draft)
 
 - [ ] **S** The `tests/test_phase44_readout_is_a_gate.py` fixture factory
