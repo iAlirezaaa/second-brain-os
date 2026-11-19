@@ -102,12 +102,15 @@ over something it cannot see is a silent gate, not a clean house.
       notes to be absent from corpus enumeration and search while an ordinary
       wiki note stays searchable. KB corpus now folds those prefixes and
       clone-readability checks before ingest. No third-party dependency, source
-      note rewrite, permission expansion or derived-cache migration is needed:
-      existing indexes still require a deliberate re-ingest under schema v4.
-      Evidence: a local isolated predicate reproduction showed old accepted
-      3/3 denied case variants and new refused 3/3; full repository tests
-      and all seven **exact-head** CI jobs must confirm before merge. Rollback
-      only this scoped predicate change if cross-platform indexing regresses.
+      note rewrite or permission expansion is needed. Derived KB schema is
+      bumped from v4 to v5 so an existing index holding forbidden case
+      variants fails closed until explicit re-ingest. The regression seeds
+      a stale v4 index and verifies refusal plus safe rebuild. Evidence:
+      an isolated predicate reproduction found all 3/3 case variants
+      accepted before and refused after the rule; full repository tests
+      and all seven **exact-head** CI jobs must confirm before merge.
+      Rollback is code-only; the cached index is rebuildable, but reverting
+      this privacy rule would reintroduce denied content into default search.
 
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
