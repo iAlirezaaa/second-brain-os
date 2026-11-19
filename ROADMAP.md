@@ -79,7 +79,8 @@ over something it cannot see is a silent gate, not a clean house.
       [CI #44462043435](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44462043435)
       completed with 3/4 OS/Python unit-test jobs green but Windows Python 3.12
       failed in `tests/test_kb_corpus_symlink_boundary.py` after 1126 tests:
-      `PermissionError: [WinError 32]` when deleting the disposable `.kb/kb.sqlite`.
+      `PermissionError: [WinError 32]` when deleting the generated KB SQLite
+      database (a disposable artifact not committed to the repository).
       Cause: `with sqlite3.connect(...)` commits/rolls back but does **not** close
       the SQLite handle. A test-first assertion now requires the connection to
       reject another query after its transaction; `contextlib.closing` releases
