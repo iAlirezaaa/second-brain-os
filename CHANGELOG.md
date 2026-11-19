@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-44 readout test fixture ownership; CI pending)
+- The synthetic link-graph vault helper in
+  `tests/test_phase44_readout_is_a_gate.py` now registers a test-owned
+  stdlib `TemporaryDirectory` before writing notes. All six calls pass the
+  owning `unittest.TestCase`, so cleanup runs even if setup or an assertion
+  aborts early. The existing successful-readout regression explicitly invokes
+  cleanups and verifies the vault directory is gone; no new test method was
+  introduced. An isolated stdlib reproduction confirmed the old unowned
+  fixture survived `doCleanups()` and the new fixture did not (including a
+  simulated failure). The full exact-head CI matrix is not yet certified for
+  this revision. This is test hygiene only; no production data or access rules
+  were modified.
+
 ### Fixed (issue #58 partial; Phase-43 synthetic reviewer fixture ownership; CI pending)
 - Goldfish-review test fixtures previously used unowned `mkdtemp()` roots. A
   failure in setup or before a test's explicit teardown could leave fake
