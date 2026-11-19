@@ -12,10 +12,11 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   rule. On case-sensitive filesystems, mixed-case spellings could previously
   become searchable even though the default MCP tool boundary rejected them.
   The existing synthetic corpus test adds three negative fixtures plus a
-  permitted wiki control. No original notes, dependencies, access permissions or
-  KB schema were changed; owners of existing derived indexes can explicitly
-  re-ingest. All seven CI jobs on the final PR head and independent review
-  remain required before this is released.
+  permitted wiki control. A synthetic stale v4 cache containing a forbidden
+  mixed-case note must refuse search until a fresh ingest; the derived KB
+  schema advances to v5 for that fail-closed guarantee. No original notes,
+  dependencies or access permissions changed. All seven CI jobs on the final
+  PR head and independent review remain required before this is released.
 
 ### Fixed (issue #143; privacy PR #141 CI, in review)
 - The synthetic KB privacy regression now explicitly closes its SQLite
