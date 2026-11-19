@@ -101,6 +101,17 @@ class KbCorpusAliases(unittest.TestCase):
                 self.assertEqual([], kb.find(case_root, marker))
         self.assertEqual(["02_WIKI/visible.md"],
                          [hit["path"] for hit in kb.find(case_root, "VISIBLECASE_CANARY")])
+        # A pre-fix schema-v4 cache may already hold a mixed-case denied
+        # path. New code must refuse the stale cache instead of leaking it.
+        with closing(sqlite3.connect(str(case_root / ".kb" / "kb.sqlite"))) as conn, conn:
+            conn.execute("UPDATE kb_meta SET value = '4' WHERE key = 'schema'")
+            conn.execute("INSERT OR REPLACE INTO notes VALUES (?,?,?,?,?,?)",
+                         ("02_WIKI/SeCrEtS/private.md", "Old secret alias", "02_WIKI",
+                          "SECRETS_CASE_CANARY", "secrets_case_canary", "2026-11-19"))
+        with self.assertRaisesRegex(RuntimeError, "older corpus rule"):
+            kb.find(case_root, "SECRETS_CASE_CANARY")
+        self.assertEqual(0, kb.ingest(case_root))
+        self.assertEqual([], kb.find(case_root, "SECRETS_CASE_CANARY"))
 
     def test_external_file_symlink_is_never_ingested(self):
         outside = self.base / "outside.md"
