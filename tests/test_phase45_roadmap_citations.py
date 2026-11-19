@@ -44,7 +44,6 @@ What each class holds the change to:
   * TestTheGateIsWired -- health's one-OK-line-per-gate invariant, and the installed home that
     inherits the plan rather than making one.
 """
-import shutil
 import subprocess
 import sys
 import tempfile
