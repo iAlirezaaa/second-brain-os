@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58; PR #142 CI regression, exact-head CI pending; 2026-11-19)
+- GitHub Actions [run 44613229218](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44613229218)
+  failed its four Python/OS test jobs because an installed-home roadmap test still
+  called `shutil.rmtree` after its `shutil` import was removed in the preceding
+  temporary-fixture refactor (`NameError`). That test now owns a scoped
+  `TemporaryDirectory` and asserts the synthetic home disappears afterward.
+  A local isolated Python reproduction exercised the old NameError and the new
+  directory cleanup; full repo tests and the next exact-head 7-job CI remain
+  to be checked separately. No runtime, user-data or dependency change.
+  Rollback: revert the bounded test-only change, without loosening CI gates.
+
+
 ### Fixed (issue #58; PR #142, review pending; 2026-11-19)
 - Phase-45 synthetic roadmap-check fixtures now release their temporary checkout
   if setup fails before the caller can reach a `finally` block. The fixture's
