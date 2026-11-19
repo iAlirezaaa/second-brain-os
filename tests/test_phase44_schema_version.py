@@ -29,7 +29,6 @@ What each class holds the change to:
 """
 import json
 import re
-import shutil
 import sys
 import tempfile
 import unittest
@@ -191,11 +190,10 @@ class TestTheLoopWriter(unittest.TestCase):
     """`loop.py` owns one generated file and stamps it with its own literal shape version."""
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix="phase44-loop-")
+        holder = tempfile.TemporaryDirectory(prefix="phase44-loop-")
+        self.addCleanup(holder.cleanup)
+        self.tmp = holder.name
         self.root = fixture_root(Path(self.tmp) / "repo")
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_history_written_by_the_ratchet_carries_its_version_first(self):
         path = self.root / HISTORY_PATH
@@ -244,11 +242,10 @@ class TestTheAuditRefusesByName(unittest.TestCase):
     """House law: an audit enumerates the files it looked at and names each one's state."""
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix="phase44-audit-")
+        holder = tempfile.TemporaryDirectory(prefix="phase44-audit-")
+        self.addCleanup(holder.cleanup)
+        self.tmp = holder.name
         self.root = fixture_root(Path(self.tmp) / "repo")
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_a_missing_stamp_is_refused_and_the_file_is_named_with_its_writer(self):
         write_json(self.root / RECORD_PATH, record_payload())
@@ -356,11 +353,10 @@ class TestTheStampingMigrationIsHonest(unittest.TestCase):
     """The one command that pays the debt; it may add a line and nothing else."""
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix="phase44-migrate-")
+        holder = tempfile.TemporaryDirectory(prefix="phase44-migrate-")
+        self.addCleanup(holder.cleanup)
+        self.tmp = holder.name
         self.root = fixture_root(Path(self.tmp) / "repo")
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp, ignore_errors=True)
 
     def stamp(self, *extra):
         return gate("--root", str(self.root), "--stamp", *extra)
@@ -436,12 +432,11 @@ class TestTheTableIsNotTwoTruths(unittest.TestCase):
     """The version lives in the plane map; the gate bites when it moves."""
 
     def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix="phase44-table-")
+        holder = tempfile.TemporaryDirectory(prefix="phase44-table-")
+        self.addCleanup(holder.cleanup)
+        self.tmp = holder.name
         self.root = fixture_root(Path(self.tmp) / "repo")
         self.path = write_json(self.root / RECORD_PATH, record_payload("3.0.0"))
-
-    def tearDown(self):
-        shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_moving_the_version_in_the_plane_map_makes_the_stamped_file_stale_by_name(self):
         """The bite, proved once: no grandfather branch, no silent acceptance of the old shape."""
