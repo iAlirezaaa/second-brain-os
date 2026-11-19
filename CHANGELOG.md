@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-44 schema fixture setup failure; CI/review pending)
+- Four schema-version test classes in `tests/test_phase44_schema_version.py`
+  now register a standard-library `TemporaryDirectory` cleanup before
+  creating their synthetic repository trees. Previously `mkdtemp` was
+  cleaned only by `tearDown`, which unittest skips when `setUp` raises.
+  A regression added to an existing test uses injected setup failures for all
+  four classes and checks that class-independent `doCleanups()` removes each
+  holder. The test-method count is unchanged. An isolated Python failure-path
+  reproduction found the old pattern leaked and the new pattern cleaned up;
+  the exact-head full suite and CI have not yet been certified. This only
+  changes test fixtures, not user memory, production schema behavior, tools
+  or permissions. PR #142 is still unmerged.
+
 ### Fixed (issue #58 partial; Phase-28 synthetic schedule fixtures; CI pending)
 - `tests/test_phase28_schedule_seam.py` now registers stdlib
   `TemporaryDirectory` cleanup before writing synthetic schedule/history data.
