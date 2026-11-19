@@ -65,6 +65,11 @@ NOT_CORPUS = ("vault-template/",)
 # Agent doors are rendered copies of AGENTS.md (`sync_hosts.py --check` owns them).
 # Indexing the copies would return the same paragraph five times under five names.
 DOORS = {rel for _key, _name, rel, _mdc in HOSTS}
+# The default MCP boundary folds path components before checking denied zones.
+# Do the same here: on case-sensitive filesystems 09_operations/ and
+# 12_runtime/ must not become searchable merely because of their spelling.
+CORPUS_DENIED_PREFIXES = tuple(
+    prefix.casefold() for prefix in NOT_CORPUS + MACHINE_PLANE + DEFAULT_DENIED_HUMAN)
 
 
 def normalise(text):
@@ -108,8 +113,7 @@ def corpus(root):
     real_root = root.resolve()
     for path in iter_markdown(root):
         rel = path.relative_to(root).as_posix()
-        if (rel in DOORS or rel.startswith(NOT_CORPUS) or rel.startswith(MACHINE_PLANE)
-                or rel.startswith(DEFAULT_DENIED_HUMAN)):
+        if rel in DOORS or rel.casefold().startswith(CORPUS_DENIED_PREFIXES):
             continue
         if any(part.startswith(".") for part in rel.split("/")[:-1]):
             continue  # host folders (.github, .cursor, ...) are configuration, not notes
@@ -117,7 +121,9 @@ def corpus(root):
         # .md. Clone-readability alone does not enforce this filename rule.
         if path.name.casefold().startswith(".env."):
             continue
-        if not clone_readable(rel):
+        # clone_readable's /secrets/ segment rule is case-sensitive, while
+        # the MCP reader denies Secrets/ and secrets/ alike. Fold for parity.
+        if not clone_readable(rel.casefold()):
             continue
         if not _regular_contained_note(root, path, real_root):
             continue
