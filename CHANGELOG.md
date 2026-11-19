@@ -11,8 +11,10 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   keyword corpus. Previously an `.env.`-prefixed Markdown filename inside an
   otherwise searchable wiki folder could enter the derived index. The existing
   synthetic KB regression now tests both exclusion from enumeration and
-  negative search, while keeping a normal note searchable. No private notes,
-  host settings, runtime ACLs or dependencies changed. Full CI is pending.
+  negative search, while keeping a normal note searchable. The derived KB
+  schema tag advances from 3 to 4 so stale indexes refuse reads until re-ingest;
+  a synthetic stale-v3 row is rejected and discarded on rebuild. No private
+  notes, host settings, runtime ACLs or dependencies changed. Full CI is pending.
 
 ### Fixed (issue #140; unindexed related-note privacy, in review)
 - `kb.py --related` no longer stats an unindexed note's user-supplied path
