@@ -143,9 +143,11 @@ def report_text(rounds=2, broken=None, split=True):
         "", ""])
 
 
-def house():
-    """A throwaway clone-shaped root: the shipped personae, one design doc, one cited script."""
-    root = Path(tempfile.mkdtemp())
+def house(owner):
+    """Create an owned fixture: cleanup is registered even when setUp later fails."""
+    holder = tempfile.TemporaryDirectory(prefix="sbo-goldfish-")
+    owner.addCleanup(holder.cleanup)
+    root = Path(holder.name)
     shutil.copytree(ROOT / "11_CONTROL" / "reviewers", root / "11_CONTROL" / "reviewers")
     (root / "scripts").mkdir(parents=True)
     (root / "scripts" / "goldfish_check.py").write_text("# the gate itself\n", encoding="utf-8")
@@ -183,7 +185,7 @@ def problems_of(root, report):
 
 class TheGateJudgesTheArtifact(unittest.TestCase):
     def setUp(self):
-        self.root = house()
+        self.root = house(self)
 
     def tearDown(self):
         shutil.rmtree(str(self.root), ignore_errors=True)
@@ -244,7 +246,7 @@ class TheGateJudgesTheArtifact(unittest.TestCase):
                          str(report)], cwd=str(ROOT))
         self.assertEqual(1, done.returncode, done.stdout)
         self.assertIn("REFUSED", done.stdout)
-        good_root = house()
+        good_root = house(self)
         good = seeded(good_root, broken=None)
         try:
             done = run_utf8([sys.executable, GATE, "--root", str(good.parents[2]),
@@ -300,7 +302,7 @@ class ThePersonaeAreData(unittest.TestCase):
             self.assertIn(stage, covered)
 
     def test_a_persona_that_can_write_is_not_a_reviewer(self):
-        root = house()
+        root = house(self)
         path = root / "11_CONTROL" / "reviewers" / "egm-design.md"
         path.write_text(path.read_text(encoding="utf-8").replace("writes: none", "writes: yes"),
                         encoding="utf-8")
@@ -311,7 +313,7 @@ class ThePersonaeAreData(unittest.TestCase):
 
     def test_a_comprehension_persona_routed_through_a_synthesiser_is_refused(self):
         """The anti-summary safeguard is data: `spawn: direct`, not a sentence in a skill."""
-        root = house()
+        root = house(self)
         path = root / "11_CONTROL" / "reviewers" / "egm-comprehension.md"
         path.write_text(path.read_text(encoding="utf-8").replace("spawn: direct",
                                                                 "spawn: synthesizer"),
