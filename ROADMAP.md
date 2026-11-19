@@ -29,6 +29,23 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## Rolling priorities and acceptance gates (2026-11-19; review after CI)
 
+**P0 CI failure reconciled — installed-home cleanup in Phase-45 (#58 / PR #142).**
+[Exact-head CI run 44613229218](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44613229218)
+failed all four matrix jobs on `5447f562d` with `NameError: name 'shutil' is not defined`
+in `tests/test_phase45_roadmap_citations.py::test_an_installed_home_inherits_the_plan_instead_of_making_one`.
+The earlier fixture ownership refactor removed `shutil` but left this final `rmtree`
+call. The test now uses a scoped stdlib `TemporaryDirectory` and verifies its
+synthetic installed-home root disappears after exit. Local isolated Python
+reproduction confirmed the old missing-import failure and the new cleanup;
+it is **not** a full clone test. This diagnostic fix does not modify production
+memory, user data, dependencies or permissions. Acceptance: exact-new-head
+health + full unit tests on Ubuntu/Windows Python 3.9/3.12 and backup seal/restore;
+leave draft until all required gates and independent review pass. Rollback:
+revert this test-only cleanup change if needed. Next (1) verify exact-head CI
+and legally resolve protected-main checks (#107); (2) measure end-to-end first
+recall on Windows/macOS/Linux (#93) with truthful success times.
+
+
 **P0 reliability slice — Phase-44 schema-test fixture ownership (#58; PR #142; awaiting full CI).**
 Four schema-version fixture owners in `tests/test_phase44_schema_version.py`
 previously relied on `tearDown` after `mkdtemp`; `tearDown` never runs when
