@@ -83,8 +83,11 @@ which is gitignored, and the commands need no network or API key. This is
 **keyword-based retrieval**, not semantic memory. Symlinked Markdown files and notes reached through
 symlinked directories are excluded from the index to avoid aliases crossing
 knowledge boundaries. Markdown files with `.env.`-prefixed basenames are also
-excluded, matching the default read boundary's secret-filename rule. Re-run `python scripts/kb.py ingest` after updating to
-remove any older aliases from your derived index. Default keyword recall also
+excluded, matching the default read boundary's secret-filename rule. An
+older local index may still contain previously indexed files: search refuses
+stale index versions until you rebuild with `python scripts/kb.py ingest`.
+Re-run that command after updating to remove previous aliases and secret-name
+entries from the derived index. Default keyword recall also
 excludes the entire `09_OPERATIONS/` zone, which is reserved for operational
 and client data, rather than silently exposing those notes to agent search.
 This filter is not an OS-enforced filesystem permission or a guarantee against
