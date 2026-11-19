@@ -27,7 +27,7 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
-## P2 — Own Phase-52 synthetic vault and key fixtures (issue #58; draft review)
+## P2 — Own Phase-52 backup and Phase-44 registry test fixtures (issue #58; draft review)
 
 - [ ] **S** Make every synthetic fixture root created by
       `tests/test_phase52_vault_seals_the_private_plane.py` disposable via
@@ -39,6 +39,15 @@ over something it cannot see is a silent gate, not a clean house.
       passphrase survives an invoked cleanup. No new unittest method and no
       dependency. The isolated Python check reproduced zero registrations
       before and two effective cleanups after; full runner CI is pending.
+- [ ] **S** Extend the same fixture-ownership repair to
+      `tests/test_phase44_registry_fills_its_repo_block.py`: the temporary Git
+      repository factory must register per-test cleanup before running Git,
+      including the no-origin and refused-kind paths that previously left
+      synthetic Git directories behind when tests succeeded or failed.
+- [ ] Acceptance: the existing no-origin regression calls the helper with its
+      owning test case, runs registered cleanups and proves the throwaway Git
+      directory is gone. All helper callers register cleanup; the no-Git fixture
+      also cleans up after assertion failures. No production registry changes.
 - [ ] Run repository health and full Python 3.9/3.12 Ubuntu/Windows CI before
       merge; do not call this verified merely because isolated stdlib passes.
 - [ ] Rollback: revert this isolated test-only branch if a platform's test
@@ -51,7 +60,8 @@ boundary in #140 and the CI result for this change.
 
 **Next 2 (P1/P2):** Measure first real recall and cleanup under a pristine
 clone on Windows/macOS/Linux (issue #93), then audit the next unowned fixture
-in #58. P3 competitor work stays research-only until measured and licensed.
+in #58 using a before/after directory count. P3 competitor work stays
+research-only until measured and licensed.
 
 ---
 
