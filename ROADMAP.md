@@ -27,6 +27,21 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## Rolling priorities and acceptance gates (2026-11-19; review after CI)
+
+- [ ] **P0 — safety and reliable first use:** reconcile protected-main check-name drift (#107), independently review the default retrieval privacy boundary (#140 / PR #141), and time a **complete clean-clone to first real local search** on Windows, macOS and Linux with source paths visible. Do not treat the synthetic `scripts/first_success.py` smoke as an under-five-minute end-to-end result; missing platforms and times remain unknown.
+- [ ] **P1 — useful, host-gated MCP:** verify actual version-pinned Claude Code, Codex and OpenCode handshakes using synthetic notes and read-only first-use permissions. Keep English and Persian setup steps aligned, measure successful installs and searches, and improve a lightweight docs entry only when it clarifies a reproducible workflow. No unsupported host-compatibility claims.
+- [ ] **P2 — optional observability and portability:** design provenance and agent-permission inspection, opt-in import/export, and collaboration with explicit access/rollback tests before implementation. Current bounded #58 slice: in `tests/test_phase47_link_graph_plane.py`, register a class-owned temporary clone **before** copying so a failed `setUpClass` cannot strand a large copied vault. The existing test injects a copy failure and proves cleanup; no production or private data changes. Full exact-head CI is still required before this checkbox can be closed.
+- [ ] **P3 — research, no copy/paste:** separately evaluate Mem0 memory-write duplicate/idempotency cases (November 2026 issue #7889), Basic Memory frontmatter write-side effects (#2125, opened 2026-11-16), Letta cross-agent memory visibility (#2666), and OpenMemory against this repository's actual contracts. These are external *reports*, not proven SBO defects. Require independent fixtures, licensing analysis, measured baseline, proposal/ADR, stdlib fallback and explicit rollback before adopting anything.
+
+**P2 fixture rollback:** revert the isolated test-class cleanup change if supported-platform CI finds an issue; generated directories are disposable and no migration is needed. Do not bypass branch protection, auto-enable a host, or promote unreviewed private memory.
+
+**Next 1 (P0):** verify all seven GitHub CI jobs on the exact PR #142 head and legally reconcile #107; leave the PR in review until successful.
+
+**Next 2 (P1):** measure one real clean-install and source-backed first search per supported OS, recording commands, wall time, host version and privacy refusals; mark unmeasured outcomes unknown.
+
+---
+
 ## P2 — Own Phase-44 link-readout test vaults (issue #58; PR #142 draft)
 
 - [ ] **S** The `tests/test_phase44_readout_is_a_gate.py` fixture factory
