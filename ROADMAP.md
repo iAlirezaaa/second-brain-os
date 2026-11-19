@@ -56,6 +56,16 @@ over something it cannot see is a silent gate, not a clean house.
       TemporaryDirectory (including the non-Git fixture), retain the real Git
       cleanup assertion, and re-run CI. A local Python 3.13 + Git smoke check
       removed the folder; Windows results for this revision are still pending.
+- [ ] **S** Phase-43 goldfish reviewer test fixtures must have a `unittest`
+      cleanup owner *before* copying the synthetic persona tree. Former `house()`
+      used `mkdtemp()` without an owner; if a test's `setUp` or fixture setup failed,
+      its `tearDown` / manual cleanup was skipped, leaving the fake reviewer tree.
+      `house(test_case)` now uses stdlib `TemporaryDirectory` with an early
+      `addCleanup` registration. Existing persona tests assert an explicit
+      `doCleanups()` removes the fixture without adding discovered test methods.
+      Isolated stdlib before/after: old directory remained after `doCleanups`;
+      the owned directory was removed. **Full repo CI is pending**; no production
+      goldfish tool, reviewers or user data are changed.
 - [ ] Run repository health and full Python 3.9/3.12 Ubuntu/Windows CI before
       merge; do not call this verified merely because isolated stdlib passes.
 - [ ] Rollback: revert this isolated test-only branch if a platform's test
