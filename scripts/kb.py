@@ -113,6 +113,10 @@ def corpus(root):
             continue
         if any(part.startswith(".") for part in rel.split("/")[:-1]):
             continue  # host folders (.github, .cursor, ...) are configuration, not notes
+        # The default MCP read law denies .env.* even when the name ends in
+        # .md. Clone-readability alone does not enforce this filename rule.
+        if path.name.casefold().startswith(".env."):
+            continue
         if not clone_readable(rel):
             continue
         if not _regular_contained_note(root, path, real_root):
