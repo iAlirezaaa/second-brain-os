@@ -67,6 +67,9 @@ class KbCorpusAliases(unittest.TestCase):
             conn.execute("INSERT OR REPLACE INTO notes VALUES (?,?,?,?,?,?)",
                          ("02_WIKI/.env.private.md", "Old private cache", "02_WIKI",
                           "ENV_NOTE_CANARY", "env_note_canary", "2026-11-19"))
+        # sqlite3 transaction context does not close the handle: Windows cleanup needs that.
+        with self.assertRaises(sqlite3.ProgrammingError):
+            conn.execute("SELECT 1")
         with self.assertRaisesRegex(RuntimeError, "older corpus rule"):
             kb.find(self.root, "ENV_NOTE_CANARY")
         self.assertEqual(0, kb.ingest(self.root))
