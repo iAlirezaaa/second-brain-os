@@ -210,6 +210,26 @@ class TestTheLoopWriter(unittest.TestCase):
         self.assertEqual("1", row["found"], row)
         self.assertEqual("loop-history", row["contract"])
 
+        # Regression for #58: unittest skips tearDown when setUp raises.
+        # Run each real fixture setup with a synthetic failure and verify its
+        # holder is deleted by TestCase cleanup, not by normal tearDown.
+        from unittest import mock
+        for test_class in (TestTheLoopWriter, TestTheAuditRefusesByName,
+                           TestTheStampingMigrationIsHonest, TestTheTableIsNotTwoTruths):
+            with self.subTest(test_class=test_class.__name__):
+                method = next(name for name in dir(test_class) if name.startswith("test_"))
+                case = test_class(method)
+                try:
+                    with mock.patch(__name__ + ".fixture_root",
+                                    side_effect=RuntimeError("synthetic setup failure")):
+                        with self.assertRaisesRegex(RuntimeError, "synthetic setup failure"):
+                            case.setUp()
+                    holder = Path(case.tmp)
+                finally:
+                    case.doCleanups()
+                self.assertFalse(holder.exists(),
+                                 "%s leaked its fixture after failed setUp" % test_class.__name__)
+
     def test_the_gate_refuses_history_that_declares_no_shape(self):
         path = self.root / HISTORY_PATH
         path.parent.mkdir(parents=True, exist_ok=True)
