@@ -46,10 +46,17 @@ class KbCorpusAliases(unittest.TestCase):
         private.parent.mkdir(parents=True)
         private.write_text("# Private operation\nONLY_OPERATIONS_CANARY stays private.\n",
                            encoding="utf-8")
+        # The default MCP read policy also refuses .env.* names. The local
+        # keyword cache must not quietly re-expose an .env.-named Markdown note.
+        env_note = self.notes / ".env.private.md"
+        env_note.write_text("# Synthetic configuration\nENV_NOTE_CANARY must stay private.\n",
+                            encoding="utf-8")
+        self.assertNotIn("02_WIKI/.env.private.md", self.indexed())
         self.assertIn("02_WIKI/real.md", self.indexed())
         self.assertNotIn("09_OPERATIONS/decisions/client.md", self.indexed())
         self.assertEqual(0, kb.ingest(self.root))
         self.assertEqual([], kb.find(self.root, "ONLY_OPERATIONS_CANARY"))
+        self.assertEqual([], kb.find(self.root, "ENV_NOTE_CANARY"))
         self.assertEqual(["02_WIKI/real.md"],
                          [hit["path"] for hit in kb.find(self.root, "LOCALORCHID")])
 
