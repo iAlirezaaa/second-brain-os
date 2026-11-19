@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #140; mixed-case default-read parity, PR #141 in review)
+- The local keyword KB now applies case-insensitive comparisons to excluded
+  machine/operational zone prefixes and to the clone-readability secret-directory
+  rule. On case-sensitive filesystems, mixed-case spellings could previously
+  become searchable even though the default MCP tool boundary rejected them.
+  The existing synthetic corpus test adds three negative fixtures plus a
+  permitted wiki control. No original notes, dependencies, access permissions or
+  KB schema were changed; owners of existing derived indexes can explicitly
+  re-ingest. All seven CI jobs on the final PR head and independent review
+  remain required before this is released.
+
 ### Fixed (issue #143; privacy PR #141 CI, in review)
 - The synthetic KB privacy regression now explicitly closes its SQLite
   connection after committing its stale-index fixture. Python's SQLite
