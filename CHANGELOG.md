@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; Phase-44 synthetic Git registry fixtures; draft review)
+- The Phase-44 code-repository test helper now assigns each temporary Git
+  directory to its calling `unittest.TestCase` via `addCleanup` before creating
+  repository state. The no-origin regression explicitly triggers cleanup and
+  checks the directory was removed; the refused non-Git fixture also registers
+  cleanup. This prevents test-created Git directories persisting after failures
+  without touching production registry or user repositories. Full exact-head
+  CI is required before merge; this change is not released.
+
 ### Fixed (issue #58 partial; Phase-52 synthetic backup fixtures; draft PR)
 - Test-only vault/restore fixture roots and synthetic outside-repository
   passphrase directories now belong to `unittest.addModuleCleanup` through
