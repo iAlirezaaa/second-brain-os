@@ -62,6 +62,16 @@ over something it cannot see is a silent gate, not a clean house.
       passed on prior SHA `49fd7363635e7c3afb506ea74942010fcfcc5e29`.
       The additional side-channel changes require a new full CI run.
 
+- [ ] **P0 privacy parity follow-up (2026-11-19; same #140):** The local KB
+      corpus previously accepted a synthetic Markdown note whose basename began
+      `.env.`, even though the default MCP read rule refused that filename.
+      The test-first regression in `tests/test_kb_corpus_symlink_boundary.py`
+      requires both corpus enumeration and keyword search to exclude such notes;
+      `scripts/kb.py` now declines them while still indexing ordinary wiki notes.
+      This closes a second local retrieval path for secret-bearing file names,
+      without claiming an OS ACL or reading real secrets. Full exact-head CI and
+      review are required before merge.
+
 **Rollback:** revert the isolated filter change if a legitimate query
 regresses; the KB SQLite cache is derived and rebuildable using
 `python scripts/kb.py ingest`. No private user data should be committed.
