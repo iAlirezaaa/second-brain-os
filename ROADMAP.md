@@ -38,6 +38,19 @@ loop-history test now exercises all four real fixtures. Each registers a stdlib
 test isolation only: no change to user memory, schema contracts, permissions or
 the release. Rollback: revert the single fixture-test change; no migration.
 
+**P0/P2 bounded follow-up — Phase-45 roadmap-check fixture ownership (#58; PR #142; in review).**
+The synthetic `Fixture` in `tests/test_phase45_roadmap_citations.py`
+allocated a temporary checkout, then wrote several files before its caller could
+reach `try/finally`. If a directory creation failed during construction, the
+fixture leaked and repeated CI runs accumulated scratch repositories. It now
+owns a stdlib `TemporaryDirectory`, calls `cleanup()` on a failed constructor
+and on normal `close()`, and proves the failure path inside an existing unittest
+method (no extra test count). Acceptance: injected `Path.mkdir` failure leaves
+zero children in an isolated parent; ordinary cleanup removes the root; supported
+OS/Python matrix and health are green on **this** final SHA. Isolated, reconstructed
+Python 3.13.5 check: 3/3 cases green; full-clone tests still pending CI.
+Rollback: revert these Phase-45 fixture commits; user memory and product code unchanged.
+
 - [ ] **Next 1 (P0):** Verify the **exact PR head** with the four OS/Python
       CI matrix jobs and three backup jobs, rerun the full test suite and
       health gates from a clean clone, and reconcile protected-main required
