@@ -137,7 +137,7 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         shutil.rmtree(plain, ignore_errors=True)
 
     def test_a_repo_with_no_origin_still_gets_path_and_branch_and_says_the_rest(self):
-        code = git_repo(with_origin=False)
+        code = git_repo(self, with_origin=False)
         _code, out = self.vault.hades("new", "--kind", "project", "--name", "Local Only",
                                       "--description", "fixture", "--type", "program",
                                       "--code-repo", str(code), "--approve")
@@ -148,6 +148,9 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         self.assertIn("origin", out.lower(), out)
         self.assertIn("repo.remote", out,
                       "the tool has to name the field the operator can still fill with `set`")
+        # The helper must arrange cleanup even if any earlier assertion fails.
+        self.doCleanups()
+        self.assertFalse(code.exists(), "a synthetic git repo survived its test cleanup")
 
     def test_a_kind_without_a_repo_block_is_refused_not_silently_ignored(self):
         code = git_repo()
