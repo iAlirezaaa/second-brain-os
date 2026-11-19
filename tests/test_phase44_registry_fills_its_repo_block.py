@@ -42,9 +42,13 @@ def git(repo_dir, *args):
                           text=True, encoding="utf-8", errors="replace")
 
 
-def git_repo(with_origin=True):
-    """A throwaway code repo with one commit on `main`, optionally an origin remote."""
-    home = Path(tempfile.mkdtemp(prefix="code-repo-"))
+def git_repo(test_case, with_origin=True):
+    """A throwaway git repo owned by its calling unittest case, even on failure."""
+    # TemporaryDirectory handles Windows read-only Git files and reports cleanup
+    # failures instead of silently hiding them with rmtree(ignore_errors=True).
+    holder = tempfile.TemporaryDirectory(prefix="code-repo-")
+    test_case.addCleanup(holder.cleanup)
+    home = Path(holder.name)
     git(home, "init", "-q", "-b", "main")
     git(home, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
         "commit", "-q", "--allow-empty", "-m", "first")
@@ -102,7 +106,7 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         self.vault.close()
 
     def test_code_repo_records_what_the_folders_git_says(self):
-        code = git_repo()
+        code = git_repo(self)
         try:
             _code, out = self.vault.hades("new", "--kind", "project", "--name", "Demo Service",
                                           "--description", "a program with real code",
@@ -122,7 +126,9 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
             shutil.rmtree(code, ignore_errors=True)
 
     def test_a_folder_with_no_git_is_refused_and_writes_no_record(self):
-        plain = Path(tempfile.mkdtemp(prefix="not-a-repo-"))
+        plain_holder = tempfile.TemporaryDirectory(prefix="not-a-repo-")
+        self.addCleanup(plain_holder.cleanup)
+        plain = Path(plain_holder.name)
         before = len(self.vault.paths())
         before_plans = len(self.vault.paths("15_SYSTEM/generated/plans/PLAN-*.json"))
         code, out = self.vault.hades("new", "--kind", "project", "--name", "No Git Here",
@@ -137,7 +143,7 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         shutil.rmtree(plain, ignore_errors=True)
 
     def test_a_repo_with_no_origin_still_gets_path_and_branch_and_says_the_rest(self):
-        code = git_repo(with_origin=False)
+        code = git_repo(self, with_origin=False)
         _code, out = self.vault.hades("new", "--kind", "project", "--name", "Local Only",
                                       "--description", "fixture", "--type", "program",
                                       "--code-repo", str(code), "--approve")
@@ -148,9 +154,12 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
         self.assertIn("origin", out.lower(), out)
         self.assertIn("repo.remote", out,
                       "the tool has to name the field the operator can still fill with `set`")
+        # The helper must arrange cleanup even if any earlier assertion fails.
+        self.doCleanups()
+        self.assertFalse(code.exists(), "a synthetic git repo survived its test cleanup")
 
     def test_a_kind_without_a_repo_block_is_refused_not_silently_ignored(self):
-        code = git_repo()
+        code = git_repo(self)
         before = len(self.vault.paths())
         c, out = self.vault.hades("new", "--kind", "organization", "--name", "No Repo Org",
                                   "--description", "fixture", "--code-repo", str(code),

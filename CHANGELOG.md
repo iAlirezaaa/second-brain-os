@@ -6,6 +6,120 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58; PR #142 CI regression, exact-head CI pending; 2026-11-19)
+- GitHub Actions [run 44613229218](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44613229218)
+  failed its four Python/OS test jobs because an installed-home roadmap test still
+  called `shutil.rmtree` after its `shutil` import was removed in the preceding
+  temporary-fixture refactor (`NameError`). That test now owns a scoped
+  `TemporaryDirectory` and asserts the synthetic home disappears afterward.
+  A local isolated Python reproduction exercised the old NameError and the new
+  directory cleanup; full repo tests and the next exact-head 7-job CI remain
+  to be checked separately. No runtime, user-data or dependency change.
+  Rollback: revert the bounded test-only change, without loosening CI gates.
+
+
+### Fixed (issue #58; PR #142, review pending; 2026-11-19)
+- Phase-45 synthetic roadmap-check fixtures now release their temporary checkout
+  if setup fails before the caller can reach a `finally` block. The fixture's
+  normal `close()` also uses `TemporaryDirectory.cleanup()`; an existing
+  unittest asserts the injected failure leaves no root. A reconstructed,
+  isolated Python 3.13.5 smoke covered legacy leak, failure cleanup and normal
+  cleanup (3/3); the full repository CI result on the final commit remains
+  separate and unverified at the time of this entry. No product runtime, user
+  memory, dependencies, permission boundary or release behavior changed.
+
+### Fixed (issue #58 partial; Phase-44 schema fixture setup failure; CI/review pending)
+- Four schema-version test classes in `tests/test_phase44_schema_version.py`
+  now register a standard-library `TemporaryDirectory` cleanup before
+  creating their synthetic repository trees. Previously `mkdtemp` was
+  cleaned only by `tearDown`, which unittest skips when `setUp` raises.
+  A regression added to an existing test uses injected setup failures for all
+  four classes and checks that class-independent `doCleanups()` removes each
+  holder. The test-method count is unchanged. An isolated Python failure-path
+  reproduction found the old pattern leaked and the new pattern cleaned up;
+  the exact-head full suite and CI have not yet been certified. This only
+  changes test fixtures, not user memory, production schema behavior, tools
+  or permissions. PR #142 is still unmerged.
+
+### Fixed (issue #58 partial; Phase-28 synthetic schedule fixtures; CI pending)
+- `tests/test_phase28_schedule_seam.py` now registers stdlib
+  `TemporaryDirectory` cleanup before writing synthetic schedule/history data.
+  Previously a fixture factory failure before the caller's `addCleanup` could
+  strand a temporary directory; the empty-record fixture used the same
+  manually cleaned `mkdtemp` pattern. All schedule test callers now supply
+  the owning `unittest.TestCase`. An existing CLI contract test verifies
+  effective directory removal, including a synthetic early mkdir failure,
+  without increasing the test-method count. An isolated Python 3.13.5
+  ownership/failure-path reproduction passed (2/2); full exact-head CI
+  and independent review are still required. This is test-only: no change
+  to production scheduling, permissions, data, dependencies or user settings.
+
+
+### Fixed (issue #58 partial; class-fixture cleanup on failed link-graph setup; CI pending)
+- `tests/test_phase47_link_graph_plane.py` now owns its temporary
+  clone via `TemporaryDirectory` and `addClassCleanup` registered
+  **before** `shutil.copytree`. Unlike `tearDownClass`, class cleanups
+  run after a failed `setUpClass`, preventing synthetic repo copies from
+  accumulating during local tests. An existing test injects a copy error and
+  asserts that running class cleanups removes the directory; no new test
+  method or dependency. Isolated Python 3.13.5 failure-path reproduction
+  showed old cleanup leaked and new cleanup removed the tree.
+  The full repository suite and exact-head seven-job CI remain required;
+  no shipped product, encryption, permissions, or real data changed.
+
+### Fixed (issue #58 partial; Phase-44 readout test fixture ownership; CI pending)
+- The synthetic link-graph vault helper in
+  `tests/test_phase44_readout_is_a_gate.py` now registers a test-owned
+  stdlib `TemporaryDirectory` before writing notes. All six calls pass the
+  owning `unittest.TestCase`, so cleanup runs even if setup or an assertion
+  aborts early. The existing successful-readout regression explicitly invokes
+  cleanups and verifies the vault directory is gone; no new test method was
+  introduced. An isolated stdlib reproduction confirmed the old unowned
+  fixture survived `doCleanups()` and the new fixture did not (including a
+  simulated failure). The full exact-head CI matrix is not yet certified for
+  this revision. This is test hygiene only; no production data or access rules
+  were modified.
+
+### Fixed (issue #58 partial; Phase-43 synthetic reviewer fixture ownership; CI pending)
+- Goldfish-review test fixtures previously used unowned `mkdtemp()` roots. A
+  failure in setup or before a test's explicit teardown could leave fake
+  reviewer files behind on a developer machine or CI runner. `house(owner)`
+  registers a stdlib `TemporaryDirectory` cleanup *before* copying fixture
+  files; existing test cases pass their owner. The existing persona test
+  now exercises `doCleanups()` and asserts the fixture path disappears,
+  without adding a test method or changing production code. An isolated
+  stdlib before/after cleanup check passed locally; complete exact-head CI
+  is still required before release. No user files, registry or permissions
+  were modified.
+
+### Fixed (issue #58 partial; PR #142 Windows cleanup follow-up; CI pending)
+- Windows CI #44433337877 exposed a false-green fixture cleanup: both Windows
+  jobs failed the existing no-origin regression because a Git temp directory
+  survived shutil.rmtree(ignore_errors=True). The Phase-44 Git and non-Git
+  fixtures now use test-owned stdlib TemporaryDirectory callbacks, which
+  handle common Windows permissions and surface failures instead of ignoring
+  them. A local Python 3.13 + real-Git cleanup smoke check passed; complete
+  four-platform CI remains required. No production behavior or user data changed.
+
+### Fixed (issue #58 partial; Phase-44 synthetic Git registry fixtures; draft review)
+- The Phase-44 code-repository test helper now assigns each temporary Git
+  directory to its calling `unittest.TestCase` via `addCleanup` before creating
+  repository state. The no-origin regression explicitly triggers cleanup and
+  checks the directory was removed; the refused non-Git fixture also registers
+  cleanup. This prevents test-created Git directories persisting after failures
+  without touching production registry or user repositories. Full exact-head
+  CI is required before merge; this change is not released.
+
+### Fixed (issue #58 partial; Phase-52 synthetic backup fixtures; draft PR)
+- Test-only vault/restore fixture roots and synthetic outside-repository
+  passphrase directories now belong to `unittest.addModuleCleanup` through
+  Python's `TemporaryDirectory` instead of surviving full-suite runs. The
+  existing Phase-52 regression checks that both fixture factories register
+  cleanup and that invoking it removes both paths. An isolated standard-library
+  check reproduced zero registrations before and two effective cleanups after.
+  Full GitHub CI is required before merge; this is not released. No production
+  vault, encryption, permission, external service, or user-data change.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

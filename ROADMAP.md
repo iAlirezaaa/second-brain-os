@@ -27,6 +27,184 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## Rolling priorities and acceptance gates (2026-11-19; review after CI)
+
+**P0 CI failure reconciled — installed-home cleanup in Phase-45 (#58 / PR #142).**
+[Exact-head CI run 44613229218](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44613229218)
+failed all four matrix jobs on `5447f562d` with `NameError: name 'shutil' is not defined`
+in `tests/test_phase45_roadmap_citations.py::test_an_installed_home_inherits_the_plan_instead_of_making_one`.
+The earlier fixture ownership refactor removed `shutil` but left this final `rmtree`
+call. The test now uses a scoped stdlib `TemporaryDirectory` and verifies its
+synthetic installed-home root disappears after exit. Local isolated Python
+reproduction confirmed the old missing-import failure and the new cleanup;
+it is **not** a full clone test. This diagnostic fix does not modify production
+memory, user data, dependencies or permissions. Acceptance: exact-new-head
+health + full unit tests on Ubuntu/Windows Python 3.9/3.12 and backup seal/restore;
+leave draft until all required gates and independent review pass. Rollback:
+revert this test-only cleanup change if needed. Next (1) verify exact-head CI
+and legally resolve protected-main checks (#107); (2) measure end-to-end first
+recall on Windows/macOS/Linux (#93) with truthful success times.
+
+
+**P0 reliability slice — Phase-44 schema-test fixture ownership (#58; PR #142; awaiting full CI).**
+Four schema-version fixture owners in `tests/test_phase44_schema_version.py`
+previously relied on `tearDown` after `mkdtemp`; `tearDown` never runs when
+`setUp` raises. A synthetic setup-failure regression in the existing
+loop-history test now exercises all four real fixtures. Each registers a stdlib
+`TemporaryDirectory` cleanup before creating any repository files. This is
+test isolation only: no change to user memory, schema contracts, permissions or
+the release. Rollback: revert the single fixture-test change; no migration.
+
+**P0/P2 bounded follow-up — Phase-45 roadmap-check fixture ownership (#58; PR #142; in review).**
+The synthetic `Fixture` in `tests/test_phase45_roadmap_citations.py`
+allocated a temporary checkout, then wrote several files before its caller could
+reach `try/finally`. If a directory creation failed during construction, the
+fixture leaked and repeated CI runs accumulated scratch repositories. It now
+owns a stdlib `TemporaryDirectory`, calls `cleanup()` on a failed constructor
+and on normal `close()`, and proves the failure path inside an existing unittest
+method (no extra test count). Acceptance: injected `Path.mkdir` failure leaves
+zero children in an isolated parent; ordinary cleanup removes the root; supported
+OS/Python matrix and health are green on **this** final SHA. Isolated, reconstructed
+Python 3.13.5 check: 3/3 cases green; full-clone tests still pending CI.
+Rollback: revert these Phase-45 fixture commits; user memory and product code unchanged.
+
+- [ ] **Next 1 (P0):** Verify the **exact PR head** with the four OS/Python
+      CI matrix jobs and three backup jobs, rerun the full test suite and
+      health gates from a clean clone, and reconcile protected-main required
+      checks in issue #107 with admin approval; do not merge on historical green CI.
+- [ ] **Next 2 (P0/P1):** Measure first *complete* local recall from a clean
+      clone on Windows, macOS and Linux (wall-clock time, OS, Python version,
+      output paths and failures), then prioritize a minimal host-specific
+      MCP onboarding example based on that baseline. Until observed, its
+      cross-OS success rate and under-five-minute claim are unknown.
+
+- [ ] **P0 — safety and reliable first use:** reconcile protected-main check-name drift (#107), independently review the default retrieval privacy boundary (#140 / PR #141), and time a **complete clean-clone to first real local search** on Windows, macOS and Linux with source paths visible. Do not treat the synthetic `scripts/first_success.py` smoke as an under-five-minute end-to-end result; missing platforms and times remain unknown.
+- [ ] **P1 — useful, host-gated MCP:** verify actual version-pinned Claude Code, Codex and OpenCode handshakes using synthetic notes and read-only first-use permissions. Keep English and Persian setup steps aligned, measure successful installs and searches, and improve a lightweight docs entry only when it clarifies a reproducible workflow. No unsupported host-compatibility claims.
+- [ ] **P2 — optional observability and portability:** design provenance and agent-permission inspection, opt-in import/export, and collaboration with explicit access/rollback tests before implementation. Current bounded #58 slice: in `tests/test_phase47_link_graph_plane.py`, register a class-owned temporary clone **before** copying so a failed `setUpClass` cannot strand a large copied vault. The existing test injects a copy failure and proves cleanup; no production or private data changes. Full exact-head CI is still required before this checkbox can be closed.
+- [ ] **P3 — research, no copy/paste:** separately evaluate Mem0 memory-write duplicate/idempotency cases (November 2026 issue #7889), Basic Memory frontmatter write-side effects (#2125, opened 2026-11-16), Letta cross-agent memory visibility (#2666), and OpenMemory against this repository's actual contracts. These are external *reports*, not proven SBO defects. Require independent fixtures, licensing analysis, measured baseline, proposal/ADR, stdlib fallback and explicit rollback before adopting anything.
+
+**P2 fixture rollback:** revert the isolated test-class cleanup change if supported-platform CI finds an issue; generated directories are disposable and no migration is needed. Do not bypass branch protection, auto-enable a host, or promote unreviewed private memory.
+
+**Next 1 (P0):** verify all seven GitHub CI jobs on the exact PR #142 head and legally reconcile #107; leave the PR in review until successful.
+
+**Next 2 (P1):** measure one real clean-install and source-backed first search per supported OS, recording commands, wall time, host version and privacy refusals; mark unmeasured outcomes unknown.
+
+---
+
+## P2 — Phase-28 schedule test fixture ownership (issue #58; PR #142)
+
+- [ ] **S / test-only:** `tests/test_phase28_schedule_seam.py` previously created
+      synthetic schedule roots with `mkdtemp()`. Normal tests removed them
+      later, but a failure inside the fixture factory, before it returned,
+      could strand the directory. The empty-record case also used a manual
+      delete after allocation.
+- [ ] **Acceptance:** a `unittest.TestCase` explicitly owns every schedule
+      fixture through `TemporaryDirectory`, and registers cleanup **before**
+      writing a schedule/history record. The existing read-only CLI test
+      verifies its directory disappears after `doCleanups()`, and injects an
+      early `Path.mkdir` failure to verify cleanup despite failed setup. No
+      additional dependencies, test methods, runtime permissions or changes
+      to user data. The isolated Python 3.13.5 reproduction passed two
+      success/failure-path scenarios; this is not full-repo verification.
+- [ ] **CI/release gate:** require health, full unittest discovery and all
+      seven Ubuntu/Windows/backup jobs on the exact final PR head. Leave PR
+      #142 in Draft while any job, independent review or branch-protection
+      requirement is missing. Roll back by reverting this test-only slice;
+      no stored data migration is involved.
+
+**Next 1 (P0):** reconcile GitHub protected-main check-name drift (#107)
+without relaxing protection; independently review security PR #141.
+
+**Next 2 (P1):** measure clean-clone to first source-cited local retrieval on
+Windows, macOS and Linux, including failure/refusal cases and elapsed time;
+do not infer host compatibility from synthetic-only smoke tests.
+
+---
+
+## P2 — Own Phase-44 link-readout test vaults (issue #58; PR #142 draft)
+
+- [ ] **S** The `tests/test_phase44_readout_is_a_gate.py` fixture factory
+      previously used unowned `mkdtemp()` and relied on `tearDown()` or
+      test-local `finally` blocks. A `setUp()` error can skip `tearDown()`;
+      suppressed removal errors can leave synthetic Markdown on the host.
+      Replace this with `TemporaryDirectory` and register
+      `unittest.TestCase.addCleanup` **before** writing test notes.
+      All six fixture users explicitly supply their owner; production code,
+      private vaults and permissions stay unchanged.
+- [ ] Acceptance: the existing successful-readout test explicitly executes
+      `doCleanups()` and proves its throwaway vault no longer exists; the
+      old unowned factory fails this regression. The discovered test-method
+      count must not increase. No dependency additions.
+- [ ] Validation: isolated Python before/after fixture checks observed an
+      unowned vault survive cleanup, then the new owned vault disappear both
+      after a normal assertion and after a simulated setup failure. This is
+      **not** a full suite pass; require exact-head GitHub Actions matrix,
+      Vault health, and cross-machine backup jobs before merge.
+
+**Next 1 (P0):** reconcile the seven exact-head CI results and protected-main
+required-check names in issue #107 without bypass or force-push.
+**Next 2 (P1):** run the real clean-clone → first local recall procedure on
+Windows, macOS and Linux, measuring time and provenance separately from the
+synthetic `scripts/first_success.py` probe; leave missing measurements unknown.
+
+---
+
+## P2 — Own Phase-52 backup and Phase-44 registry test fixtures (issue #58; draft review)
+
+- [ ] **S** Make every synthetic fixture root created by
+      `tests/test_phase52_vault_seals_the_private_plane.py` disposable via
+      stdlib `TemporaryDirectory` and `unittest.addModuleCleanup`,
+      including restore destinations and outside-repository test passphrases.
+      No change to production vault, encryption, authorization, or real data.
+- [ ] Acceptance: the existing Phase-52 regression verifies both factories
+      register working cleanup callbacks and neither synthetic vault nor
+      passphrase survives an invoked cleanup. No new unittest method and no
+      dependency. The isolated Python check reproduced zero registrations
+      before and two effective cleanups after; full runner CI is pending.
+- [ ] **S** Extend the same fixture-ownership repair to
+      `tests/test_phase44_registry_fills_its_repo_block.py`: the temporary Git
+      repository factory must register per-test cleanup before running Git,
+      including the no-origin and refused-kind paths that previously left
+      synthetic Git directories behind when tests succeeded or failed.
+- [ ] Acceptance: the existing no-origin regression calls the helper with its
+      owning test case, runs registered cleanups and proves the throwaway Git
+      directory is gone. All helper callers register cleanup; the no-Git fixture
+      also cleans up after assertion failures. No production registry changes.
+- [ ] Windows regression follow-up (2026-11-19): CI run
+      #44433337877 passed both Ubuntu jobs, but both Windows jobs failed the
+      existing no-origin fixture assertion because its folder still existed
+      after cleanup. The helper used shutil.rmtree(ignore_errors=True), which
+      can silently hide Windows cleanup errors. Use a test-owned
+      TemporaryDirectory (including the non-Git fixture), retain the real Git
+      cleanup assertion, and re-run CI. A local Python 3.13 + Git smoke check
+      removed the folder; Windows results for this revision are still pending.
+- [ ] **S** Phase-43 goldfish reviewer test fixtures must have a `unittest`
+      cleanup owner *before* copying the synthetic persona tree. Former `house()`
+      used `mkdtemp()` without an owner; if a test's `setUp` or fixture setup failed,
+      its `tearDown` / manual cleanup was skipped, leaving the fake reviewer tree.
+      `house(test_case)` now uses stdlib `TemporaryDirectory` with an early
+      `addCleanup` registration. Existing persona tests assert an explicit
+      `doCleanups()` removes the fixture without adding discovered test methods.
+      Isolated stdlib before/after: old directory remained after `doCleanups`;
+      the owned directory was removed. **Full repo CI is pending**; no production
+      goldfish tool, reviewers or user data are changed.
+- [ ] Run repository health and full Python 3.9/3.12 Ubuntu/Windows CI before
+      merge; do not call this verified merely because isolated stdlib passes.
+- [ ] Rollback: revert this isolated test-only branch if a platform's test
+      holds an open handle that prevents `TemporaryDirectory.cleanup()`;
+      retain the baseline and reopen the issue subset, without deleting user data.
+
+**Next 1 (P0):** Reconcile protected-main required-check drift in issue #107
+without bypassing branch protection, then independently review the privacy
+boundary in #140 and the CI result for this change.
+
+**Next 2 (P1/P2):** Measure first real recall and cleanup under a pristine
+clone on Windows/macOS/Linux (issue #93), then audit the next unowned fixture
+in #58 using a before/after directory count. P3 competitor work stays
+research-only until measured and licensed.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

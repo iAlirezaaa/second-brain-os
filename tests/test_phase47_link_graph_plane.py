@@ -127,13 +127,11 @@ class TestRealTreeWithARecordedBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls._tmp = tempfile.mkdtemp(prefix="sb-real-tree-")
-        cls.clone = Path(cls._tmp) / "repo"
+        # Class cleanups run even when setUpClass fails before finishing the copy.
+        cls._tempdir = tempfile.TemporaryDirectory(prefix="sb-real-tree-")
+        cls.addClassCleanup(cls._tempdir.cleanup)
+        cls.clone = Path(cls._tempdir.name) / "repo"
         shutil.copytree(ROOT, cls.clone, ignore=shutil.ignore_patterns(".git", "__pycache__"))
-
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls._tmp, ignore_errors=True)
 
     def test_recording_a_base_into_the_real_tree_leaves_the_readout_settled(self):
         tree = self.clone / "02_WIKI" / "indexes" / "reference-maps.md"
@@ -160,6 +158,30 @@ class TestRealTreeWithARecordedBase(unittest.TestCase):
         self.assertEqual(len(before["degree0"]) + 1, after["components"],
                          "the readout's own invariant: islands = orphan notes + 1")
 
+
+        # A class fixture must be released when setUpClass fails during copying.
+        # unittest skips tearDownClass in that case, but runs addClassCleanup callbacks.
+        from unittest import mock
+
+        class FailedCopy(unittest.TestCase):
+            pass
+
+        try:
+            with mock.patch.object(shutil, "copytree",
+                                   side_effect=OSError("synthetic copy failure")):
+                with self.assertRaisesRegex(OSError, "synthetic copy failure"):
+                    TestRealTreeWithARecordedBase.setUpClass.__func__(FailedCopy)
+            self.assertTrue(hasattr(FailedCopy, "_tempdir"),
+                            "a failed setUpClass must still own its temporary directory")
+            fixture_root = Path(FailedCopy._tempdir.name)
+            self.assertTrue(fixture_root.is_dir())
+            FailedCopy.doClassCleanups()
+            self.assertFalse(fixture_root.exists(),
+                             "failed class setup must not leave a copied vault on disk")
+        finally:
+            FailedCopy.doClassCleanups()
+            if hasattr(FailedCopy, "_tmp"):
+                shutil.rmtree(FailedCopy._tmp, ignore_errors=True)
 
 if __name__ == "__main__":
     unittest.main()

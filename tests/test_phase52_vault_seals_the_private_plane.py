@@ -65,9 +65,20 @@ GOOD_EVIDENCE = {
 }
 
 
+def temp_root(prefix):
+    """Own every synthetic directory until unittest completes this module.
+
+    Module cleanup also runs after a failing test, including in discovery mode.
+    A registered TemporaryDirectory keeps its holder alive until cleanup.
+    """
+    holder = tempfile.TemporaryDirectory(prefix=prefix)
+    unittest.addModuleCleanup(holder.cleanup)
+    return Path(holder.name)
+
+
 def fixture(planes=ABSENT, flag=False, evidence=None, files=ABSENT):
     """A repo-shaped sandbox: config, private planes, and nothing else."""
-    root = Path(tempfile.mkdtemp(prefix="vault-fixture-"))
+    root = temp_root("vault-fixture-")
     config = root / vault.CONFIG
     config.parent.mkdir(parents=True, exist_ok=True)
     data = {"feature_flags": {"encrypted_private_backup": flag}}
@@ -89,7 +100,7 @@ def fixture(planes=ABSENT, flag=False, evidence=None, files=ABSENT):
 
 def keyfile():
     """A key kept where the repository cannot see it -- which is the whole rule."""
-    directory = Path(tempfile.mkdtemp(prefix="vault-key-"))
+    directory = temp_root("vault-key-")
     path = directory / "passphrase"
     path.write_bytes(KEY)
     return path
@@ -143,7 +154,7 @@ class TheRoundTrip(unittest.TestCase):
         report = vault.verify(root, row["name"], KEY)
         self.assertEqual(row["container_sha256"], report["container_sha256"])
         self.assertEqual(sorted(FILES), sorted(rel for rel, _size in report["entries"]))
-        into = Path(tempfile.mkdtemp(prefix="vault-into-"))
+        into = temp_root("vault-into-")
         restored = vault.restore(root, row["name"], into, KEY)
         self.assertEqual(digests(root), digests(into))
         self.assertEqual(restored["container_sha256"], row["container_sha256"])
@@ -156,7 +167,7 @@ class TheRoundTrip(unittest.TestCase):
         second = fixture()
         self.assertEqual(0, len(vault.rows(second)))
         shelf_copy(second, row["name"], source)
-        into = Path(tempfile.mkdtemp(prefix="vault-elsewhere-"))
+        into = temp_root("vault-elsewhere-")
         report = vault.restore(second, row["name"], into, KEY)
         self.assertEqual(row["container_sha256"], report["container_sha256"])
         self.assertEqual(digests(first), digests(into))
@@ -188,7 +199,7 @@ class TheRoundTrip(unittest.TestCase):
         self.assertTrue(any(name in line and "frames" in line for line in listed), listed)
         status = vault.run(["--status", "--root", str(root)], str(root))
         self.assertEqual("encrypted_private_backup: inert", status[0])
-        into = Path(tempfile.mkdtemp(prefix="vault-cli-into-"))
+        into = temp_root("vault-cli-into-")
         unsealed = vault.run(["--unseal", name, "--into", str(into), "--root", str(root),
                               "--passphrase-file", str(key)], str(root))
         self.assertTrue(unsealed[0].startswith("restored "), unsealed)
@@ -320,7 +331,7 @@ class ADamagedContainerIsStillOnTheShelf(unittest.TestCase):
     def test_a_wrong_passphrase_writes_nothing_at_the_destination(self):
         root = fixture()
         row = vault.seal(root, KEY, crypto.KDF_PBKDF2)
-        into = Path(tempfile.mkdtemp(prefix="vault-empty-"))
+        into = temp_root("vault-empty-")
         with self.assertRaises(crypto.OpenError) as caught:
             vault.restore(root, row["name"], into, b"not-the-phrase")
         self.assertEqual("tag", caught.exception.rule)
@@ -479,7 +490,7 @@ class TheCommandsSayTheSameThing(unittest.TestCase):
         verified = cli(["--verify", name, "--root", root, "--passphrase-file", key])
         self.assertEqual(0, verified.returncode, verified.stdout)
         self.assertIn("every frame authenticated", verified.stdout)
-        into = Path(tempfile.mkdtemp(prefix="vault-sub-into-"))
+        into = temp_root("vault-sub-into-")
         unsealed = cli(["--unseal", name, "--into", into, "--root", root,
                         "--passphrase-file", key])
         self.assertEqual(0, unsealed.returncode, unsealed.stdout)
@@ -563,6 +574,25 @@ class TheHouseWiring(unittest.TestCase):
             self.assertEqual([], list(shelf.glob("priv-*" + vault.SUFFIX)))
         self.assertFalse(common.is_repo_checkout(fixture()),
                          "a sandbox must not read as a checkout")
+        # Issue #58: even a failed vault test must not leave synthetic notes or
+        # passphrase files on disk. Capture module cleanups and execute them here
+        # so the contract is observable before the full unittest module exits.
+        with patch.object(unittest, "addModuleCleanup") as register:
+            sandbox = fixture()
+            key_path = keyfile()
+            try:
+                self.assertEqual(2, register.call_count,
+                                 "both synthetic fixture factories must own cleanup")
+                for call in register.call_args_list:
+                    call.args[0](*call.args[1:], **call.kwargs)
+                self.assertFalse(sandbox.exists(), "synthetic vault survived cleanup")
+                self.assertFalse(key_path.parent.exists(), "test passphrase survived cleanup")
+            finally:
+                # This guard also cleans the pre-fix reproduction when its
+                # missing cleanup registration makes the assertion fail.
+                import shutil
+                shutil.rmtree(str(sandbox), ignore_errors=True)
+                shutil.rmtree(str(key_path.parent), ignore_errors=True)
 
     def test_the_bench_measures_a_seal_without_touching_the_vault(self):
         measured = vault.bench(4096)

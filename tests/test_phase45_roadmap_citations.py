@@ -44,11 +44,11 @@ What each class holds the change to:
   * TestTheGateIsWired -- health's one-OK-line-per-gate invariant, and the installed home that
     inherits the plan rather than making one.
 """
-import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,27 +67,35 @@ class Fixture:
     git truth is written against the real repo instead."""
 
     def __init__(self, plan):
-        self.dir = Path(tempfile.mkdtemp())
-        (self.dir / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
-        backend = self.dir / "15_SYSTEM" / "scripts" / "backend"
-        backend.mkdir(parents=True)
-        (backend / "vector.py").write_text(
-            "class Embedder:\n    pass\n\nEVIDENCE = 'state/activation.json'\n", encoding="utf-8")
-        (backend / "schedules.py").write_text(
-            "def is_due(spec):\n    return True\n", encoding="utf-8")
-        (self.dir / "scripts").mkdir()
-        (self.dir / "scripts" / "loop.py").write_text(
-            "JOURNAL = '14_CANDIDATES/loop/recovery.jsonl'\n", encoding="utf-8")
-        (self.dir / "state").mkdir()
-        (self.dir / "state" / "activation.json").write_text("{}", encoding="utf-8")
-        (self.dir / "02_WIKI").mkdir()
-        (self.dir / "02_WIKI" / "a-map.md").write_text("note\n", encoding="utf-8")
-        (self.dir / "02_WIKI" / "b-map.md").write_text("note\n", encoding="utf-8")
-        self.plan = self.dir / "ROADMAP.md"
-        self.plan.write_text(plan, encoding="utf-8")
+        # Own the directory before populating it: a failed constructor has no caller
+        # that can invoke close(), and must clean up immediately.
+        self._temp = tempfile.TemporaryDirectory(prefix="roadmap-fixture-")
+        self.dir = Path(self._temp.name)
+        try:
+            (self.dir / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
+            backend = self.dir / "15_SYSTEM" / "scripts" / "backend"
+            backend.mkdir(parents=True)
+            (backend / "vector.py").write_text(
+                "class Embedder:\n    pass\n\nEVIDENCE = 'state/activation.json'\n", encoding="utf-8")
+            (backend / "schedules.py").write_text(
+                "def is_due(spec):\n    return True\n", encoding="utf-8")
+            (self.dir / "scripts").mkdir()
+            (self.dir / "scripts" / "loop.py").write_text(
+                "JOURNAL = '14_CANDIDATES/loop/recovery.jsonl'\n", encoding="utf-8")
+            (self.dir / "state").mkdir()
+            (self.dir / "state" / "activation.json").write_text("{}", encoding="utf-8")
+            (self.dir / "02_WIKI").mkdir()
+            (self.dir / "02_WIKI" / "a-map.md").write_text("note\n", encoding="utf-8")
+            (self.dir / "02_WIKI" / "b-map.md").write_text("note\n", encoding="utf-8")
+            self.plan = self.dir / "ROADMAP.md"
+            self.plan.write_text(plan, encoding="utf-8")
+
+        except BaseException:
+            self._temp.cleanup()
+            raise
 
     def close(self):
-        shutil.rmtree(self.dir, ignore_errors=True)
+        self._temp.cleanup()
 
     def run(self, expect_rc=0):
         result = subprocess.run([sys.executable, GATE, "--root", str(self.dir), "--check"],
@@ -110,6 +118,15 @@ class TestClosedRowsMustResolve(unittest.TestCase):
             self.assertIn("closed row", out)
         finally:
             fix.close()
+        # A constructor error must not leak its already allocated scratch root.
+        # The old Fixture() allocated with mkdtemp() and never reached close().
+        with tempfile.TemporaryDirectory(prefix="roadmap-failure-parent-") as parent:
+            with mock.patch.object(tempfile, "gettempdir", return_value=parent):
+                with mock.patch.object(Path, "mkdir", side_effect=OSError("injected setup failure")):
+                    with self.assertRaisesRegex(OSError, "injected setup failure"):
+                        Fixture("- [x] **S** `scripts/loop.py` is checked.\n")
+            self.assertEqual(list(Path(parent).iterdir()), [],
+                             "failed Fixture() leaked a repository under %s" % parent)
 
     def test_a_closed_row_citing_a_real_path_passes_and_counts_it(self):
         fix = Fixture("- [x] **S** `scripts/loop.py` runs the nightly loop.\n")
@@ -330,8 +347,8 @@ class TestTheRealRepoAndTheRealGate(unittest.TestCase):
         self.assertNotIn("\ufffd", result.stdout, "a gate writing cp1252 bytes arrives as mojibake")
 
     def test_an_installed_home_inherits_the_plan_instead_of_making_one(self):
-        home = Path(tempfile.mkdtemp())
-        try:
+        with tempfile.TemporaryDirectory(prefix="roadmap-installed-home-") as tmp:
+            home = Path(tmp)
             (home / "ROADMAP.md").write_text(
                 "- [x] **S** cites `tests/test_that_a_home_never_receives.py`\n", encoding="utf-8")
             result = subprocess.run([sys.executable, GATE, "--root", str(home), "--check"],
@@ -340,8 +357,7 @@ class TestTheRealRepoAndTheRealGate(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(len([l for l in result.stdout.splitlines() if l.startswith("OK")]), 1)
             self.assertIn("installed brain home", result.stdout, result.stdout)
-        finally:
-            shutil.rmtree(home, ignore_errors=True)
+        self.assertFalse(home.exists(), "installed-home fixture must be removed")
 
 
 if __name__ == "__main__":
