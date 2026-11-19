@@ -347,8 +347,8 @@ class TestTheRealRepoAndTheRealGate(unittest.TestCase):
         self.assertNotIn("\ufffd", result.stdout, "a gate writing cp1252 bytes arrives as mojibake")
 
     def test_an_installed_home_inherits_the_plan_instead_of_making_one(self):
-        home = Path(tempfile.mkdtemp())
-        try:
+        with tempfile.TemporaryDirectory(prefix="roadmap-installed-home-") as tmp:
+            home = Path(tmp)
             (home / "ROADMAP.md").write_text(
                 "- [x] **S** cites `tests/test_that_a_home_never_receives.py`\n", encoding="utf-8")
             result = subprocess.run([sys.executable, GATE, "--root", str(home), "--check"],
@@ -357,8 +357,7 @@ class TestTheRealRepoAndTheRealGate(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertEqual(len([l for l in result.stdout.splitlines() if l.startswith("OK")]), 1)
             self.assertIn("installed brain home", result.stdout, result.stdout)
-        finally:
-            shutil.rmtree(home, ignore_errors=True)
+        self.assertFalse(home.exists(), "installed-home fixture must be removed")
 
 
 if __name__ == "__main__":
