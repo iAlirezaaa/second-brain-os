@@ -29,6 +29,25 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## Rolling priorities and acceptance gates (2026-11-19; review after CI)
 
+**P0 reliability slice — Phase-44 schema-test fixture ownership (#58; PR #142; awaiting full CI).**
+Four schema-version fixture owners in `tests/test_phase44_schema_version.py`
+previously relied on `tearDown` after `mkdtemp`; `tearDown` never runs when
+`setUp` raises. A synthetic setup-failure regression in the existing
+loop-history test now exercises all four real fixtures. Each registers a stdlib
+`TemporaryDirectory` cleanup before creating any repository files. This is
+test isolation only: no change to user memory, schema contracts, permissions or
+the release. Rollback: revert the single fixture-test change; no migration.
+
+- [ ] **Next 1 (P0):** Verify the **exact PR head** with the four OS/Python
+      CI matrix jobs and three backup jobs, rerun the full test suite and
+      health gates from a clean clone, and reconcile protected-main required
+      checks in issue #107 with admin approval; do not merge on historical green CI.
+- [ ] **Next 2 (P0/P1):** Measure first *complete* local recall from a clean
+      clone on Windows, macOS and Linux (wall-clock time, OS, Python version,
+      output paths and failures), then prioritize a minimal host-specific
+      MCP onboarding example based on that baseline. Until observed, its
+      cross-OS success rate and under-five-minute claim are unknown.
+
 - [ ] **P0 — safety and reliable first use:** reconcile protected-main check-name drift (#107), independently review the default retrieval privacy boundary (#140 / PR #141), and time a **complete clean-clone to first real local search** on Windows, macOS and Linux with source paths visible. Do not treat the synthetic `scripts/first_success.py` smoke as an under-five-minute end-to-end result; missing platforms and times remain unknown.
 - [ ] **P1 — useful, host-gated MCP:** verify actual version-pinned Claude Code, Codex and OpenCode handshakes using synthetic notes and read-only first-use permissions. Keep English and Persian setup steps aligned, measure successful installs and searches, and improve a lightweight docs entry only when it clarifies a reproducible workflow. No unsupported host-compatibility claims.
 - [ ] **P2 — optional observability and portability:** design provenance and agent-permission inspection, opt-in import/export, and collaboration with explicit access/rollback tests before implementation. Current bounded #58 slice: in `tests/test_phase47_link_graph_plane.py`, register a class-owned temporary clone **before** copying so a failed `setUpClass` cannot strand a large copied vault. The existing test injects a copy failure and proves cleanup; no production or private data changes. Full exact-head CI is still required before this checkbox can be closed.
