@@ -116,8 +116,8 @@ over something it cannot see is a silent gate, not a clean house.
 regresses; the KB SQLite cache is derived and rebuildable using
 `python scripts/kb.py ingest`. No private user data should be committed.
 
-**Next 1 (P0):** confirm all seven jobs on the latest privacy/SQLite lifetime fix head,
-independently review the privacy boundary, then reconcile protected-main required
+**Next 1 (P0):** confirm all seven jobs on the exact mixed-case privacy + v5 index head,
+independently review default read parity, then reconcile protected-main required
 checks in issue #107 without bypassing branch protection.
 **Next 2 (P0 to P1):** repeat the under-five-minute first-recall onboarding
 measurement in issue #93 on Windows/macOS/Linux, then test installed
