@@ -6,6 +6,14 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #140; .env-named Markdown in derived KB, in review)
+- Match the existing default MCP read rule for `.env.*` basenames in the local
+  keyword corpus. Previously an `.env.`-prefixed Markdown filename inside an
+  otherwise searchable wiki folder could enter the derived index. The existing
+  synthetic KB regression now tests both exclusion from enumeration and
+  negative search, while keeping a normal note searchable. No private notes,
+  host settings, runtime ACLs or dependencies changed. Full CI is pending.
+
 ### Fixed (issue #140; unindexed related-note privacy, in review)
 - `kb.py --related` no longer stats an unindexed note's user-supplied path
   to distinguish an existing protected file from an absent file. The old
