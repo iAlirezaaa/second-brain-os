@@ -9,11 +9,11 @@ The tests below hold that seam at three levels: the records this repo ships, the
 function at fixed clocks, and the CLI contract other rituals (and CI) call.
 """
 import json
-import shutil
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -30,8 +30,11 @@ RECORD = {
 }
 
 
-def fixture(spec=None, status="active", target="scripts/loop.py", history=None):
-    tmp = Path(tempfile.mkdtemp())
+def fixture(owner, spec=None, status="active", target="scripts/loop.py", history=None):
+    # Register cleanup before any setup write, including a failed mkdir.
+    holder = tempfile.TemporaryDirectory(prefix="phase28-schedule-")
+    owner.addCleanup(holder.cleanup)
+    tmp = Path(holder.name)
     folder = tmp / "11_CONTROL" / "schedules"
     folder.mkdir(parents=True)
     record = dict(RECORD, status=status, target=target)
@@ -72,8 +75,7 @@ class TheRepoOwnsItsCadence(unittest.TestCase):
 
 class DueVerdict(unittest.TestCase):
     def setUp(self):
-        self.tmp = fixture()
-        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.tmp = fixture(self)
 
     def test_the_hour_decides_not_the_date(self):
         # The loop ran on the 27th at 03:30 — after that day's 02:00 — so the next
@@ -99,33 +101,30 @@ class DueVerdict(unittest.TestCase):
                              loop.due_state(self.tmp, now=now, last_run=last)["due"], now)
 
     def test_a_paused_schedule_is_never_due(self):
-        paused = fixture(status="paused")
-        self.addCleanup(shutil.rmtree, paused, True)
+        paused = fixture(self, status="paused")
         state = loop.due_state(paused, now="2030-01-01T00:00:00Z")
         self.assertIs(False, state["due"])
         self.assertIn("paused", state["reason"])
 
     def test_a_malformed_spec_is_refused_not_guessed(self):
-        broken = fixture(spec={"cron": "30 3 * * *"})
-        self.addCleanup(shutil.rmtree, broken, True)
+        broken = fixture(self, spec={"cron": "30 3 * * *"})
         state = loop.due_state(broken, now="2026-10-28T12:00:00Z")
         self.assertIsNone(state["due"], state)
         self.assertIn("cannot be read", state["reason"])
 
     def test_no_record_refuses_instead_of_inventing_a_cadence(self):
-        empty = Path(tempfile.mkdtemp())
-        self.addCleanup(shutil.rmtree, empty, True)
+        empty_holder = tempfile.TemporaryDirectory(prefix="phase28-empty-")
+        self.addCleanup(empty_holder.cleanup)
+        empty = Path(empty_holder.name)
         state = loop.due_state(empty, now="2026-10-28T12:00:00Z")
         self.assertIsNone(state["due"])
         self.assertIn("no schedule record", state["reason"])
 
     def test_last_cycle_prefers_the_stamp_and_reads_old_rows_as_midnight(self):
-        stamped = fixture(history=[{"date": "2026-10-27", "ran_at": "2026-10-27T03:30:00Z"}])
-        self.addCleanup(shutil.rmtree, stamped, True)
+        stamped = fixture(self, history=[{"date": "2026-10-27", "ran_at": "2026-10-27T03:30:00Z"}])
         self.assertEqual("2026-10-27T03:30:00Z", loop.last_cycle(stamped))
 
-        old = fixture(history=[{"date": "2026-10-27", "metrics": {}}])
-        self.addCleanup(shutil.rmtree, old, True)
+        old = fixture(self, history=[{"date": "2026-10-27", "metrics": {}}])
         self.assertEqual("2026-10-27T00:00:00Z", loop.last_cycle(old))
 
 
@@ -135,8 +134,7 @@ class TheCommandLineContract(unittest.TestCase):
                          "--root", str(root), "--now", "2026-10-28T02:30:00Z"] + list(extra))
 
     def test_due_is_zero_and_carries_the_rule_not_just_the_verdict(self):
-        tmp = fixture()
-        self.addCleanup(shutil.rmtree, tmp, True)
+        tmp = fixture(self)
         result = self.run_due(tmp, "--last-run", "2026-10-27T02:30:00Z")
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertIn("DUE", result.stdout)
@@ -144,26 +142,42 @@ class TheCommandLineContract(unittest.TestCase):
         self.assertIn("SCH-AAAAAAAA-test.json", result.stdout)
 
     def test_not_due_is_three_and_names_the_next_run(self):
-        tmp = fixture()
-        self.addCleanup(shutil.rmtree, tmp, True)
+        tmp = fixture(self)
         result = self.run_due(tmp, "--last-run", "2026-10-28T02:10:00Z")
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
         self.assertIn("NOT DUE", result.stdout)
         self.assertIn("2026-10-29T02:00:00Z", result.stdout)
 
     def test_a_refused_schedule_exits_one(self):
-        tmp = fixture(spec={"cron": "30 3 * * *"})
-        self.addCleanup(shutil.rmtree, tmp, True)
+        tmp = fixture(self, spec={"cron": "30 3 * * *"})
         result = self.run_due(tmp)
         self.assertEqual(1, result.returncode, result.stdout + result.stderr)
         self.assertIn("REFUSED", result.stdout)
 
-    def test_the_due_check_writes_nothing(self):
-        tmp = fixture()
-        self.addCleanup(shutil.rmtree, tmp, True)
+    def test_the_due_check_writes_nothing_and_owns_its_fixture(self):
+        tmp = fixture(self)
         before = sorted(p.as_posix() for p in tmp.rglob("*"))
         self.run_due(tmp)
         self.assertEqual(before, sorted(p.as_posix() for p in tmp.rglob("*")))
+        self.doCleanups()
+        self.assertFalse(tmp.exists(), "the schedule fixture survived its test cleanup")
+
+        # Registering cleanup before mkdir matters: this simulated failure must not leak.
+        allocated = []
+        original = tempfile.TemporaryDirectory
+
+        def capture(*args, **kwargs):
+            holder = original(*args, **kwargs)
+            allocated.append(Path(holder.name))
+            return holder
+
+        with patch.object(tempfile, "TemporaryDirectory", side_effect=capture), \
+                patch.object(Path, "mkdir", side_effect=OSError("synthetic setup failure")):
+            with self.assertRaises(OSError):
+                fixture(self)
+        self.assertEqual(1, len(allocated))
+        self.doCleanups()
+        self.assertFalse(allocated[0].exists(), "failed setup leaked its fixture directory")
 
 
 if __name__ == "__main__":
