@@ -81,7 +81,7 @@ class KbCorpusAliases(unittest.TestCase):
         case_root = self.base / "casefold-policy"
         visible = case_root / "02_WIKI" / "visible.md"
         visible.parent.mkdir(parents=True)
-        visible.write_text("# Visible\\nVISIBLECASE_CANARY is synthetic.\\n",
+        visible.write_text("# Visible\nVISIBLECASE_CANARY is synthetic.\n",
                            encoding="utf-8")
         secret_cases = (
             ("02_WIKI/SeCrEtS/private.md", "SECRETS_CASE_CANARY"),
@@ -91,7 +91,7 @@ class KbCorpusAliases(unittest.TestCase):
         for rel, marker in secret_cases:
             note = case_root / rel
             note.parent.mkdir(parents=True, exist_ok=True)
-            note.write_text("# Protected\\n" + marker + " is synthetic.\\n",
+            note.write_text("# Protected\n" + marker + " is synthetic.\n",
                             encoding="utf-8")
         self.assertEqual({"02_WIKI/visible.md"},
                          {rel for rel, _note in kb.corpus(case_root)})
