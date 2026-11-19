@@ -68,27 +68,35 @@ class Fixture:
     git truth is written against the real repo instead."""
 
     def __init__(self, plan):
-        self.dir = Path(tempfile.mkdtemp())
-        (self.dir / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
-        backend = self.dir / "15_SYSTEM" / "scripts" / "backend"
-        backend.mkdir(parents=True)
-        (backend / "vector.py").write_text(
-            "class Embedder:\n    pass\n\nEVIDENCE = 'state/activation.json'\n", encoding="utf-8")
-        (backend / "schedules.py").write_text(
-            "def is_due(spec):\n    return True\n", encoding="utf-8")
-        (self.dir / "scripts").mkdir()
-        (self.dir / "scripts" / "loop.py").write_text(
-            "JOURNAL = '14_CANDIDATES/loop/recovery.jsonl'\n", encoding="utf-8")
-        (self.dir / "state").mkdir()
-        (self.dir / "state" / "activation.json").write_text("{}", encoding="utf-8")
-        (self.dir / "02_WIKI").mkdir()
-        (self.dir / "02_WIKI" / "a-map.md").write_text("note\n", encoding="utf-8")
-        (self.dir / "02_WIKI" / "b-map.md").write_text("note\n", encoding="utf-8")
-        self.plan = self.dir / "ROADMAP.md"
-        self.plan.write_text(plan, encoding="utf-8")
+        # Own the directory before populating it: a failed constructor has no caller
+        # that can invoke close(), and must clean up immediately.
+        self._temp = tempfile.TemporaryDirectory(prefix="roadmap-fixture-")
+        self.dir = Path(self._temp.name)
+        try:
+            (self.dir / "pyproject.toml").write_text("[project]\nname = 'fixture'\n", encoding="utf-8")
+            backend = self.dir / "15_SYSTEM" / "scripts" / "backend"
+            backend.mkdir(parents=True)
+            (backend / "vector.py").write_text(
+                "class Embedder:\n    pass\n\nEVIDENCE = 'state/activation.json'\n", encoding="utf-8")
+            (backend / "schedules.py").write_text(
+                "def is_due(spec):\n    return True\n", encoding="utf-8")
+            (self.dir / "scripts").mkdir()
+            (self.dir / "scripts" / "loop.py").write_text(
+                "JOURNAL = '14_CANDIDATES/loop/recovery.jsonl'\n", encoding="utf-8")
+            (self.dir / "state").mkdir()
+            (self.dir / "state" / "activation.json").write_text("{}", encoding="utf-8")
+            (self.dir / "02_WIKI").mkdir()
+            (self.dir / "02_WIKI" / "a-map.md").write_text("note\n", encoding="utf-8")
+            (self.dir / "02_WIKI" / "b-map.md").write_text("note\n", encoding="utf-8")
+            self.plan = self.dir / "ROADMAP.md"
+            self.plan.write_text(plan, encoding="utf-8")
+
+        except BaseException:
+            self._temp.cleanup()
+            raise
 
     def close(self):
-        shutil.rmtree(self.dir, ignore_errors=True)
+        self._temp.cleanup()
 
     def run(self, expect_rc=0):
         result = subprocess.run([sys.executable, GATE, "--root", str(self.dir), "--check"],
