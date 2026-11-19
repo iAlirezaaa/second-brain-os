@@ -49,6 +49,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,6 +111,15 @@ class TestClosedRowsMustResolve(unittest.TestCase):
             self.assertIn("closed row", out)
         finally:
             fix.close()
+        # A constructor error must not leak its already allocated scratch root.
+        # The old Fixture() allocated with mkdtemp() and never reached close().
+        with tempfile.TemporaryDirectory(prefix="roadmap-failure-parent-") as parent:
+            with mock.patch.object(tempfile, "gettempdir", return_value=parent):
+                with mock.patch.object(Path, "mkdir", side_effect=OSError("injected setup failure")):
+                    with self.assertRaisesRegex(OSError, "injected setup failure"):
+                        Fixture("- [x] **S** `scripts/loop.py` is checked.\\n")
+            self.assertEqual(list(Path(parent).iterdir()), [],
+                             "failed Fixture() leaked a repository under %s" % parent)
 
     def test_a_closed_row_citing_a_real_path_passes_and_counts_it(self):
         fix = Fixture("- [x] **S** `scripts/loop.py` runs the nightly loop.\n")
