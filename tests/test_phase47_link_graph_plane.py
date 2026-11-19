@@ -161,5 +161,29 @@ class TestRealTreeWithARecordedBase(unittest.TestCase):
                          "the readout's own invariant: islands = orphan notes + 1")
 
 
+        # A class fixture must be released when setUpClass fails during copying.
+        # unittest skips tearDownClass in that case, but runs addClassCleanup callbacks.
+        from unittest import mock
+
+        class FailedCopy(unittest.TestCase):
+            pass
+
+        try:
+            with mock.patch.object(shutil, "copytree",
+                                   side_effect=OSError("synthetic copy failure")):
+                with self.assertRaisesRegex(OSError, "synthetic copy failure"):
+                    TestRealTreeWithARecordedBase.setUpClass.__func__(FailedCopy)
+            self.assertTrue(hasattr(FailedCopy, "_tempdir"),
+                            "a failed setUpClass must still own its temporary directory")
+            fixture_root = Path(FailedCopy._tempdir.name)
+            self.assertTrue(fixture_root.is_dir())
+            FailedCopy.doClassCleanups()
+            self.assertFalse(fixture_root.exists(),
+                             "failed class setup must not leave a copied vault on disk")
+        finally:
+            FailedCopy.doClassCleanups()
+            if hasattr(FailedCopy, "_tmp"):
+                shutil.rmtree(FailedCopy._tmp, ignore_errors=True)
+
 if __name__ == "__main__":
     unittest.main()
