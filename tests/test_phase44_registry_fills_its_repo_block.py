@@ -44,8 +44,11 @@ def git(repo_dir, *args):
 
 def git_repo(test_case, with_origin=True):
     """A throwaway git repo owned by its calling unittest case, even on failure."""
-    home = Path(tempfile.mkdtemp(prefix="code-repo-"))
-    test_case.addCleanup(shutil.rmtree, home, True)
+    # TemporaryDirectory handles Windows read-only Git files and reports cleanup
+    # failures instead of silently hiding them with rmtree(ignore_errors=True).
+    holder = tempfile.TemporaryDirectory(prefix="code-repo-")
+    test_case.addCleanup(holder.cleanup)
+    home = Path(holder.name)
     git(home, "init", "-q", "-b", "main")
     git(home, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
         "commit", "-q", "--allow-empty", "-m", "first")
@@ -123,8 +126,9 @@ class TestCodeRepoFillsTheBlockFromGit(unittest.TestCase):
             shutil.rmtree(code, ignore_errors=True)
 
     def test_a_folder_with_no_git_is_refused_and_writes_no_record(self):
-        plain = Path(tempfile.mkdtemp(prefix="not-a-repo-"))
-        self.addCleanup(shutil.rmtree, plain, True)
+        plain_holder = tempfile.TemporaryDirectory(prefix="not-a-repo-")
+        self.addCleanup(plain_holder.cleanup)
+        plain = Path(plain_holder.name)
         before = len(self.vault.paths())
         before_plans = len(self.vault.paths("15_SYSTEM/generated/plans/PLAN-*.json"))
         code, out = self.vault.hades("new", "--kind", "project", "--name", "No Git Here",

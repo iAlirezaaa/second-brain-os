@@ -48,6 +48,14 @@ over something it cannot see is a silent gate, not a clean house.
       owning test case, runs registered cleanups and proves the throwaway Git
       directory is gone. All helper callers register cleanup; the no-Git fixture
       also cleans up after assertion failures. No production registry changes.
+- [ ] Windows regression follow-up (2026-11-19): CI run
+      #44433337877 passed both Ubuntu jobs, but both Windows jobs failed the
+      existing no-origin fixture assertion because its folder still existed
+      after cleanup. The helper used shutil.rmtree(ignore_errors=True), which
+      can silently hide Windows cleanup errors. Use a test-owned
+      TemporaryDirectory (including the non-Git fixture), retain the real Git
+      cleanup assertion, and re-run CI. A local Python 3.13 + Git smoke check
+      removed the folder; Windows results for this revision are still pending.
 - [ ] Run repository health and full Python 3.9/3.12 Ubuntu/Windows CI before
       merge; do not call this verified merely because isolated stdlib passes.
 - [ ] Rollback: revert this isolated test-only branch if a platform's test

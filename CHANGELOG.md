@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #58 partial; PR #142 Windows cleanup follow-up; CI pending)
+- Windows CI #44433337877 exposed a false-green fixture cleanup: both Windows
+  jobs failed the existing no-origin regression because a Git temp directory
+  survived shutil.rmtree(ignore_errors=True). The Phase-44 Git and non-Git
+  fixtures now use test-owned stdlib TemporaryDirectory callbacks, which
+  handle common Windows permissions and surface failures instead of ignoring
+  them. A local Python 3.13 + real-Git cleanup smoke check passed; complete
+  four-platform CI remains required. No production behavior or user data changed.
+
 ### Fixed (issue #58 partial; Phase-44 synthetic Git registry fixtures; draft review)
 - The Phase-44 code-repository test helper now assigns each temporary Git
   directory to its calling `unittest.TestCase` via `addCleanup` before creating
