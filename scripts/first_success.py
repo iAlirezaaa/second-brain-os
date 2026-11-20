@@ -98,10 +98,10 @@ def installed_home_trial(installer_script, timeout=180):
             notes = home / "02_WIKI"
             notes.mkdir(parents=True, exist_ok=True)
             (notes / "demo.md").write_text(
-                "# First personal memory\\n" + QUERY + " is a synthetic marker.\\n",
+                "# First personal memory\n" + QUERY + " is a synthetic marker.\n",
                 encoding="utf-8")
             (notes / "distractor.md").write_text(
-                "# Other note\\nContains no recall marker.\\n", encoding="utf-8")
+                "# Other note\nContains no recall marker.\n", encoding="utf-8")
 
             def invoke(*args):
                 return subprocess.run(
@@ -120,8 +120,8 @@ def installed_home_trial(installer_script, timeout=180):
 
         elapsed = round((time.perf_counter() - start) * 1000, 3)
         index = (home / ".kb" / "kb.sqlite").is_file()
-        indexed = re.search(r"\\bindexed (\\d+) notes\\b", ingest.stdout)
-        paths = re.findall(r"(?m)^((?:[\\w-]+/)+[\\w.-]+\\.md)\\s+\\[", search.stdout)
+        indexed = re.search(r"\bindexed (\d+) notes\b", ingest.stdout)
+        paths = re.findall(r"(?m)^((?:[\w-]+/)+[\w.-]+\.md)\s+\[", search.stdout)
         passed = (search.returncode == 0 and index and indexed is not None
                   and int(indexed.group(1)) >= 2 and paths == [EXPECTED])
         return {"success": bool(passed), "elapsed_ms": elapsed,
