@@ -55,13 +55,21 @@ def trial(kb_script, timeout=30):
             "# A different note\nThis note has no matching token.\n",
             encoding="utf-8")
 
+        start = time.perf_counter()
+
+        # Ingest and search share one budget. Per-subprocess timeouts could
+        # otherwise double the declared maximum, especially on a hung CLI.
+        def time_left():
+            remaining = timeout - (time.perf_counter() - start)
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired("synthetic first recall", timeout)
+            return remaining
+
         def invoke(*args):
             return subprocess.run(
                 [sys.executable, str(kb_script), *args, "--vault", str(vault)],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
-                timeout=timeout, check=False)
-
-        start = time.perf_counter()
+                timeout=time_left(), check=False)
         try:
             ingest = invoke("ingest")
             if ingest.returncode != 0:
@@ -69,6 +77,8 @@ def trial(kb_script, timeout=30):
                         "reason": "ingest_exit_nonzero"}
             search = invoke("search", QUERY)
             elapsed = round((time.perf_counter() - start) * 1000, 3)
+            if elapsed > timeout * 1000:
+                raise subprocess.TimeoutExpired("synthetic first recall", timeout)
         except subprocess.TimeoutExpired:
             return {"success": False, "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
                     "reason": "timeout"}
