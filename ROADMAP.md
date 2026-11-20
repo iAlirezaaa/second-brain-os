@@ -91,7 +91,22 @@ must pass Constitution §2's admission gates with stdlib fallback.
   installed-home test with a green source test suite. Rollback: revert these
   bounded documentation assertions; no user data or runtime logic is changed.
 
-**Next 1:** Check PR #145's exact SHA across all seven CI jobs, and leave it in
+- **P0 executable personal-home recall (issue #144; PR #145; 2026-11-20).**
+  The human quickstart promises that an independently installed home can
+  index a synthetic `02_WIKI/my-first-note.md` and retrieve its source path.
+  A new assertion inside the existing first-session integration test now
+  **runs** `scripts/install.py --target` against a disposable sibling,
+  creates that note, and invokes the *installed* `scripts/kb.py` via the
+  installed working directory. It requires a local `.kb/kb.sqlite` index
+  and a path-backed hit, not just the presence of commands in README.
+  Acceptance: all four Ubuntu/Windows Python 3.9/3.12 jobs plus three
+  cross-machine backup jobs must pass on the **new** exact head SHA; an
+  installed-home fixture is not a real-user five-minute or macOS benchmark.
+  No permissions, source notes, core logic or dependencies change.
+  Rollback: revert this single added test block if cross-platform execution
+  disproves the path, and record the counterexample before changing docs.
+
+**Next 1:** Verify the new executable private-home test and PR #145's exact SHA across all seven CI jobs, and leave it in
 review while required branch-protection contexts remain mismatched.
 
 **Next 2:** Run a genuinely clean-clone **Windows/macOS/Linux** first-result
