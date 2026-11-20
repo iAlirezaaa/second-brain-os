@@ -29,6 +29,29 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## Active priorities — 2026-11-20 (review after CI and external feedback)
 
+- **P0 default first-recall subprocess deadline (2026-11-20; #93/#144, PR #145).**
+  The keyword-only synthetic `scripts/first_success.py --repeat 3` probe
+  previously allowed ingest and search **30 seconds each** instead of
+  the expected 30-second trial budget. Both stages now share a monotonic
+  remaining-time deadline; a late search is a `timeout` failure even
+  when it returns successfully. The existing focused unittest method
+  uses a synthetic clock (0.6 seconds per stage, 1.0-second budget)
+  to assert timeout and a smaller search allowance, without increasing
+  the number of discovered tests. This is not an end-user onboarding timer
+  or evidence of under-five-minute clean-clone recall.
+  Acceptance: focused regression, health gate, and all seven exact-head
+  Ubuntu/Windows plus backup/restore CI jobs, followed by independent
+  review and the protected-main status-context repair in #107. No
+  runtime/KB schema, dependency, permission or user-data changes.
+  Rollback: revert the probe deadline and its regression if an
+  independently reproduced supported-platform failure is found.
+  **Next 1 (P0):** verify PR #145 exact-head CI, reconcile #111/#134
+  overlap and #107 required checks; do not bypass protection.
+  **Next 2 (P1):** measure true clone-to-first-sourced-hit on clean
+  Windows/macOS/Linux hosts with hardware, failed attempts and source
+  fixture identifiers (#93); keep unknowns explicit.
+
+
 - **P0 installed-home total runtime budget (2026-11-20; #144 / PR #145).**
   The synthetic `first_success.py --installed-home` probe previously allowed
   the installer, indexer and search subprocess to each consume the full
