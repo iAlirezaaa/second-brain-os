@@ -69,6 +69,17 @@ class FirstSessionOnboarding(unittest.TestCase):
                     self.assertIn(local_hit, text)
                     self.assertLess(text.index(install), text.index(enter))
                     self.assertLess(text.index(enter), text.index(local_hit))
+                    # Contributor checks must run in the source checkout, not the
+                    # installed home (which only ships its installed-home test).
+                    self.assertRegex(
+                        text,
+                        r"(?m)^cd \\.\\./second-brain-os[ \\t]*$\\n"
+                        r"python scripts/health\\.py[ \\t]*$\\n"
+                        r"python -m unittest discover -s tests[ \\t]*$",
+                        "full-repository checks must first return to the source clone")
+                    self.assertLess(text.index(local_hit),
+                                    text.index("cd ../second-brain-os"),
+                                    "return to the checkout only after optional private-home recall")
                     self.assertEqual((ROOT / "../my-private-brain").resolve().parent,
                                      ROOT.parent, "private home must be outside clone")
 
