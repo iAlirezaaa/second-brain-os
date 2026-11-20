@@ -51,6 +51,24 @@ over something it cannot see is a silent gate, not a clean house.
   macOS, and are not evidence of the five-minute target. Rollback: revert
   the single CI step and its onboarding assertion if platform behavior
   disproves the design; preserve all existing test and security gates.
+- **P0 follow-up (2026-11-20) — measurable *installed-home* recall, not a clone benchmark.**
+  The existing #144 Draft PR now adds an explicit opt-in synthetic
+  `scripts/first_success.py --installed-home --repeat 1` mode. It measures
+  local `install.py --target`, temporary-note creation, the installed
+  `kb.py` index and source-path recall in one bounded JSON record. The
+  current CI matrix runs the same probe on Windows/Ubuntu Python 3.9/3.12.
+  Acceptance: installed-home mode must return nonzero on failed install,
+  indexing, missing index or incorrect hit; the onboarding regression must
+  parse its JSON and verify the synthetic source path; all seven exact-head
+  CI jobs must finish green before merging. The probe excludes clone time,
+  editor time, macOS and human data. Rollback: revert only the mode,
+  regression, CI step and corresponding notes; no new dependencies,
+  user-file writes outside a temporary directory or architecture changes.
+  **Next 1 (P0):** reconcile protected `main` required-check drift (#107)
+  and secure independent review before merge; never bypass protection.
+  **Next 2 (P1):** instrument complete clean-clone-to-first-recall elapsed
+  time and failure counts on Windows/macOS/Linux (#93), with provenance
+  and no unmeasured five-minute claim.
 - **P1 — measured host integrations and onboarding.** Keep version-pinned,
   permission-reviewed, synthetic-data MCP handshakes for Claude Code, Codex
   and OpenCode separate from merely printing a host config. Improve bilingual
