@@ -80,6 +80,54 @@ class FirstRecallProbe(unittest.TestCase):
         self.assertEqual(len(keyword_timeouts), 2)
         self.assertGreater(keyword_timeouts[0], keyword_timeouts[1])
 
+        # A synthetic install can finish all subprocesses within budget while
+        # SQLite verification itself runs past the deadline. The report must
+        # not claim a successful, bounded first-recall run.
+        from contextlib import closing
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        clock = [500.0]
+        real_connect = first_success.sqlite3.connect
+
+        def late_verification_connect(*args, **kwargs):
+            clock[0] += 1.1
+            return real_connect(*args, **kwargs)
+
+        def valid_install_and_recall(argv, **kwargs):
+            if "--target" in argv:
+                home = Path(argv[argv.index("--target") + 1])
+                (home / "scripts").mkdir(parents=True)
+                (home / "scripts" / "kb.py").write_text(
+                    "# Synthetic installed KB\\n", encoding="utf-8")
+                return SimpleNamespace(returncode=0, stdout="installed", stderr="")
+            if "ingest" in argv:
+                home = Path(kwargs["cwd"])
+                cache = home / ".kb" / "kb.sqlite"
+                cache.parent.mkdir(parents=True)
+                with closing(real_connect(str(cache))) as conn, conn:
+                    conn.execute("CREATE TABLE notes (path TEXT, body TEXT)")
+                    for name in ("demo.md", "distractor.md"):
+                        rel = "02_WIKI/" + name
+                        body = (home / rel).read_text(encoding="utf-8")
+                        conn.execute("INSERT INTO notes VALUES (?, ?)", (rel, body))
+                return SimpleNamespace(returncode=0, stdout="indexed 2 notes",
+                                       stderr="")
+            return SimpleNamespace(returncode=0,
+                                   stdout="02_WIKI/demo.md [synthetic]\\n",
+                                   stderr="")
+
+        with patch.object(first_success.time, "perf_counter",
+                          side_effect=lambda: clock[0]):
+            with patch.object(first_success.subprocess, "run",
+                              side_effect=valid_install_and_recall):
+                with patch.object(first_success.sqlite3, "connect",
+                                  side_effect=late_verification_connect):
+                    late = first_success.installed_home_trial(
+                        ROOT / "scripts" / "install.py", timeout=1)
+        self.assertFalse(late["success"], late)
+        self.assertEqual(late["reason"], "timeout", late)
+
         # False-green fixture: a forged installed CLI prints the expected
         # index/search lines and creates a fake SQLite file, with no real rows.
         # This used to be reported as a successful first recall.
