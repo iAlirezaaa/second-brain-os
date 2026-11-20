@@ -38,6 +38,16 @@ class FirstSessionOnboarding(unittest.TestCase):
                 self.assertEqual(cd.group(1), clone.group("destination") or clone.group("repo"),
                                  "git clone without a destination creates the repo-named folder")
 
+                if document == "README.md":
+                    # Human quickstart should yield an actual offline result before
+                    # asking newcomers to run the full maintainer test suite.
+                    self.assertIn("python scripts/kb.py ingest", block,
+                                  "first copy/paste block does not build a local index")
+                    self.assertIn('python scripts/kb.py search "memory"', block,
+                                  "first copy/paste block does not return a source-backed hit")
+                    self.assertNotIn("python -m unittest", block,
+                                     "the full test suite must follow first recall")
+
     def test_first_recall_works_from_synthetic_markdown_without_an_account(self):
         for document in ONBOARDING:
             text = (ROOT / document).read_text(encoding="utf-8")
