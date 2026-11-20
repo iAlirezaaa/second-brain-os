@@ -116,6 +116,34 @@ class FirstSessionOnboarding(unittest.TestCase):
             self.assertEqual(recall.returncode, 0, recall.stdout + recall.stderr)
             self.assertIn("02_WIKI/example.md", recall.stdout)
 
+        # Exercise the documented optional private-home path end to end; a
+        # syntactically correct README can still point to an unusable install.
+        # All note bytes are synthetic and stay outside this public checkout.
+        with tempfile.TemporaryDirectory(prefix="sbo-onboarding-home-") as base:
+            private_home = Path(base) / "my-private-brain"
+            installed = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "install.py"),
+                 "--target", str(private_home)],
+                cwd=str(ROOT), capture_output=True, text=True,
+                encoding="utf-8", errors="replace", timeout=180)
+            self.assertEqual(installed.returncode, 0,
+                             installed.stdout + installed.stderr)
+            personal_kb = private_home / "scripts" / "kb.py"
+            self.assertTrue(personal_kb.is_file(), "installer must ship the KB CLI")
+            note = private_home / "02_WIKI" / "my-first-note.md"
+            note.parent.mkdir(parents=True, exist_ok=True)
+            note.write_text(
+                "# First personal note\nYOUR_UNIQUE_TERM is synthetic and contains no user data.\n",
+                encoding="utf-8")
+            for args in (("ingest",), ("search", "YOUR_UNIQUE_TERM")):
+                result = subprocess.run(
+                    [sys.executable, str(personal_kb), *args],
+                    cwd=str(private_home), capture_output=True, text=True,
+                    encoding="utf-8", errors="replace", timeout=60)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((private_home / ".kb" / "kb.sqlite").is_file())
+            self.assertIn("02_WIKI/my-first-note.md", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()
