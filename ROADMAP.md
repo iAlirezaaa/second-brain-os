@@ -43,6 +43,14 @@ over something it cannot see is a silent gate, not a clean house.
   The Persian human quickstart now also starts with a real cloned-repo ingest
   and keyword search. Both human entrypoints share an ordering regression,
   while `first_success.py` measures only a disposable synthetic corpus.
+  The CI matrix now runs `python scripts/first_success.py --repeat 3`
+  as its own visible smoke step, so a JSON success rate and synthetic recall
+  latency are recorded separately for Ubuntu/Windows on Python 3.9/3.12.
+  Acceptance: all four matrix runs and the three backup/restore jobs must
+  pass on the **exact** head SHA; these numbers exclude clone time and
+  macOS, and are not evidence of the five-minute target. Rollback: revert
+  the single CI step and its onboarding assertion if platform behavior
+  disproves the design; preserve all existing test and security gates.
 - **P1 — measured host integrations and onboarding.** Keep version-pinned,
   permission-reviewed, synthetic-data MCP handshakes for Claude Code, Codex
   and OpenCode separate from merely printing a host config. Improve bilingual
