@@ -58,6 +58,21 @@ class FirstSessionOnboarding(unittest.TestCase):
                     self.assertNotIn("python -m unittest", block,
                                      "the full test suite must follow first recall")
 
+                    # A first-time user must have a *separate* home path,
+                    # not be invited to put personal notes in the public clone.
+                    install = "python scripts/install.py --target ../my-private-brain"
+                    enter = "cd ../my-private-brain"
+                    local_hit = 'python scripts/kb.py search "YOUR_UNIQUE_TERM"'
+                    self.assertIn(install, text)
+                    self.assertIn(enter, text)
+                    self.assertIn("02_WIKI/my-first-note.md", text)
+                    self.assertIn(local_hit, text)
+                    self.assertLess(text.index(install), text.index(enter))
+                    self.assertLess(text.index(enter), text.index(local_hit))
+                    self.assertEqual((ROOT / "../my-private-brain").resolve().parent,
+                                     ROOT.parent, "private home must be outside clone")
+
+
     def test_first_recall_works_from_synthetic_markdown_without_an_account(self):
         # The smoke command must run as a visible cross-platform CI step, not
         # merely appear as an optional README command or be hidden in unittests.

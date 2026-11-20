@@ -83,6 +83,36 @@ remove any older aliases from your derived index. In your own installed brain,
 index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
 
+
+### Put personal knowledge in a separate local brain (optional)
+
+The first search above explores this repository's documentation, **not your
+personal memory**. To make a local home for your own Markdown, choose a new,
+empty directory *outside* this public source checkout:
+
+```bash
+python scripts/install.py --target ../my-private-brain
+cd ../my-private-brain
+```
+
+In that new directory, use a local editor to create
+`02_WIKI/my-first-note.md` containing an original, non-sensitive test
+sentence with the exact word `YOUR_UNIQUE_TERM`. Then run:
+
+```bash
+python scripts/kb.py ingest
+python scripts/kb.py search "YOUR_UNIQUE_TERM"
+```
+
+Confirm that the result names `02_WIKI/my-first-note.md`. The installer
+refuses a nonempty destination; it does not overwrite an existing brain.
+This separate folder is **not inside the cloned project's Git repository**,
+but you must still check whether a parent directory is synced or tracked
+before entering any private information. A local folder is not encryption
+or an OS-enforced permission boundary. Never commit or publish private
+notes or credentials. This is a separate personal-home walkthrough, **not**
+a measured clean-clone timing or evidence of multi-host compatibility.
+
 ### Full repository checks (for contributors)
 
 After your first search, run the health gates and the full test suite **before

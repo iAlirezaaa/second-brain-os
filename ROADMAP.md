@@ -67,6 +67,18 @@ For major features, require a proposal, ADR, compatibility test, explicit
 permission boundary and rollback procedure; new dependencies additionally
 must pass Constitution §2's admission gates with stdlib fallback.
 
+- **P0 onboarding safety follow-up (issue #144, PR #145).** The first
+  source-repo search is a demo, not a home for personal notes. English and
+  Persian quickstarts now give a non-destructive `install.py --target`
+  example in a new sibling directory, followed by an editable Markdown
+  note and keyword hit in that separate home. Existing onboarding
+  regression guards path and command order with no additional discovered
+  test methods. This is guidance, not a claim of OS filesystem isolation,
+  encryption, or a measured installation time. The target must be empty;
+  users must check parent directories for other Git/sync boundaries.
+  Rollback: revert these five documentation/test edits; no user data,
+  dependency, index schema or permission settings are touched.
+
 **Next 1:** Check PR #145's exact SHA across all seven CI jobs, and leave it in
 review while required branch-protection contexts remain mismatched.
 

@@ -23,6 +23,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   a test method or changing runtime behavior. Clean-clone timings remain unknown.
 
 
+- The bilingual quickstarts now show how to install a **separate local
+  brain outside the public source clone**, add a harmless test note,
+  build its local keyword index and verify a source-path search result.
+  The existing onboarding test guards the directory/command ordering.
+  The installer already refuses nonempty destinations. This does not
+  encrypt the user's files or establish a complete setup-time benchmark;
+  verify the parent directory's Git/sync boundaries before storing
+  private notes. Pending exact-head CI; PR #145 remains Draft.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
