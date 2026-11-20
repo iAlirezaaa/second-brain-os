@@ -25,6 +25,30 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Bound installed-home verification, not just subprocesses (#144, PR #145; 2026-11-20)
+
+- [ ] In the synthetic installed-home first-recall probe, make SQLite source-row
+      verification part of the reported elapsed time and shared 180-second budget.
+      The earlier reported elapsed time stopped after keyword search, even though
+      two SQL reads and source-body checks still ran before declaring success.
+      Bound SQLite lock waiting to remaining time and return `timeout` if the
+      final verification crosses the deadline. This is best-effort wall-clock
+      accounting, not preemptive cancellation of arbitrary disk I/O.
+- [ ] Test-first regression within existing `tests/test_first_success_probe.py`:
+      three synthetic subprocess successes and valid SQLite rows, but a mocked
+      verification crossing a one-second deadline must report failure. Preserve
+      test count and existing no-private-data fixtures. Require focused test,
+      health, all seven exact-head CI jobs and independent review before merge.
+      No production KB or schema changes, new packages or user-data writes.
+      Rollback: revert this isolated probe/test/docs delta if verified to regress.
+
+**Next 1 (P0):** inspect the exact-head seven CI jobs and reconcile overlapping
+#111/#134/#145 changes, then resolve protected-main required contexts (#107)
+without bypassing security or reviewer requirements.
+**Next 2 (P1):** measure clean-checkout-to-first-sourced-recall on Windows,
+macOS and Linux with repeat counts and failure provenance; report sub-five-minute
+claims only after reproducible results, then evaluate host handshakes.
+
 ---
 
 ## Active priorities — 2026-11-20 (review after CI and external feedback)
