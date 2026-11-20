@@ -29,6 +29,32 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## Active priorities — 2026-11-20 (review after CI and external feedback)
 
+- **P0 evidence integrity — installed-home recall (2026-11-20; #144 / PR #145).**
+  The installed-home synthetic probe accepted the printed indexed count,
+  matching search-result path and a merely existing SQLite file as a success,
+  without reading any indexed rows. A deliberately forged CLI that wrote
+  corrupt `.kb/kb.sqlite` bytes could appear green. The existing regression
+  now rejects that fixture. The probe reads SQLite `notes` after actual
+  installation, checks both synthetic Markdown bodies and source paths,
+  and requires the real row count to equal the printed count. A fresh
+  install includes other template notes (52 on Linux 3.12 in CI
+  run 44778490785), so it does not require exactly two total rows.
+  This is synthetic diagnostic integrity, not semantic correctness,
+  host sandboxing or a five-minute end-user benchmark.
+  **Acceptance:** adversarial regression red on old code, focused test and
+  installed-home probe green on exact patch, all seven current Windows/
+  Ubuntu CI jobs green, independent review before merge. No package,
+  migration, permission change or writes to personal vaults.
+  **Rollback:** revert scoped SQLite validation if verified supported SQLite
+  cannot read the derived index; preserve the false-green test.
+  **Next 1 (P0):** confirm 7/7 exact-head CI; reconcile PR #111
+  (default-mode SQLite proof) and #134 (default-mode environment isolation);
+  repair protected-main check-name drift (#107) without bypass.
+  **Next 2 (P1):** independently measure clean clone to first sourced hit
+  on Windows/macOS/Linux with hardware, dataset, failures, repeats and elapsed
+  time; do not claim under five minutes without evidence.
+
+
 - **P0 default first-recall subprocess deadline (2026-11-20; #93/#144, PR #145).**
   The keyword-only synthetic `scripts/first_success.py --repeat 3` probe
   previously allowed ingest and search **30 seconds each** instead of
