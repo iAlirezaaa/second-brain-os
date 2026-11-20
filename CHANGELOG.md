@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Changed (issue #144; first-result quickstart in review)
+- The README's first copy/paste block now puts a real local `kb.py ingest` and
+  `kb.py search "memory"` before the complete maintainer health/unit suite.
+  The latter stays available in a separate contributor-verification section.
+  The existing onboarding test now checks the copy/paste block, rather than
+  merely finding the commands somewhere in the page. No production code,
+  permission setting, private user data or dependency changed. This change
+  **does not** establish a measured under-five-minute clone-to-first-result
+  experience or real-user adoption; CI and independent platform timing remain
+  required.
+
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
