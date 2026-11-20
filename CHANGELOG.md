@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issues #93 and #144; PR #145 in review — default first-recall deadline)
+- The keyword-only synthetic probe now budgets ingestion and search
+  against one monotonic 30-second trial deadline rather than permitting
+  each subprocess 30 seconds. Its JSON marks a late result as `timeout`
+  instead of silently extending the stated limit. A deterministic
+  fake-clock regression covers the two stages without increasing the
+  collected test count. This is a local diagnostic limit, **not** a
+  measured clean-clone installation or end-user five-minute result.
+  No KB schema, user data, package, host permission or architecture
+  change; exact-head CI and independent review remain mandatory.
+
+
 ### Fixed (issue #144; PR #145 in review — installed-home smoke time budget)
 - The synthetic installed-home first-recall probe now shares one 180-second
   default wall-clock budget across installation, ingest and search rather than
