@@ -162,6 +162,38 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(evidence["trials"][0]["matched_paths"], ["02_WIKI/demo.md"])
         self.assertIn("excludes clone", evidence["scope"])
 
+        # Execute the real installed-home installer, ingest and search with
+        # synthetic parent-only credentials. None may inherit those values.
+        import importlib.util
+        import os
+        from unittest import mock
+        spec = importlib.util.spec_from_file_location(
+            "sbo_first_success_installed", ROOT / "scripts" / "first_success.py")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        original_run = subprocess.run
+        observed_envs = []
+
+        def capture_run(*args, **kwargs):
+            observed_envs.append(kwargs.get("env"))
+            return original_run(*args, **kwargs)
+
+        with mock.patch.dict(os.environ, {
+                "SBO_FIRST_RECALL_SECRET_CANARY": "synthetic-parent-only",
+                "PYTHONPATH": "synthetic-untrusted-import-root"}):
+            with mock.patch.object(module.subprocess, "run", side_effect=capture_run):
+                measured = module.installed_home_trial(ROOT / "scripts" / "install.py")
+        self.assertTrue(measured["success"], measured)
+        self.assertEqual(measured["matched_paths"], ["02_WIKI/demo.md"])
+        self.assertEqual(len(observed_envs), 3,
+                         "installer, ingest and search must all be run")
+        for child_env in observed_envs:
+            self.assertIsNotNone(child_env, "child inherited the parent environment")
+            self.assertNotIn("SBO_FIRST_RECALL_SECRET_CANARY", child_env)
+            self.assertNotIn("PYTHONPATH", child_env)
+            self.assertEqual(child_env.get("PYTHONIOENCODING"), "utf-8")
+            self.assertEqual(child_env.get("PYTHONNOUSERSITE"), "1")
+
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ Returns JSON and exits nonzero if any synthetic ingest/recall trial fails.
 import argparse
 import datetime
 import json
+import os
 import re
 import statistics
 import subprocess
@@ -23,6 +24,22 @@ HERE = Path(__file__).resolve().parent
 EXPECTED = "02_WIKI/demo.md"
 QUERY = "ORCHIDMEMORY2026"
 MAX_REPEAT = 10
+
+# Minimize inherited settings for the disposable install+recall subprocesses.
+# This mirrors PR #134's environment boundary; it is not a process sandbox.
+_CHILD_ENV_KEYS = (
+    "PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT",
+    "TEMP", "TMP", "TMPDIR", "HOME", "USERPROFILE",
+    "HOMEDRIVE", "HOMEPATH", "LANG", "LC_ALL", "LC_CTYPE",
+)
+
+
+def _child_environment():
+    env = {key: os.environ[key] for key in _CHILD_ENV_KEYS if key in os.environ}
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
+
 
 
 def trial(kb_script, timeout=30):
@@ -88,7 +105,8 @@ def installed_home_trial(installer_script, timeout=180):
             install = subprocess.run(
                 [sys.executable, str(installer_script), "--target", str(home)],
                 cwd=str(HERE.parent), capture_output=True, text=True,
-                encoding="utf-8", errors="replace", timeout=timeout, check=False)
+                encoding="utf-8", errors="replace", timeout=timeout, check=False,
+                env=_child_environment())
             if install.returncode != 0:
                 return failed("install_exit_nonzero")
             kb_script = home / "scripts" / "kb.py"
@@ -107,7 +125,8 @@ def installed_home_trial(installer_script, timeout=180):
                 return subprocess.run(
                     [sys.executable, str(kb_script), *args, "--vault", str(home)],
                     cwd=str(home), capture_output=True, text=True,
-                    encoding="utf-8", errors="replace", timeout=timeout, check=False)
+                    encoding="utf-8", errors="replace", timeout=timeout, check=False,
+                    env=_child_environment())
 
             ingest = invoke("ingest")
             if ingest.returncode != 0:

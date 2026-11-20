@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 in review — installed-home probe process environment)
+- The opt-in installed-home smoke now launches the real installer, indexer and
+  search with an explicit reduced environment instead of automatically
+  forwarding parent API keys and `PYTHONPATH`. Existing onboarding coverage
+  runs all three processes with synthetic parent-only canaries and confirms
+  their absence, as well as successful indexed retrieval. The default smoke
+  remains separately tracked in PR #134. This is environment minimization,
+  not a sandbox; no private note bytes, access permissions or packages changed.
+  Exact-head CI and independent review are still required.
+
+
 ### Changed (issue #144; first-result quickstart in review)
 - An opt-in `first_success.py --installed-home --repeat 1` probe now measures
   disposable local installation through a synthetic source-cited keyword hit.

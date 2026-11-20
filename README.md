@@ -152,6 +152,10 @@ indexing and keyword retrieval, and verifies the cited file path. It excludes
 Git clone, editor time and macOS unless run there. The CI matrix runs this
 same synthetic probe on Windows and Ubuntu; pass/fail and measured latencies
 are properties of those runners, not promises about user hardware.
+The installed-home synthetic installer and KB subprocesses now receive a
+minimal process environment, not the shell's unrelated API keys or `PYTHONPATH`.
+This is **not** an OS sandbox, permission boundary, or verified host integration;
+the default first-recall probe has a separate pending fix in PR #134.
 See [first-success acceptance criteria](https://github.com/iAlirezaaa/second-brain-os/issues/93).
 
 Use the CLI to discover skills, open an accountable session and monitor it:

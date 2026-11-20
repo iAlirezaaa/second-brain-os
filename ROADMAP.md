@@ -29,6 +29,24 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## Active priorities — 2026-11-20 (review after CI and external feedback)
 
+- **P0 installed-home probe child-environment isolation (2026-11-20; #144 / PR #145).**
+  The newly added optional install+recall benchmark launched the installer and
+  two installed KB subprocesses with the entire shell environment, potentially
+  forwarding unrelated API credentials and Python import overrides. It now
+  uses a minimal OS-launch environment for all three. The existing real
+  integration test injects synthetic parent-only canaries and verifies every
+  child's environment while also requiring successful local keyword recall.
+  This aligns with, but does not replace, the default-probe fix in #133/PR #134.
+  A filtered child environment is not an OS sandbox or protection against
+  all parent-process import overrides.
+  Acceptance: seven green exact-head CI jobs (Ubuntu/Windows py3.9/3.12 plus
+  backup/restore) and independent review. Rollback only this scoped patch if
+  a required OS launch variable is demonstrated by a failing platform test.
+  **Next 1 (P0):** reconcile PR #134 with #145 and protected-main check
+  contexts (#107) before merging, without bypassing branch protection.
+  **Next 2 (P1):** measure end-to-end clone-to-first-hit duration and
+  failure rate on Windows/macOS/Linux, with hardware/provenance (#93).
+
 - **P0 — truthful first use and security.** Resolve verified CI failures and protected
   `main` check-context drift ([#107](https://github.com/iAlirezaaa/second-brain-os/issues/107))
   without bypassing branch protection. Reconcile privacy PR #141 and synthetic-fixture PR #142
