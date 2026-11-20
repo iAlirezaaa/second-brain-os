@@ -2,6 +2,7 @@
 
 The integration test uses an isolated, synthetic vault and no network or model.
 """
+import json
 import re
 import subprocess
 import sys
@@ -92,6 +93,8 @@ class FirstSessionOnboarding(unittest.TestCase):
         ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("run: python scripts/first_success.py --repeat 3", ci,
                       "CI must publish synthetic offline recall JSON on each OS/Python job")
+        self.assertIn("run: python scripts/first_success.py --installed-home --repeat 1", ci,
+                      "CI must time an actual installed-home keyword recall on each supported runner")
         for document in ONBOARDING:
             text = (ROOT / document).read_text(encoding="utf-8")
             with self.subTest(document=document):
@@ -143,6 +146,22 @@ class FirstSessionOnboarding(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue((private_home / ".kb" / "kb.sqlite").is_file())
             self.assertIn("02_WIKI/my-first-note.md", result.stdout)
+
+        # An independent, machine-readable probe must measure *installation*
+        # as well as indexing and recall. It excludes network clone time.
+        probe = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "first_success.py"),
+             "--installed-home", "--repeat", "1"],
+            cwd=str(ROOT), capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=240)
+        self.assertEqual(probe.returncode, 0, probe.stdout + probe.stderr)
+        evidence = json.loads(probe.stdout)
+        self.assertEqual(evidence["probe"], "synthetic_installed_home_keyword_recall")
+        self.assertEqual(evidence["repeat"], 1)
+        self.assertEqual(evidence["successes"], 1)
+        self.assertEqual(evidence["trials"][0]["matched_paths"], ["02_WIKI/demo.md"])
+        self.assertIn("excludes clone", evidence["scope"])
+
 
 
 if __name__ == "__main__":
