@@ -7,6 +7,14 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 ## [Unreleased]
 
 ### Changed (issue #144; first-result quickstart in review)
+- An installed-home private-note integration now exercises the actual
+  documented optional setup path, not just the README command order:
+  `install.py --target` provisions a disposable external home, the test
+  writes only a synthetic `02_WIKI/my-first-note.md`, and the *shipped*
+  `kb.py` must ingest and recover that source path. It uses the existing
+  onboarding unittest method, preserving the collected test count. This
+  does not measure clone-to-first-result time or certify operating-system
+  file permissions. Exact-head cross-platform CI is required before merge.
 - The README's first copy/paste block now puts a real local `kb.py ingest` and
   `kb.py search "memory"` before the complete maintainer health/unit suite.
   The latter stays available in a separate contributor-verification section.
