@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 in review — installed-home smoke time budget)
+- The synthetic installed-home first-recall probe now shares one 180-second
+  default wall-clock budget across installation, ingest and search rather than
+  allowing each process up to 180 seconds. A deterministic synthetic clock
+  regression confirms no search process starts after the budget is exhausted;
+  the visible JSON still reports timeout as a failure. The budget constrains
+  only this disposable local diagnostic, **not** git clone or full user setup.
+  No user data, dependency, permission or index schema change. Awaiting
+  exact-head cross-platform CI and review before release.
+
 ### Fixed (issue #144; PR #145 in review — installed-home probe process environment)
 - The opt-in installed-home smoke now launches the real installer, indexer and
   search with an explicit reduced environment instead of automatically
