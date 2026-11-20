@@ -76,9 +76,10 @@ def trial(kb_script, timeout=30):
                 return {"success": False, "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
                         "reason": "ingest_exit_nonzero"}
             search = invoke("search", QUERY)
-            elapsed = round((time.perf_counter() - start) * 1000, 3)
-            if elapsed > timeout * 1000:
+            # Compare unrounded time; rounding milliseconds may hide an overrun.
+            if time.perf_counter() - start > timeout:
                 raise subprocess.TimeoutExpired("synthetic first recall", timeout)
+            elapsed = round((time.perf_counter() - start) * 1000, 3)
         except subprocess.TimeoutExpired:
             return {"success": False, "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
                     "reason": "timeout"}
