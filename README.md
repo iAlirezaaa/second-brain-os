@@ -149,7 +149,10 @@ To measure the optional **installed personal home** path separately, without
 using private notes, run `python scripts/first_success.py --installed-home --repeat 1`
 from the source checkout. Its JSON covers local install, synthetic note creation,
 indexing and keyword retrieval, checks the cited path and verifies the
-actual SQLite source rows and declared index count. It excludes
+actual SQLite source rows and declared index count. The measured interval now includes
+SQLite validation and treats verification that exceeds the trial deadline as a
+timeout, rather than a successful fast recall; SQLite lock waiting is limited
+by the remaining deadline (not a hard filesystem time limit). It excludes
 Git clone, editor time and macOS unless run there. The CI matrix runs this
 same synthetic probe on Windows and Ubuntu; pass/fail and measured latencies
 are properties of those runners, not promises about user hardware.
