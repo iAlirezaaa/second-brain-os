@@ -13,11 +13,13 @@ import datetime
 import json
 import os
 import re
+import sqlite3
 import statistics
 import subprocess
 import sys
 import tempfile
 import time
+from contextlib import closing
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -164,6 +166,25 @@ def installed_home_trial(installer_script, timeout=180):
         paths = re.findall(r"(?m)^((?:[\w-]+/)+[\w.-]+\.md)\s+\[", search.stdout)
         passed = (search.returncode == 0 and index and indexed is not None
                   and int(indexed.group(1)) >= 2 and paths == [EXPECTED])
+        if passed:
+            # A CLI can print a plausible result and leave an empty or corrupt
+            # SQLite file. Verify real notes plus the advertised row count.
+            # The installer also ships other Markdown, so NOT exactly 2 rows.
+            try:
+                with closing(sqlite3.connect(str(home / ".kb" / "kb.sqlite"))) as conn:
+                    total = conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
+                    rows = conn.execute(
+                        "SELECT path, body FROM notes WHERE path IN (?, ?)",
+                        (EXPECTED, "02_WIKI/distractor.md")).fetchall()
+                expected = {
+                    EXPECTED: (notes / "demo.md").read_text(encoding="utf-8"),
+                    "02_WIKI/distractor.md":
+                        (notes / "distractor.md").read_text(encoding="utf-8"),
+                }
+                passed = (total == int(indexed.group(1))
+                          and len(rows) == 2 and dict(rows) == expected)
+            except (sqlite3.Error, OSError):
+                passed = False
         return {"success": bool(passed), "elapsed_ms": elapsed,
                 "reason": "ok" if passed else "unexpected_search_or_index",
                 "indexed_notes": int(indexed.group(1)) if indexed else None,
