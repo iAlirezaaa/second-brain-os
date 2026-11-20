@@ -32,6 +32,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   verify the parent directory's Git/sync boundaries before storing
   private notes. Pending exact-head CI; PR #145 remains Draft.
 
+- The English and Persian onboarding guides now return from the optional
+  `../my-private-brain` directory to `../second-brain-os` before running
+  **full repository** health and unittest checks. Previously those commands
+  would run inside the installed home, which ships only its installed-home
+  test, potentially giving a misleading contributor verification. The
+  existing onboarding test guards this working-directory transition. No
+  runtime behavior, permissions or user files were changed; full CI on the
+  new head remains a merge requirement.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape
