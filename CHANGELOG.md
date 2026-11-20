@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issues #93/#144; PR #145 in review — SQLite verification deadline)
+- The installed-home synthetic first-recall probe now includes SQLite row/body
+  verification in `elapsed_ms` and treats a validation finishing past the shared
+  trial deadline as a timeout, even if subprocess output looks successful.
+  SQLite lock waiting is bounded by the remaining time; this does not provide
+  a preemptive disk-I/O or OS sandbox guarantee. A synthetic clock regression
+  extends an existing test method, preserving test count. No installed user
+  memory, production KB schema, packages, permission controls or network
+  behavior changed. Final-head CI and independent review are required before
+  merge; no claim of complete clone-to-first-result timing is made.
+
 ### Fixed (issue #144; PR #145 in review — installed-home SQLite evidence)
 - The disposable installed-home first-success probe now checks SQLite `notes`
   against two synthetic source paths and exact bodies plus the total indexed
