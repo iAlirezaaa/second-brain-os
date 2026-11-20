@@ -144,6 +144,14 @@ success rate and per-trial/median latency. It exits nonzero on any failed
 trial and cleans up its temporary index. **It does not measure Git clone,
 installation, full first-use time, semantic recall or real-user performance.**
 The current under-five-minute end-to-end onboarding goal remains unverified.
+
+To measure the optional **installed personal home** path separately, without
+using private notes, run `python scripts/first_success.py --installed-home --repeat 1`
+from the source checkout. Its JSON covers local install, synthetic note creation,
+indexing and keyword retrieval, and verifies the cited file path. It excludes
+Git clone, editor time and macOS unless run there. The CI matrix runs this
+same synthetic probe on Windows and Ubuntu; pass/fail and measured latencies
+are properties of those runners, not promises about user hardware.
 See [first-success acceptance criteria](https://github.com/iAlirezaaa/second-brain-os/issues/93).
 
 Use the CLI to discover skills, open an accountable session and monitor it:
