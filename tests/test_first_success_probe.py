@@ -32,6 +32,34 @@ class FirstRecallProbe(unittest.TestCase):
         self.assertEqual(report["success_rate"], 0)
         self.assertFalse(report["trials"][0]["success"])
 
+        # A single installed-home trial has ONE wall-clock budget. Otherwise
+        # install + ingest + search can each consume the full per-stage timeout.
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        clock = [100.0]
+        observed_timeouts = []
+
+        def fake_run(argv, **kwargs):
+            observed_timeouts.append(kwargs["timeout"])
+            clock[0] += 0.6
+            if "--target" in argv:
+                destination = Path(argv[argv.index("--target") + 1])
+                (destination / "scripts").mkdir(parents=True)
+                (destination / "scripts" / "kb.py").write_text(
+                    "# Synthetic installed CLI placeholder\\n", encoding="utf-8")
+            return SimpleNamespace(returncode=0, stdout="indexed 2 notes", stderr="")
+
+        with patch.object(first_success.time, "perf_counter",
+                          side_effect=lambda: clock[0]):
+            with patch.object(first_success.subprocess, "run", side_effect=fake_run):
+                budget = first_success.installed_home_trial(
+                    ROOT / "scripts" / "install.py", timeout=1.0)
+        self.assertEqual(budget["reason"], "timeout", budget)
+        self.assertEqual(len(observed_timeouts), 2,
+                         "search must not launch after the shared trial deadline")
+        self.assertGreater(observed_timeouts[0], observed_timeouts[1])
+
     def test_invalid_repeat_cannot_run_unbounded_probes(self):
         for repeat in ("0", "11", "garbage"):
             with self.subTest(repeat=repeat), self.assertRaises(SystemExit) as error:
