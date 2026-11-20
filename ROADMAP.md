@@ -27,6 +27,45 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## Active priorities — 2026-11-20 (review after CI and external feedback)
+
+- **P0 — truthful first use and security.** Resolve verified CI failures and protected
+  `main` check-context drift ([#107](https://github.com/iAlirezaaa/second-brain-os/issues/107))
+  without bypassing branch protection. Reconcile privacy PR #141 and synthetic-fixture PR #142
+  against their actual checks, not earlier green runs. Issue #144 is a bounded
+  human-quickstart correction: in README the first copy/paste block should
+  clone, build a local keyword index and show a path-backed hit **before**
+  invoking health and the 1,126-test maintainer suite. The existing
+  `tests/test_first_session_onboarding.py` clone-block test now guards this order.
+  Verification: CI on Windows/Ubuntu Python 3.9/3.12 and the backup jobs;
+  no sub-five-minute clone-to-recall timing is claimed. Agent
+  `skills/first-session/SKILL.md` keeps its stricter audit-first protocol.
+- **P1 — measured host integrations and onboarding.** Keep version-pinned,
+  permission-reviewed, synthetic-data MCP handshakes for Claude Code, Codex
+  and OpenCode separate from merely printing a host config. Improve bilingual
+  instructions and reproducible first-result measurements; do not report
+  setup time or host support that has not been tested.
+- **P2 — optional usability surfaces.** Explore a local-only memory/provenance
+  and permissions viewer, reversible import/export and collaboration only
+  behind explicit access/identity gates and tested rollback.
+- **P3 — independent research.** Evaluate Mem0, Basic Memory, Letta and
+  OpenMemory with source-dated evidence, license review and comparable
+  synthetic benchmarks before any independently useful adoption.
+
+For major features, require a proposal, ADR, compatibility test, explicit
+permission boundary and rollback procedure; new dependencies additionally
+must pass Constitution §2's admission gates with stdlib fallback.
+
+**Next 1:** Check PR #144's exact SHA across all seven CI jobs, and leave it in
+review while required branch-protection contexts remain mismatched.
+
+**Next 2:** Run a genuinely clean-clone **Windows/macOS/Linux** first-result
+timing study (clone, interpreter check, index, source-path hit), with source,
+repeats and failed attempts recorded as failures; only then judge the
+under-five-minute usability target.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
