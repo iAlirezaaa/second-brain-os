@@ -101,11 +101,19 @@ def installed_home_trial(installer_script, timeout=180):
                     "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
                     "reason": reason}
 
+        # One budget for installation, indexing and search together. Giving
+        # each subprocess the full timeout can silently triple the wall time.
+        def time_left():
+            remaining = timeout - (time.perf_counter() - start)
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired("installed-home first recall", timeout)
+            return remaining
+
         try:
             install = subprocess.run(
                 [sys.executable, str(installer_script), "--target", str(home)],
                 cwd=str(HERE.parent), capture_output=True, text=True,
-                encoding="utf-8", errors="replace", timeout=timeout, check=False,
+                encoding="utf-8", errors="replace", timeout=time_left(), check=False,
                 env=_child_environment())
             if install.returncode != 0:
                 return failed("install_exit_nonzero")
@@ -125,13 +133,15 @@ def installed_home_trial(installer_script, timeout=180):
                 return subprocess.run(
                     [sys.executable, str(kb_script), *args, "--vault", str(home)],
                     cwd=str(home), capture_output=True, text=True,
-                    encoding="utf-8", errors="replace", timeout=timeout, check=False,
+                    encoding="utf-8", errors="replace", timeout=time_left(), check=False,
                     env=_child_environment())
 
             ingest = invoke("ingest")
             if ingest.returncode != 0:
                 return failed("ingest_exit_nonzero")
             search = invoke("search", QUERY)
+            if time.perf_counter() - start > timeout:
+                return failed("timeout")
         except subprocess.TimeoutExpired:
             return failed("timeout")
         except OSError:
