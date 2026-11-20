@@ -225,7 +225,7 @@ must pass Constitution §2's admission gates with stdlib fallback.
   A new assertion inside the existing first-session integration test now
   **runs** `scripts/install.py --target` against a disposable sibling,
   creates that note, and invokes the *installed* `scripts/kb.py` via the
-  installed working directory. It requires a local `.kb/kb.sqlite` index
+  installed working directory. It requires a locally created SQLite index
   and a path-backed hit, not just the presence of commands in README.
   Acceptance: all four Ubuntu/Windows Python 3.9/3.12 jobs plus three
   cross-machine backup jobs must pass on the **new** exact head SHA; an
