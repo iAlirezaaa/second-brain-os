@@ -59,6 +59,11 @@ class FirstSessionOnboarding(unittest.TestCase):
                                      "the full test suite must follow first recall")
 
     def test_first_recall_works_from_synthetic_markdown_without_an_account(self):
+        # The smoke command must run as a visible cross-platform CI step, not
+        # merely appear as an optional README command or be hidden in unittests.
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("run: python scripts/first_success.py --repeat 3", ci,
+                      "CI must publish synthetic offline recall JSON on each OS/Python job")
         for document in ONBOARDING:
             text = (ROOT / document).read_text(encoding="utf-8")
             with self.subTest(document=document):
