@@ -6,6 +6,15 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Added (issues #93/#144; PR #145 in review — macOS recall witness)
+- The workflow now has a dedicated macOS 15 / Python 3.12 job running
+  the existing focused first-recall unittest and an installed-home smoke
+  with synthetic JSON output. The former seven jobs covered Ubuntu and
+  Windows only. An existing regression checks the macOS job's steps.
+  This does not certify the entire macOS suite, clone time or production
+  security. Eight exact-head CI jobs and independent review are required.
+  Rollback only the workflow, assertion and docs; no data migration.
+
 ### Fixed (issues #93/#144; PR #145 in review — SQLite verification deadline)
 - The installed-home synthetic first-recall probe now includes SQLite row/body
   verification in `elapsed_ms` and treats a validation finishing past the shared

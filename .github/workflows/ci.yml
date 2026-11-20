@@ -63,6 +63,23 @@ jobs:
       - name: HADES plane is honest from a pristine clone
         run: python scripts/ci_hades_plane.py --battery
 
+  # Bounded macOS evidence for the installed personal-home path.
+  # Not a full macOS suite, clone-timing, or production restore test.
+  first-recall-macos:
+    timeout-minutes: 10
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Focused first-recall regression (macOS)
+        run: python -m unittest discover -s tests -p test_first_success_probe.py -v
+      - name: Installed-home first recall (macOS synthetic JSON; excludes clone)
+        run: python scripts/first_success.py --installed-home --repeat 1
+
   # Track A's independent witness. `scripts/backup_proof.py` seals synthetic bytes and prints a
   # draft, but it cannot certify *where* it ran: a host name is self-reported, and one machine
   # agreeing with itself is the self-deception the charter names. This pair supplies the two facts

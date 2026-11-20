@@ -49,6 +49,23 @@ without bypassing security or reviewer requirements.
 macOS and Linux with repeat counts and failure provenance; report sub-five-minute
 claims only after reproducible results, then evaluate host handshakes.
 
+### P1 — macOS isolated first-recall witness (#93/#144, PR #145; 2026-11-20)
+
+- [ ] A macOS 15 / Python 3.12 CI job executes the existing focused
+      first-recall unittest and the disposable installed-home keyword probe.
+      Previously seven CI jobs ran only on Ubuntu/Windows; macOS was unknown.
+      Its own OS label, Python and commands are guarded by an existing test.
+- [ ] Accept only after all eight jobs on the exact final SHA are green:
+      four Ubuntu/Windows test jobs, one scoped macOS smoke and three backup
+      jobs. This is not a full macOS test suite, a Git-clone timer, or a real
+      user's five-minute benchmark. No dependency, ACL, runtime schema or
+      personal data changes. Rollback: revert the scoped workflow/test/docs.
+
+**Next 1 (P0):** reconcile #111/#134/#145, verify eight exact-head CI jobs,
+and repair protected-main status contexts (#107) by authorized review only.
+**Next 2 (P1):** benchmark true clone-to-first-source-hit on three OSes,
+including repeat/failure counts and checkout/runner provenance.
+
 ---
 
 ## Active priorities — 2026-11-20 (review after CI and external feedback)

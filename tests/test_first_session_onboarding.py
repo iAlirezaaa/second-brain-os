@@ -95,6 +95,18 @@ class FirstSessionOnboarding(unittest.TestCase):
                       "CI must publish synthetic offline recall JSON on each OS/Python job")
         self.assertIn("run: python scripts/first_success.py --installed-home --repeat 1", ci,
                       "CI must time an actual installed-home keyword recall on each supported runner")
+        # Scope the macOS assertion to its own job, never to matrix commands.
+        self.assertIn("  first-recall-macos:\n", ci)
+        macos_job = ci.split("  first-recall-macos:\n", 1)[1].split(
+            "\n  backup-seal:", 1)[0]
+        self.assertIn("runs-on: macos-15", macos_job)
+        self.assertIn('python-version: "3.12"', macos_job)
+        self.assertIn(
+            "run: python -m unittest discover -s tests -p test_first_success_probe.py -v",
+            macos_job)
+        self.assertIn(
+            "run: python scripts/first_success.py --installed-home --repeat 1",
+            macos_job)
         for document in ONBOARDING:
             text = (ROOT / document).read_text(encoding="utf-8")
             with self.subTest(document=document):

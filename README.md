@@ -143,7 +143,7 @@ This bounded, offline smoke probe creates disposable Markdown, invokes the real
 success rate and per-trial/median latency. It exits nonzero on any failed
 trial and cleans up its temporary index. **It does not measure Git clone,
 installation, full first-use time, semantic recall or real-user performance.**
-The current under-five-minute end-to-end onboarding goal remains unverified.
+The under-five-minute end-to-end onboarding goal remains unverified. A dedicated macOS 15/Python 3.12 CI smoke checks the installed-home path only, not full macOS support or clone time.
 
 To measure the optional **installed personal home** path separately, without
 using private notes, run `python scripts/first_success.py --installed-home --repeat 1`
