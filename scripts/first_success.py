@@ -160,7 +160,8 @@ def installed_home_trial(installer_script, timeout=180):
         except OSError:
             return failed("process_or_filesystem_error")
 
-        elapsed = round((time.perf_counter() - start) * 1000, 3)
+        # Verification of the *actual* index is part of the measured trial.
+        # The previous elapsed_ms snapshot excluded this last phase.
         index = (home / ".kb" / "kb.sqlite").is_file()
         indexed = re.search(r"\bindexed (\d+) notes\b", ingest.stdout)
         paths = re.findall(r"(?m)^((?:[\w-]+/)+[\w.-]+\.md)\s+\[", search.stdout)
@@ -171,7 +172,11 @@ def installed_home_trial(installer_script, timeout=180):
             # SQLite file. Verify real notes plus the advertised row count.
             # The installer also ships other Markdown, so NOT exactly 2 rows.
             try:
-                with closing(sqlite3.connect(str(home / ".kb" / "kb.sqlite"))) as conn:
+                # Limit SQLite lock waiting to the remaining wall-clock budget.
+                # This is not a hard OS-level deadline for arbitrary disk I/O.
+                with closing(sqlite3.connect(
+                        str(home / ".kb" / "kb.sqlite"),
+                        timeout=max(0.001, time_left()))) as conn:
                     total = conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
                     rows = conn.execute(
                         "SELECT path, body FROM notes WHERE path IN (?, ?)",
@@ -183,8 +188,13 @@ def installed_home_trial(installer_script, timeout=180):
                 }
                 passed = (total == int(indexed.group(1))
                           and len(rows) == 2 and dict(rows) == expected)
+            except subprocess.TimeoutExpired:
+                return failed("timeout")
             except (sqlite3.Error, OSError):
                 passed = False
+        if time.perf_counter() - start > timeout:
+            return failed("timeout")
+        elapsed = round((time.perf_counter() - start) * 1000, 3)
         return {"success": bool(passed), "elapsed_ms": elapsed,
                 "reason": "ok" if passed else "unexpected_search_or_index",
                 "indexed_notes": int(indexed.group(1)) if indexed else None,
