@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 in review — installed-home SQLite evidence)
+- The disposable installed-home first-success probe now checks SQLite `notes`
+  against two synthetic source paths and exact bodies plus the total indexed
+  row count. A CLI that prints plausible ingest/search output but creates
+  corrupt or empty SQLite no longer counts as success. The installer also
+  includes template Markdown, so this does not assume only two total rows.
+  The adversarial regression extends an existing test method. The analogous
+  default-mode proof remains separately proposed in PR #111 and needs
+  reconciliation. No personal data, new dependency, access rule or network
+  behavior changed. Exact-head CI and review remain release gates.
+
+
 ### Fixed (issues #93 and #144; PR #145 in review — default first-recall deadline)
 - The keyword-only synthetic probe now budgets ingestion and search
   against one monotonic 30-second trial deadline rather than permitting
