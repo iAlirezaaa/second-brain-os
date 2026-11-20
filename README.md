@@ -64,18 +64,14 @@ version such as 3.10 is required. Use a UTF-8 terminal for non-ASCII output.
 ```bash
 git clone https://github.com/iAlirezaaa/second-brain-os.git
 cd second-brain-os
-python scripts/health.py
-python -m unittest discover -s tests
+python scripts/kb.py ingest
+python scripts/kb.py search "memory"
 ```
 
 ### Your first local recall (no account or model)
 
-From the cloned repository, run:
-
-```bash
-python scripts/kb.py ingest
-python scripts/kb.py search "memory"
-```
+The final two commands above create a local index and display the first
+keyword matches immediately, without requiring the full maintainer test suite.
 
 The first command builds a local index of the repository's tracked Markdown; the
 second prints matching file paths and excerpts. Your index lives at `.kb/kb.sqlite`,
@@ -86,6 +82,21 @@ knowledge boundaries. Re-run `python scripts/kb.py ingest` after updating to
 remove any older aliases from your derived index. In your own installed brain,
 index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
+
+### Full repository checks (for contributors)
+
+After your first search, run the health gates and the full test suite **before
+proposing code changes**:
+
+```bash
+python scripts/health.py
+python -m unittest discover -s tests
+```
+
+These may take longer than a first search. They are contributor verification
+steps, not prerequisites for using the offline keyword index. The total
+clone-to-first-result time has not been independently measured on all target
+platforms.
 
 To verify this path independently on **synthetic** notes (no private data), run:
 
