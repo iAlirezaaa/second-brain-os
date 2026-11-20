@@ -115,10 +115,14 @@ a measured clean-clone timing or evidence of multi-host compatibility.
 
 ### Full repository checks (for contributors)
 
-After your first search, run the health gates and the full test suite **before
-proposing code changes**:
+After your first search, return to the **source checkout** before running its
+health gates and complete test suite. This matters if you followed the optional
+private-home installation above: that installed home ships only its own
+installed-home test, not the complete repository suite. Run these checks
+**before proposing code changes**:
 
 ```bash
+cd ../second-brain-os
 python scripts/health.py
 python -m unittest discover -s tests
 ```
