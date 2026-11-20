@@ -7,6 +7,14 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 ## [Unreleased]
 
 ### Changed (issue #144; first-result quickstart in review)
+- An opt-in `first_success.py --installed-home --repeat 1` probe now measures
+  disposable local installation through a synthetic source-cited keyword hit.
+  It validates the installed CLI rather than only the source checkout and
+  prints failure-aware JSON. CI runs this separately on Windows and Ubuntu;
+  the existing onboarding unittest checks its JSON contract. No real user
+  files, cloud/model service, new dependency or runtime permission changes.
+  This excludes clone and editor time; complete under-five-minute onboarding
+  and macOS results remain unverified until independently measured.
 - An installed-home private-note integration now exercises the actual
   documented optional setup path, not just the README command order:
   `install.py --target` provisions a disposable external home, the test
