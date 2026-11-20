@@ -79,6 +79,18 @@ must pass Constitution §2's admission gates with stdlib fallback.
   Rollback: revert these five documentation/test edits; no user data,
   dependency, index schema or permission settings are touched.
 
+- **P0 contributor-check execution context (issue #144; PR #145; 2026-11-20).**
+  After the optional `cd ../my-private-brain` walkthrough, the English and
+  Persian guides still ran "full repository" health/unittest commands in the
+  **installed home**, which ships only `tests/test_installed_home.py` rather
+  than the source suite (installer `PROOF` and `CODE_DIRS`). Both guides now
+  explicitly return to `../second-brain-os` before those commands. The
+  existing onboarding test refuses the wrong working directory without
+  increasing the collected test count. Acceptance: exact-head seven-job CI
+  success plus human confirmation of the checkout path; do not equate a green
+  installed-home test with a green source test suite. Rollback: revert these
+  bounded documentation assertions; no user data or runtime logic is changed.
+
 **Next 1:** Check PR #145's exact SHA across all seven CI jobs, and leave it in
 review while required branch-protection contexts remain mismatched.
 
