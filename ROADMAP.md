@@ -29,6 +29,25 @@ over something it cannot see is a silent gate, not a clean house.
 
 ## Active priorities — 2026-11-20 (review after CI and external feedback)
 
+- **P0 installed-home total runtime budget (2026-11-20; #144 / PR #145).**
+  The synthetic `first_success.py --installed-home` probe previously allowed
+  the installer, indexer and search subprocess to each consume the full
+  180-second timeout (up to 540 seconds per trial). It now passes **remaining
+  time from one deadline** to each subprocess and refuses to start the next
+  stage after that deadline. A deterministic fake-clock regression within the
+  existing unittest method covers the old 3-launch failure and the new
+  2-launch timeout, without altering the discovered test count. This bounds
+  the *synthetic diagnostic*, **not** git clone, editor use, or real end-user
+  onboarding; a sub-five-minute first-use outcome remains unknown.
+  Acceptance: the focused regression and all seven exact-head Ubuntu/Windows
+  CI jobs; an independent reviewer must inspect timeout handling. Rollback
+  the probe's deadline helper and its bounded regression if a supported OS
+  shows a verified failure; no user files, ACL, dependencies or KB schema change.
+  **Next 1 (P0):** finish exact-head CI, reconcile security PR #134,
+  validate protected-main required checks (#107), and review before merge.
+  **Next 2 (P1):** time a true clean clone through the first sourced hit on
+  Windows, macOS and Linux (#93) and publish corpus/hash/hardware metadata.
+
 - **P0 installed-home probe child-environment isolation (2026-11-20; #144 / PR #145).**
   The newly added optional install+recall benchmark launched the installer and
   two installed KB subprocesses with the entire shell environment, potentially
