@@ -10,7 +10,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ONBOARDING = ("README.md", "skills/first-session/SKILL.md")
+HUMAN_ONBOARDING = ("README.md", "00_START_HERE/README_FA.md")
+ONBOARDING = HUMAN_ONBOARDING + ("skills/first-session/SKILL.md",)
 
 
 def clone_block(text):
@@ -38,13 +39,22 @@ class FirstSessionOnboarding(unittest.TestCase):
                 self.assertEqual(cd.group(1), clone.group("destination") or clone.group("repo"),
                                  "git clone without a destination creates the repo-named folder")
 
-                if document == "README.md":
+                if document in HUMAN_ONBOARDING:
                     # Human quickstart should yield an actual offline result before
                     # asking newcomers to run the full maintainer test suite.
                     self.assertIn("python scripts/kb.py ingest", block,
                                   "first copy/paste block does not build a local index")
                     self.assertIn('python scripts/kb.py search "memory"', block,
                                   "first copy/paste block does not return a source-backed hit")
+                    commands = [line.strip() for line in block.splitlines() if line.strip()]
+                    self.assertLess(commands.index("cd second-brain-os"),
+                                    commands.index("python scripts/kb.py ingest"),
+                                    "index only after entering the cloned repo")
+                    self.assertLess(commands.index("python scripts/kb.py ingest"),
+                                    commands.index('python scripts/kb.py search "memory"'),
+                                    "index before searching in the first-use block")
+                    self.assertNotIn("python scripts/health.py", block,
+                                     "maintainer checks must not block first human recall")
                     self.assertNotIn("python -m unittest", block,
                                      "the full test suite must follow first recall")
 

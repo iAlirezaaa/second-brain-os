@@ -16,6 +16,11 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   **does not** establish a measured under-five-minute clone-to-first-result
   experience or real-user adoption; CI and independent platform timing remain
   required.
+- The Persian `00_START_HERE/README_FA.md` now has a real clone-to-first-keyword-result
+  path before optional maintainer checks, with corrected fenced code blocks and
+  portable Python launcher guidance. The existing synthetic onboarding regression
+  now covers both human-language entrypoints and command order, without adding
+  a test method or changing runtime behavior. Clean-clone timings remain unknown.
 
 
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
