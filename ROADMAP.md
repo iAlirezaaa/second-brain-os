@@ -57,7 +57,7 @@ claims only after reproducible results, then evaluate host handshakes.
   The installed-home synthetic probe accepted the printed indexed count,
   matching search-result path and a merely existing SQLite file as a success,
   without reading any indexed rows. A deliberately forged CLI that wrote
-  corrupt `.kb/kb.sqlite` bytes could appear green. The existing regression
+  corrupt bytes in the disposable SQLite index could appear green. The existing regression
   now rejects that fixture. The probe reads SQLite `notes` after actual
   installation, checks both synthetic Markdown bodies and source paths,
   and requires the real row count to equal the printed count. A fresh
