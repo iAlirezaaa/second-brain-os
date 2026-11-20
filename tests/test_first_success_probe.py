@@ -89,7 +89,7 @@ class FirstRecallProbe(unittest.TestCase):
                 home = Path(argv[argv.index("--target") + 1])
                 (home / "scripts").mkdir(parents=True)
                 (home / "scripts" / "kb.py").write_text(
-                    "# Synthetic placeholder\\n", encoding="utf-8")
+                    "# Synthetic placeholder\n", encoding="utf-8")
                 return SimpleNamespace(returncode=0, stdout="installed", stderr="")
             if "ingest" in argv:
                 cache = Path(kwargs["cwd"]) / ".kb" / "kb.sqlite"
@@ -97,7 +97,7 @@ class FirstRecallProbe(unittest.TestCase):
                 cache.write_bytes(b"not a real sqlite index")
                 return SimpleNamespace(returncode=0, stdout="indexed 2 notes", stderr="")
             return SimpleNamespace(
-                returncode=0, stdout="02_WIKI/demo.md [synthetic]\\n", stderr="")
+                returncode=0, stdout="02_WIKI/demo.md [synthetic]\n", stderr="")
 
         with patch.object(first_success.subprocess, "run",
                           side_effect=forged_install_and_recall):
