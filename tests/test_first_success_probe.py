@@ -80,6 +80,32 @@ class FirstRecallProbe(unittest.TestCase):
         self.assertEqual(len(keyword_timeouts), 2)
         self.assertGreater(keyword_timeouts[0], keyword_timeouts[1])
 
+        # False-green fixture: a forged installed CLI prints the expected
+        # index/search lines and creates a fake SQLite file, with no real rows.
+        # This used to be reported as a successful first recall.
+        def forged_install_and_recall(argv, **kwargs):
+            from types import SimpleNamespace
+            if "--target" in argv:
+                home = Path(argv[argv.index("--target") + 1])
+                (home / "scripts").mkdir(parents=True)
+                (home / "scripts" / "kb.py").write_text(
+                    "# Synthetic placeholder\\n", encoding="utf-8")
+                return SimpleNamespace(returncode=0, stdout="installed", stderr="")
+            if "ingest" in argv:
+                cache = Path(kwargs["cwd"]) / ".kb" / "kb.sqlite"
+                cache.parent.mkdir(parents=True)
+                cache.write_bytes(b"not a real sqlite index")
+                return SimpleNamespace(returncode=0, stdout="indexed 2 notes", stderr="")
+            return SimpleNamespace(
+                returncode=0, stdout="02_WIKI/demo.md [synthetic]\\n", stderr="")
+
+        with patch.object(first_success.subprocess, "run",
+                          side_effect=forged_install_and_recall):
+            forged = first_success.installed_home_trial(ROOT / "scripts" / "install.py")
+        self.assertFalse(forged["success"],
+                         "a printed keyword hit with a corrupt index is not retrieval")
+        self.assertEqual(forged["reason"], "unexpected_search_or_index")
+
     def test_invalid_repeat_cannot_run_unbounded_probes(self):
         for repeat in ("0", "11", "garbage"):
             with self.subTest(repeat=repeat), self.assertRaises(SystemExit) as error:
