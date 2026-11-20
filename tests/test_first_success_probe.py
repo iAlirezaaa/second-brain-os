@@ -60,6 +60,26 @@ class FirstRecallProbe(unittest.TestCase):
                          "search must not launch after the shared trial deadline")
         self.assertGreater(observed_timeouts[0], observed_timeouts[1])
 
+        # The default (non-install) smoke also needs ONE total deadline.
+        # Old behavior allowed ingest and search a full timeout each and
+        # accepted a late search as a merely missing-index failure.
+        clock = [200.0]
+        keyword_timeouts = []
+
+        def fake_keyword_run(argv, **kwargs):
+            keyword_timeouts.append(kwargs["timeout"])
+            clock[0] += 0.6
+            return SimpleNamespace(returncode=0, stdout="indexed 2 notes", stderr="")
+
+        with patch.object(first_success.time, "perf_counter",
+                          side_effect=lambda: clock[0]):
+            with patch.object(first_success.subprocess, "run",
+                              side_effect=fake_keyword_run):
+                keyword_budget = first_success.trial(KB, timeout=1.0)
+        self.assertEqual(keyword_budget["reason"], "timeout", keyword_budget)
+        self.assertEqual(len(keyword_timeouts), 2)
+        self.assertGreater(keyword_timeouts[0], keyword_timeouts[1])
+
     def test_invalid_repeat_cannot_run_unbounded_probes(self):
         for repeat in ("0", "11", "garbage"):
             with self.subTest(repeat=repeat), self.assertRaises(SystemExit) as error:
