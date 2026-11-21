@@ -266,8 +266,34 @@ class FirstSessionOnboarding(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
                 self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
             forged = clean_module.measure(fake_repo)
+            # Red-first: a CLI can forge a plausible result and a VALID
+            # SQLite file, yet point at a row without the searched term.
+            # The probe must refuse an index that does not substantiate a hit.
+            (fake_repo / "scripts" / "kb.py").write_text(
+                "import pathlib, sqlite3, sys\n"
+                "if 'ingest' in sys.argv:\n"
+                "    pathlib.Path('.kb').mkdir(exist_ok=True)\n"
+                "    db = sqlite3.connect('.kb/kb.sqlite')\n"
+                "    db.execute('CREATE TABLE notes (path TEXT PRIMARY KEY, title TEXT, zone TEXT, body TEXT, norm TEXT, updated TEXT)')\n"
+                "    db.execute(\"INSERT INTO notes VALUES ('02_WIKI/memory.md','Unrelated','02_WIKI','nothing relevant here','nothing relevant here','2026-11-21')\")\n"
+                "    db.commit(); db.close()\n"
+                "    print('indexed 1 notes')\n"
+                "else:\n"
+                "    print('02_WIKI/memory.md  [02_WIKI] forged result')\n",
+                encoding="utf-8")
+            for args in (("add", "scripts/kb.py"),
+                         ("-c", "user.name=Fixture", "-c",
+                          "user.email=fixture@example.invalid", "commit", "-qm",
+                          "synthetic valid but unrelated index")):
+                step = subprocess.run(["git", *args], cwd=str(fake_repo),
+                                      capture_output=True, text=True, timeout=30)
+                self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
+            forged_valid_sqlite = clean_module.measure(fake_repo)
         self.assertEqual(forged["status"], "fail", forged)
         self.assertEqual(forged["reason"], "no_source_backed_hit", forged)
+        self.assertEqual(forged_valid_sqlite["status"], "fail", forged_valid_sqlite)
+        self.assertEqual(forged_valid_sqlite["reason"],
+                         "no_source_backed_hit", forged_valid_sqlite)
 
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
