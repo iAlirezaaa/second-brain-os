@@ -92,7 +92,10 @@ and prints failure-aware JSON with clone, index, search and total time. This
 **includes local Git clone time but excludes GitHub/network download, Python
 installation, human editing and personal note ingestion**. It does not yet
 establish five-minute end-to-end onboarding; independent full-path platform
-timings are still needed. This probe is under review, not released.
+timings are still needed. This probe is under review, not released. The draft CI workflow is
+configured to run the same disposable local-clone probe in all four
+Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
+completed exact-commit runs provide evidence. None measures network download.
 
 ### Put personal knowledge in a separate local brain (optional)
 

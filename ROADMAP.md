@@ -25,6 +25,30 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Measure clean local-checkout recall across CI operating systems (#144 / PR #145, 2026-11-21)
+
+- [ ] **Observed baseline:** `scripts/clean_checkout_recall.py` and its local-clone
+      timing were exercised as a dedicated workflow step only on macOS.
+      The four Ubuntu/Windows matrix jobs checked real public Markdown and
+      synthetic installed-home recall, but did not execute the same clone probe.
+      Therefore no platform-comparable local clone timing was available there.
+- [ ] **Bounded change (S):** add the *existing* offline probe as a real YAML step
+      to each Python 3.9/3.12 × Ubuntu 24.04/Windows job. Extend an existing
+      onboarding regression to refuse a comment-only step or a misplaced step.
+      No new package, network access, cache persistence, permissions, real user
+      memory, or architecture change. **Rollback:** revert this CI/test/docs commit.
+- [ ] **Acceptance:** on the final head, 4/4 matrix jobs plus the independent
+      macOS job execute the same probe and produce honest JSON, 8/8 workflow jobs
+      pass, and any `status=fail` makes the corresponding job red. This measures
+      local committed Git clone → index → keyword hit only. Remote clone,
+      interpreter setup, personal-memory onboarding and sub-five-minute real
+      first use remain **unknown**; do not publish them as benchmarks.
+
+**Next 1 (P0):** verify the final-head CI step outputs and eight conclusions;
+reconcile overlap among PRs #111/#134/#145 and protected-main issue #107.
+**Next 2 (P1):** design separately repeatable *remote* clone-to-first-hit
+trials on Windows/macOS/Linux with failures, medians and hardware records.
+
 ### P0 — Repair a commented-out macOS clean-checkout probe (#144 / PR #145, 2026-11-21)
 
 - [ ] **Measured red baseline:** on draft head `ff50e149`,

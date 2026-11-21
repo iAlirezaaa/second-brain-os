@@ -53,6 +53,10 @@ jobs:
         run: |
           python scripts/kb.py ingest
           python scripts/kb.py search "memory"
+      # Include the committed local Git-clone cost in every supported matrix runner.
+      # This stays offline; it does not measure GitHub network download or Python setup.
+      - name: Clean local checkout to first keyword hit (matrix JSON)
+        run: python scripts/clean_checkout_recall.py
       # Each OS/Python job emits its own machine-readable, explicitly synthetic
       # offline recall success/latency report. This does NOT measure clone time.
       - name: Offline first-recall smoke (synthetic JSON)

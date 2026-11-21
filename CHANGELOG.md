@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Changed (issue #144; PR #145 draft — cross-platform local-clone recall)
+- The existing stdlib-only clean committed-clone-to-first-keyword-hit JSON
+  probe is now a required step in all four Ubuntu 24.04/Windows × Python
+  3.9/3.12 matrix jobs, in addition to the macOS focused job. An onboarding
+  regression refuses a commented-out/misplaced matrix step. This is **CI
+  coverage**, not a remote-network clone benchmark or a released user feature.
+  Final-head checks and independent review must pass before merge; protected-
+  main status-context drift remains tracked in #107. No private data, secrets,
+  third-party packages, schema or access policy change. Rollback: revert this
+  scoped workflow/test/documentation commit.
+
 ### Fixed (issue #144; PR #145 draft — macOS clean-checkout CI wiring)
 - The macOS workflow's claimed `clean_checkout_recall.py` execution
   was embedded in a comment by literal escaped newline characters;
