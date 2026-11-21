@@ -101,8 +101,11 @@ class FirstSessionOnboarding(unittest.TestCase):
             "\n  backup-seal:", 1)[0]
         self.assertIn("runs-on: macos-15", macos_job)
         self.assertIn('python-version: "3.12"', macos_job)
+        # macOS must exercise both the probe and the real bilingual/private-home
+        # onboarding regression. A single-file smoke could miss installer or
+        # privacy-boundary failures that only reproduce on macOS.
         self.assertIn(
-            "run: python -m unittest discover -s tests -p test_first_success_probe.py -v",
+            'run: python -m unittest discover -s tests -p "test_first_*.py" -v',
             macos_job)
         self.assertIn(
             "run: python scripts/first_success.py --installed-home --repeat 1",
