@@ -93,11 +93,23 @@ def measure(source=ROOT, timeout=TIMEOUT):
                 try:
                     with closing(sqlite3.connect(str(cache), timeout=max(0.001, remaining()))) as conn:
                         actual_count = conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
-                        indexed_paths = {conn.execute(
-                            "SELECT path FROM notes WHERE path = ?", (path,)).fetchone()
-                            for path in hits}
-                    valid_hits = (actual_count == result["indexed_notes"]
-                                  and all(item is not None for item in indexed_paths))
+                        # A matching path and nonempty index are insufficient:
+                        # verify the real indexed title/body actually contain
+                        # the published search term, not just a forged CLI hit.
+                        indexed_rows = [
+                            conn.execute(
+                                "SELECT title, norm FROM notes WHERE path = ?",
+                                (path,)).fetchone()
+                            for path in hits
+                        ]
+                    valid_hits = (
+                        actual_count == result["indexed_notes"]
+                        and all(
+                            row is not None and
+                            "memory" in " ".join(str(value or "") for value in row).casefold()
+                            for row in indexed_rows
+                        )
+                    )
                 except sqlite3.Error:
                     valid_hits = False
             else:
