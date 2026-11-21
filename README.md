@@ -87,7 +87,7 @@ index your notes with the same command from that brain's directory. See the
 For a **local Git-clone-to-first-hit diagnostic**, run
 `python scripts/clean_checkout_recall.py` from a Git checkout. It makes a
 disposable no-hardlinks clone of committed files, runs the real offline
-ingest/search commands, checks that SQLite contains the reported source hits,
+ingest/search commands, checks that SQLite contains the reported source hits **and** that each indexed title/body substantiates the `memory` keyword,
 and prints failure-aware JSON with clone, index, search and total time. This
 **includes local Git clone time but excludes GitHub/network download, Python
 installation, human editing and personal note ingestion**. It does not yet
