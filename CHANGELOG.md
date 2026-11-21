@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Added (issue #144; PR #145 in review — real README keyword witness)
+- CI now runs the README's real scripts/kb.py ingest then
+  scripts/kb.py search "memory" on checked-out public Markdown in the
+  four Windows/Ubuntu jobs and the macOS first-recall job. Unlike
+  synthetic-only smoke, a zero-hit search fails. The existing onboarding
+  regression holds the CI steps and ordering. Final-head CI, review and
+  lawful protected-main drift #107 resolution remain required before merge.
+  No remote clone timing, semantic recall, real-user success or released
+  capability is claimed. The runner-local .kb/ index is ignored by Git;
+  no production KB behavior, dependencies, private data or ACL changes.
+  Rollback: revert this scoped CI/test/docs commit.
+
+
 ### Changed (issue #144; PR #145 in review — macOS health before first-use witness)
 - The macOS 15 / Python 3.12 focused onboarding job now runs the real
   `scripts/health.py` gate *before* its synthetic first-recall tests.

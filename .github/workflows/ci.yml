@@ -46,6 +46,13 @@ jobs:
       # full test suite incl. retrieval golden eval gate
       - name: Unit tests
         run: python -m unittest discover -s tests -v
+      # Exercise the exact first-use commands on checked-out PUBLIC Markdown.
+      # kb.py search exits nonzero on zero hits; synthetic fixtures alone cannot
+      # prove the documented "memory" query remains useful for a fresh clone.
+      - name: README offline keyword recall (public checkout)
+        run: |
+          python scripts/kb.py ingest
+          python scripts/kb.py search "memory"
       # Each OS/Python job emits its own machine-readable, explicitly synthetic
       # offline recall success/latency report. This does NOT measure clone time.
       - name: Offline first-recall smoke (synthetic JSON)
@@ -79,6 +86,11 @@ jobs:
       # not leave a green recall result on a broken repository.
       - name: Vault health (macOS)
         run: python scripts/health.py
+      # Also verify a real source-backed README hit, not just synthetic notes.
+      - name: README offline keyword recall (macOS public checkout)
+        run: |
+          python scripts/kb.py ingest
+          python scripts/kb.py search "memory"
       # Run both the low-level probe and the copyable private-home onboarding
       # contract; Windows/Ubuntu already exercise these in the full suite.
       - name: Focused first-recall and onboarding regressions (macOS)

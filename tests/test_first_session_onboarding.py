@@ -95,6 +95,17 @@ class FirstSessionOnboarding(unittest.TestCase):
                       "CI must publish synthetic offline recall JSON on each OS/Python job")
         self.assertIn("run: python scripts/first_success.py --installed-home --repeat 1", ci,
                       "CI must time an actual installed-home keyword recall on each supported runner")
+        # The README's first search must work on the REAL public checkout,
+        # not only on disposable notes with a guaranteed keyword.
+        readme_commands = 'python scripts/kb.py ingest\n          python scripts/kb.py search "memory"'
+        matrix_job = ci.split("  test:\n", 1)[1].split(
+            "\n  first-recall-macos:\n", 1)[0]
+        self.assertIn("name: README offline keyword recall (public checkout)",
+                      matrix_job)
+        self.assertIn(readme_commands, matrix_job)
+        self.assertLess(matrix_job.index(readme_commands),
+                        matrix_job.index("run: python scripts/first_success.py --repeat 3"),
+                        "public README recall must precede synthetic smoke")
         # Scope the macOS assertion to its own job, never to matrix commands.
         self.assertIn("  first-recall-macos:\n", ci)
         macos_job = ci.split("  first-recall-macos:\n", 1)[1].split(
@@ -111,6 +122,11 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertIn(health_step, macos_job,
                       "macOS must run the full repository health gate")
         self.assertIn(focused_step, macos_job)
+        self.assertIn("name: README offline keyword recall (macOS public checkout)",
+                      macos_job)
+        self.assertIn(readme_commands, macos_job)
+        self.assertLess(macos_job.index(health_step), macos_job.index(readme_commands),
+                        "macOS health must run before the real README witness")
         self.assertLess(macos_job.index(health_step), macos_job.index(focused_step),
                         "macOS health must precede onboarding tests")
         self.assertIn(

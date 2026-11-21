@@ -25,6 +25,29 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Guard the published first recall against silent zero-hit drift (#144; PR #145, 2026-11-21)
+
+- [ ] **S, observed gap:** the Windows/Ubuntu and macOS jobs measured
+      disposable synthetic recall but never ran the first two commands
+      on the real checked-out Markdown. The documented example could return
+      zero hits while synthetic trials remained green. The prior CI
+      lacked this real-checkout command pair (structural baseline).
+- [ ] Run scripts/kb.py ingest then scripts/kb.py search "memory" in four
+      matrix jobs and the dedicated macOS job. Zero-hit search returns a
+      nonzero status. Extend the existing onboarding regression to require
+      both steps and order, without increasing discovered-test counts.
+      No schema changes, dependencies, private data or permission changes.
+- [ ] **Acceptance:** both real-checkout steps and all eight jobs succeed
+      on the final SHA; independent review and protected-main check-context
+      repair (#107) precede merge. This proves a CI public-corpus keyword
+      result, not remote-clone latency, under-five-minute setup, or real
+      user success. **Rollback:** revert this one CI/test/docs commit.
+
+**Next 1 (P0):** inspect eight exact-head job conclusions and reconcile
+#111/#134 alongside #145 and #107 without bypassing protection.
+**Next 2 (P1):** measure remote clone through first source-backed keyword
+hit on Windows/macOS/Linux with repeat and failure counts.
+
 ### P0 — macOS first-use evidence must also pass health (#144, PR #145; 2026-11-21)
 
 - [ ] **S, red-first:** the existing focused macOS 15/Python 3.12 CI
