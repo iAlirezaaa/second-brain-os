@@ -6,6 +6,9 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Changed (issue #93; PR #145 review; exact-head CI pending)
+- The proposed disposable local-checkout recall probe now includes the **actual cloned Git commit SHA** in each JSON trial and refuses a green repeatability aggregate across mixed source revisions. The revision lookup is included in clone timing; it does not measure GitHub download, Python setup, host integration or actual-user onboarding. Existing onboarding regressions check commit provenance and a synthetic mixed-revision failure. No new dependencies, production index semantics, credentials or personal data access.
+
 ### Changed (issue #144; PR #145 draft — three-trial cross-platform CI)
 - The four Windows/Ubuntu jobs and focused macOS first-use job now run
   `clean_checkout_recall.py --repeat 3` instead of one local trial. Each

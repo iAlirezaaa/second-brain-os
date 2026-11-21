@@ -512,6 +512,28 @@ three platforms with complete failure counts and no synthetic benchmark claim.
 
 ---
 
+## P0 — Auditable committed-revision recall timings (#93, PR #145; under review)
+
+- [ ] **S** Record the actual `git rev-parse HEAD` of the disposable checkout
+      in each `clean_checkout_recall.py` JSON trial, including its verification
+      overhead in the same elapsed-time budget. If Git cannot verify the revision,
+      fail closed rather than reporting a passing source-backed result.
+- [ ] Fail the aggregate when individually successful trials came from different
+      revisions. Extend the existing onboarding integration test to compare the
+      reported SHA to its source checkout and reject mocked mixed-SHA trials.
+      Review exact-head CI across all five Windows/Ubuntu/macOS environments
+      and backup gates before changing this to done.
+- [ ] Keep `main` and public release unchanged until review, exact-head CI,
+      and the obsolete required contexts in #107 are repaired legitimately.
+      This is local Git clone timing only, not GitHub download or user setup.
+
+**Next 1 (P0):** verify exact-head CI, independent review and protected-main
+required-context alignment (#107), then reconcile overlapping #111/#134/#145.
+**Next 2 (P1):** benchmark genuine network clone to first cited result
+on Windows/macOS/Linux with repeat counts, failure rate and commit provenance.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

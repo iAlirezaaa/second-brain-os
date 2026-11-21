@@ -230,6 +230,11 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(clone_report["status"], "pass", clone_report)
         self.assertGreater(clone_report["indexed_notes"], 0)
         self.assertTrue(clone_report["matched_paths"])
+        commit = subprocess.run(["git", "rev-parse", "--verify", "HEAD"],
+                                cwd=str(ROOT), capture_output=True, text=True, timeout=30)
+        self.assertEqual(commit.returncode, 0, commit.stderr)
+        self.assertEqual(clone_report["commit_sha"], commit.stdout.strip(),
+                         "benchmark must report the exact committed checkout revision")
         self.assertIn("excludes remote network", clone_report["scope"])
         self.assertGreaterEqual(clone_report["elapsed_ms"],
                                 clone_report["clone_ms"])
@@ -249,6 +254,9 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(repeated["success_rate"], 1.0)
         self.assertEqual(len(repeated["trials"]), 2)
         self.assertTrue(all(t["status"] == "pass" for t in repeated["trials"]))
+        self.assertEqual(repeated["commit_sha"], commit.stdout.strip())
+        self.assertTrue(all(t["commit_sha"] == repeated["commit_sha"]
+                            for t in repeated["trials"]))
         self.assertGreater(repeated["median_ms"], 0)
         self.assertGreaterEqual(repeated["max_ms"], repeated["median_ms"])
         invalid_repeat = subprocess.run(
@@ -264,6 +272,18 @@ class FirstSessionOnboarding(unittest.TestCase):
             "sbo_clean_checkout_probe", ROOT / "scripts" / "clean_checkout_recall.py")
         clean_module = importlib.util.module_from_spec(source_spec)
         source_spec.loader.exec_module(clean_module)
+        # Two green trials from different revisions are NOT one reproducible
+        # benchmark. Use measured-looking synthetic records, not a fake Git repo.
+        from unittest.mock import patch
+        with patch.object(clean_module, "measure", side_effect=[
+            {"status": "pass", "elapsed_ms": 10.0, "commit_sha": "a" * 40},
+            {"status": "pass", "elapsed_ms": 12.0, "commit_sha": "b" * 40},
+        ]):
+            mixed_revisions = clean_module.evaluate(2)
+        self.assertEqual(mixed_revisions["successes"], 2)
+        self.assertEqual(mixed_revisions["status"], "fail")
+        self.assertEqual(mixed_revisions["reason"], "commit_mismatch")
+        self.assertIsNone(mixed_revisions["commit_sha"])
         with tempfile.TemporaryDirectory(prefix="sbo-forged-git-") as directory:
             fake_repo = Path(directory) / "source"
             (fake_repo / "scripts").mkdir(parents=True)

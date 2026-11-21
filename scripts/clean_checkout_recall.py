@@ -59,7 +59,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
     start = time.perf_counter()
     result = {"status": "fail", "reason": None, "elapsed_ms": None,
               "clone_ms": None, "ingest_ms": None, "search_ms": None,
-              "indexed_notes": None, "matched_paths": []}
+              "indexed_notes": None, "matched_paths": [], "commit_sha": None}
 
     def remaining():
         left = timeout - (time.perf_counter() - start)
@@ -81,6 +81,15 @@ def measure(source=ROOT, timeout=TIMEOUT):
             if cloned.returncode != 0:
                 result["reason"] = "local_clone_failed"
                 return result
+            # Pin the actual commit cloned (not the potentially moving source branch).
+            # This Git query is included in clone_ms and the shared timeout.
+            head = invoke(["git", "rev-parse", "--verify", "HEAD"], cwd=checkout)
+            commit_sha = head.stdout.strip()
+            if head.returncode != 0 or not re.fullmatch(
+                    r"(?:[0-9a-f]{40}|[0-9a-f]{64})", commit_sha):
+                result["reason"] = "commit_unverified"
+                return result
+            result["commit_sha"] = commit_sha
             clone_end = time.perf_counter()
             result["clone_ms"] = round((clone_end - start) * 1000, 3)
             kb = checkout / "scripts" / "kb.py"
@@ -165,10 +174,13 @@ def evaluate(repeat, source=ROOT, timeout=TIMEOUT):
     trials = [measure(source, timeout) for _ in range(repeat)]
     durations = [trial["elapsed_ms"] for trial in trials]
     successes = sum(trial["status"] == "pass" for trial in trials)
+    commits = [trial.get("commit_sha") for trial in trials]
+    stable_commit = bool(commits[0]) and all(sha == commits[0] for sha in commits)
     report = {
         "repeat": repeat,
         "successes": successes,
         "success_rate": round(successes / repeat, 3),
+        "commit_sha": commits[0] if stable_commit else None,
         "median_ms": round(statistics.median(durations), 3),
         "max_ms": max(durations),
         "trials": trials,
@@ -182,6 +194,11 @@ def evaluate(repeat, source=ROOT, timeout=TIMEOUT):
             "reason": "ok" if successes == repeat else "one_or_more_trials_failed",
             "elapsed_ms": round(sum(durations), 3),
         })
+        # A moving source branch cannot yield one comparable repeatability
+        # sample, even if each individual clone happened to find a hit.
+        if successes == repeat and not stable_commit:
+            report["status"] = "fail"
+            report["reason"] = "commit_mismatch"
     return report
 
 
