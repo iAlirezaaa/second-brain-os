@@ -25,6 +25,29 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Verify local-recall evidence against committed Markdown (#144 / PR #145; 2026-11-21)
+
+- [x] **Reproduced in isolation:** the prior local-clone probe could accept a
+      plausible CLI output and valid SQLite row containing `memory` even
+      when the committed source note and its filename contained no such term.
+      The derived index alone is not independent source evidence.
+- [x] **Bounded correction (S):** after normal path/index checks, require the
+      committed Markdown text or source filename to contain the literal query;
+      resolve sources within the temporary checkout before reading and refuse
+      undecodable or missing files. Extend the existing adversarial Git fixture
+      with a valid index that contradicts its committed Markdown. No third-party
+      dependency, production KB change, private data or permission expansion.
+      Rollback: revert this probe/test/docs commit.
+- [ ] **Acceptance:** exact-head focused test, real local-clone probe and all
+      eight CI jobs pass, followed by independent review and lawful correction
+      of required-check drift (#107). This is a source-evidence check, not a
+      remote GitHub download benchmark or a sandbox guarantee.
+
+**Next 1 (P0):** verify final-head CI and reconcile overlapping #111, #134
+and #145 before any branch-protection-compliant merge.
+**Next 2 (P1):** run repeated remote clone-to-first-recall trials with
+machine/network context and failures on Windows, macOS and Linux.
+
 ### P0 — Refuse keyword-free SQLite evidence in local-clone recall (#144 / PR #145; 2026-11-21)
 
 - [x] **Reproduced code gap:** the first-hit probe previously checked only that

@@ -33,6 +33,24 @@ def _child_env():
     return env
 
 
+def _source_supports_keyword(checkout, relative_path, keyword="memory"):
+    """Independently verify committed Markdown, not only derived SQLite metadata.
+
+    A source filename can itself satisfy a keyword query. Resolve before
+    reading, so the diagnostic never follows a tracked link outside its
+    disposable checkout. Malformed/unreadable sources fail closed.
+    """
+    try:
+        source = (checkout / relative_path).resolve(strict=True)
+        if checkout.resolve() not in source.parents or not source.is_file():
+            return False
+        if keyword.casefold() in Path(relative_path).stem.casefold():
+            return True
+        return keyword.casefold() in source.read_text(encoding="utf-8").casefold()
+    except (OSError, UnicodeError):
+        return False
+
+
 def measure(source=ROOT, timeout=TIMEOUT):
     """Return a failure-aware JSON-ready record; always delete the clone."""
     start = time.perf_counter()
@@ -83,6 +101,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
             valid_hits = bool(hits) and all(
                 (checkout / path).is_file()
                 and ".." not in Path(path).parts
+                and _source_supports_keyword(checkout, path)
                 and not path.casefold().startswith(("09_operations/", "11_control/",
                                                     "12_runtime/", "13_lab/",
                                                     "14_candidates/", "15_system/"))

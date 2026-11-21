@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — source-backed local recall evidence)
+- The clean local-clone keyword diagnostic now independently checks committed
+  Markdown text or the source filename for the published query, instead of
+  accepting a self-consistent but fabricated SQLite row as sufficient proof.
+  Source reads stay inside the disposable checkout; unavailable or undecodable
+  notes fail closed. The existing onboarding regression includes a committed
+  fixture where SQLite claims `memory` but the note does not. This changes
+  benchmark integrity only, not the production search index, dependencies,
+  permissions or user data. Exact-head CI, independent review and protected-main
+  check reconciliation (#107) still gate merge. Remote download and real-user
+  first-use latency remain unknown. Rollback: revert this scoped commit.
+
 ### Fixed (issue #144; PR #145 draft — local keyword evidence check)
 - The clean local-checkout first-hit diagnostic now confirms that every
   reported SQLite row's stored title or normalized body actually contains
