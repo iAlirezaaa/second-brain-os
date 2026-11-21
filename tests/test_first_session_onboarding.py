@@ -232,15 +232,15 @@ class FirstSessionOnboarding(unittest.TestCase):
             (fake_repo / "scripts").mkdir(parents=True)
             (fake_repo / "02_WIKI").mkdir()
             (fake_repo / "02_WIKI" / "memory.md").write_text(
-                "# Fake memory\\n", encoding="utf-8")
+                "# Fake memory\n", encoding="utf-8")
             (fake_repo / "scripts" / "kb.py").write_text(
-                "import pathlib, sys\\n"
-                "if 'ingest' in sys.argv:\\n"
-                "    pathlib.Path('.kb').mkdir(exist_ok=True)\\n"
-                "    pathlib.Path('.kb/kb.sqlite').write_bytes(b'not sqlite')\\n"
-                "    print('indexed 1 notes')\\n"
-                "else:\\n"
-                "    print('02_WIKI/memory.md  [02_WIKI] forged result')\\n",
+                "import pathlib, sys\n"
+                "if 'ingest' in sys.argv:\n"
+                "    pathlib.Path('.kb').mkdir(exist_ok=True)\n"
+                "    pathlib.Path('.kb/kb.sqlite').write_bytes(b'not sqlite')\n"
+                "    print('indexed 1 notes')\n"
+                "else:\n"
+                "    print('02_WIKI/memory.md  [02_WIKI] forged result')\n",
                 encoding="utf-8")
             for args in (
                     ("init", "-q"),
