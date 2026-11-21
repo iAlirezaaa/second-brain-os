@@ -6,6 +6,20 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Changed (issue #144; PR #145 in review — macOS private-home onboarding regression)
+- The dedicated macOS 15/Python 3.12 job now runs *both* existing
+  `test_first_*.py` modules, not just the synthetic low-level probe. That
+  adds an actual disposable install, private-home keyword search and
+  parent-only environment canary regression to the macOS witness. An existing
+  test verifies the CI step so coverage cannot silently shrink again. The
+  earlier probe-only macOS commit passed all eight jobs in
+  [run 44832855401](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44832855401);
+  that result does **not** verify this changed job. Require fresh exact-head
+  CI, review and protected-main check repair before merge. No production
+  data, dependencies, permissions, or architecture changed; no full macOS
+  suite or network-clone timing is claimed. Rollback the focused CI and test
+  assertions if a real supported-platform failure is reproduced.
+
 ### Added (issues #93/#144; PR #145 in review — macOS recall witness)
 - The workflow now has a dedicated macOS 15 / Python 3.12 job running
   the existing focused first-recall unittest and an installed-home smoke
