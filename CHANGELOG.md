@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — local keyword evidence check)
+- The clean local-checkout first-hit diagnostic now confirms that every
+  reported SQLite row's stored title or normalized body actually contains
+  the documented `memory` query. Previously, a plausible search printout,
+  existing source path and valid-but-unrelated SQLite row could be counted
+  as a keyword hit. An adversarial committed Git fixture in the existing
+  onboarding test method covers that false-positive alongside corrupt SQLite.
+  This fixes **benchmark truthfulness**, not user indexing, permissions,
+  data formats or MCP. Final-head CI/review remain required; remote GitHub
+  clone and real-user setup remain unmeasured.
+  Rollback: revert this scoped probe/test/doc change.
+
 ### Changed (issue #144; PR #145 draft — cross-platform local-clone recall)
 - The existing stdlib-only clean committed-clone-to-first-keyword-hit JSON
   probe is now a required step in all four Ubuntu 24.04/Windows × Python
