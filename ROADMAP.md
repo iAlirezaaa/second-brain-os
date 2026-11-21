@@ -49,6 +49,33 @@ without bypassing security or reviewer requirements.
 macOS and Linux with repeat counts and failure provenance; report sub-five-minute
 claims only after reproducible results, then evaluate host handshakes.
 
+### P1 — macOS onboarding contract coverage (#144, PR #145; 2026-11-21)
+
+- [ ] Extend the macOS 15/Python 3.12 CI witness to run both
+      `tests/test_first_success_probe.py` and
+      `tests/test_first_session_onboarding.py` with a focused
+      `test_first_*.py` discovery pattern. The latter exercises the real
+      temporary personal-home installation, note ingestion, source-path
+      retrieval, bilingual command-order regression and parent-only
+      synthetic credential canaries. Ubuntu/Windows already run it through
+      the full suite. The existing onboarding test now refuses a
+      probe-only macOS job; no new test method or dependency is added.
+- [ ] Acceptance: the focused macOS job and all seven other jobs must
+      succeed on the **new exact head**; check job logs and obtain
+      independent review. The prior commit d44f510 had 8/8 successful
+      jobs in Actions run 44832855401, which verifies only the older
+      probe-only macOS job. No claim is made for the complete macOS
+      suite, user data, host sandbox or end-to-end clone latency.
+      Rollback: revert only the CI test-discovery pattern, its assertion
+      and corresponding documentation if a supported runner demonstrates
+      incompatibility.
+
+**Next 1 (P0):** verify all eight new-head CI jobs; reconcile overlapping
+#111/#134/#145 and repair stale protected-main checks in #107 without bypass.
+**Next 2 (P1):** separately measure GitHub network clone through first
+source-backed hit on Windows/macOS/Linux, recording repeats, elapsed times
+and failures before making any under-five-minute claim.
+
 ### P1 — macOS isolated first-recall witness (#93/#144, PR #145; 2026-11-20)
 
 - [ ] A macOS 15 / Python 3.12 CI job executes the existing focused
