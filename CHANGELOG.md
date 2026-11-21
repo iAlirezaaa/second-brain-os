@@ -6,6 +6,21 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — clean-source benchmark preflight)
+- The local-clone-to-first-keyword-hit diagnostic now rejects uncommitted
+  tracked/staged or nonignored untracked source changes with `source_dirty`.
+  Previously Git quietly cloned only committed bytes and a green result could
+  be misread as testing a developer's pending edits. The Git status preflight
+  runs with the existing restricted child environment; its time is separated
+  as `preflight_ms` and excluded from `clone_ms`, but included in the total.
+  An inaccessible or non-Git source fails closed. Existing onboarding tests
+  exercise clean source, dirty tracked and untracked synthetic repositories.
+  This affects **diagnostic truthfulness** only, not normal indexing, private
+  data, permissions, schema or MCP. Full exact-head CI, independent review and
+  protected-main reconciliation (#107) still gate merge. Remote network
+  download and real-user onboarding are **unknown**. Rollback: revert this
+  scoped change.
+
 ### Changed (issue #93; PR #145 review; exact-head CI pending)
 - The proposed disposable local-checkout recall probe now includes the **actual cloned Git commit SHA** in each JSON trial and refuses a green repeatability aggregate across mixed source revisions. The revision lookup is included in clone timing; it does not measure GitHub download, Python setup, host integration or actual-user onboarding. Existing onboarding regressions check commit provenance and a synthetic mixed-revision failure. No new dependencies, production index semantics, credentials or personal data access.
 

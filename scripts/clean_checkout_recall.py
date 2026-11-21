@@ -5,6 +5,8 @@ Run from a Git checkout: python scripts/clean_checkout_recall.py
 A no-hardlinks clone copies committed files to a disposable directory, then
 runs the documented ingest/search commands there. This includes local Git
 clone time, NOT GitHub download latency, Python installation or editor time.
+The source worktree must be clean: unstaged, staged and nonignored untracked
+files are refused, because a local clone would silently omit them.
 No network, LLM, user vault, or package installation is involved.
 """
 import argparse
@@ -58,7 +60,8 @@ def measure(source=ROOT, timeout=TIMEOUT):
     """Return a failure-aware JSON-ready record; always delete the clone."""
     start = time.perf_counter()
     result = {"status": "fail", "reason": None, "elapsed_ms": None,
-              "clone_ms": None, "ingest_ms": None, "search_ms": None,
+              "preflight_ms": None, "clone_ms": None,
+              "ingest_ms": None, "search_ms": None,
               "indexed_notes": None, "matched_paths": [], "commit_sha": None}
 
     def remaining():
@@ -74,6 +77,21 @@ def measure(source=ROOT, timeout=TIMEOUT):
                               env=_child_env(), check=False)
 
     try:
+        # A local clone contains committed bytes only. Reject a dirty source
+        # instead of silently benchmarking an older revision than the user sees.
+        # Porcelain status is machine-readable, locale-independent, and ignores
+        # generated .kb/ indexes via the repository's .gitignore.
+        source_status = invoke(
+            ["git", "-C", str(source), "status", "--porcelain=v1",
+             "--untracked-files=normal"])
+        if source_status.returncode != 0:
+            result["reason"] = "source_status_unavailable"
+            return result
+        if source_status.stdout.strip():
+            result["reason"] = "source_dirty"
+            return result
+        preflight_end = time.perf_counter()
+        result["preflight_ms"] = round((preflight_end - start) * 1000, 3)
         with tempfile.TemporaryDirectory(prefix="sbo-clean-checkout-") as temp:
             checkout = Path(temp) / "second-brain-os"
             cloned = invoke(["git", "clone", "--quiet", "--local", "--no-hardlinks",
@@ -91,7 +109,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
                 return result
             result["commit_sha"] = commit_sha
             clone_end = time.perf_counter()
-            result["clone_ms"] = round((clone_end - start) * 1000, 3)
+            result["clone_ms"] = round((clone_end - preflight_end) * 1000, 3)
             kb = checkout / "scripts" / "kb.py"
             if not kb.is_file():
                 result["reason"] = "kb_missing"
@@ -212,7 +230,7 @@ def main(argv=None):
     report = {"schema_version": 1,
               "observed_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
               "probe": "clean_local_git_clone_to_first_keyword_hit",
-              "scope": "local committed Git clone + index + keyword search; excludes remote network, Python setup and editor time",
+              "scope": "clean-source Git status preflight + local committed clone + index + keyword search; excludes remote network, Python setup and editor time",
               "python": sys.version.split()[0], "platform": sys.platform}
     report.update(evaluate(args.repeat))
     print(json.dumps(report, sort_keys=True, ensure_ascii=False))

@@ -238,6 +238,8 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertIn("excludes remote network", clone_report["scope"])
         self.assertGreaterEqual(clone_report["elapsed_ms"],
                                 clone_report["clone_ms"])
+        self.assertIsInstance(clone_report["preflight_ms"], float)
+        self.assertGreaterEqual(clone_report["preflight_ms"], 0)
 
         # Repeatability is measured with independent clones, not by timing
         # one result twice. Preserve individual outcomes for auditing.
@@ -358,6 +360,21 @@ class FirstSessionOnboarding(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
                 self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
             forged_source_only = clean_module.measure(fake_repo)
+            # A local clone ignores uncommitted work; accepting it as a live
+            # source benchmark would conceal the files a newcomer is editing.
+            untracked = fake_repo / "02_WIKI" / "draft-untracked.md"
+            untracked.write_text("# Not committed yet\n", encoding="utf-8")
+            dirty_untracked = clean_module.measure(fake_repo)
+            untracked.unlink()
+            tracked = fake_repo / "02_WIKI" / "claim.md"
+            tracked.write_text(
+                tracked.read_text(encoding="utf-8") + "Uncommitted edit\n",
+                encoding="utf-8")
+            dirty_tracked = clean_module.measure(fake_repo)
+        for dirty in (dirty_untracked, dirty_tracked):
+            self.assertEqual(dirty["status"], "fail", dirty)
+            self.assertEqual(dirty["reason"], "source_dirty", dirty)
+            self.assertIsNone(dirty["clone_ms"], dirty)
         self.assertEqual(forged["status"], "fail", forged)
         self.assertEqual(forged["reason"], "no_source_backed_hit", forged)
         self.assertEqual(forged_valid_sqlite["status"], "fail", forged_valid_sqlite)

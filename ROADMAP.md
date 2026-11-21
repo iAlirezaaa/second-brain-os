@@ -25,6 +25,31 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Refuse misleading local-recall benchmarks from dirty sources (#144 / PR #145; 2026-11-21)
+
+- [x] **Baseline (reproduced by adversarial fixture):** `git clone --local`
+      ignores staged, modified and untracked source work. The previous
+      diagnostic measured the old commit and could still print a green
+      result even though it did not benchmark the developer's visible edits.
+- [x] **Scoped fix (S):** preflight `git status --porcelain=v1` with the
+      existing restricted child environment. Reject nonignored changes with
+      `source_dirty`; refuse unreadable/non-Git sources with
+      `source_status_unavailable`. Report `preflight_ms` separately so
+      `clone_ms` stays a real local clone+SHA duration. Regression exercises
+      untracked and modified tracked source files and a clean real checkout.
+      No third-party package, schema, runtime memory, approval or access
+      semantics change. Rollback: revert this scoped probe/test/docs commit.
+- [ ] **Acceptance gate:** verify the final SHA using full health and all
+      eight CI jobs; require independent review and reconcile protected-main
+      check contexts (#107) before merge. This probe does **not** measure
+      remote GitHub download, Python install or real users.
+
+**Next 1 (P0):** finish exact-head CI and lawfully reconcile protected
+`main` checks (#107) before merging #145; coordinate with #111/#134.
+**Next 2 (P1):** publish repeated real **remote** clone-to-first-hit trials
+with timestamp, failure count, OS, network conditions and hardware. The
+five-minute user experience remains **unknown**.
+
 ### P1 — Require repeated local-recall evidence in CI (#144 / PR #145; 2026-11-21)
 
 - [x] **Baseline:** the committed-checkout probe supports 1–5 independent

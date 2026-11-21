@@ -97,6 +97,16 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
+**Clean-source requirement:** the diagnostic refuses staged changes, modified
+tracked files and nonignored untracked files with `source_dirty` rather than
+silently cloning the last commit and ignoring those edits. Commit the work or
+run from a clean worktree before comparing results. Gitignored local indexes
+(e.g. `.kb/`) do not make the source dirty. JSON reports `preflight_ms`
+separately; `clone_ms` now excludes the Git-status check, while total elapsed
+time includes it. An unreadable/non-Git source returns
+`source_status_unavailable`. This is a benchmark integrity guard, not a
+backup, recovery or protection of user data. It is proposed in PR #145.
+
 For a **repeatability check** on independent temporary clones, use
 `python scripts/clean_checkout_recall.py --repeat 3` (1–5 trials; default 1).
 JSON includes each trial's outcome, successful-trial count, success rate,
