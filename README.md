@@ -84,6 +84,16 @@ index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
 
 
+For a **local Git-clone-to-first-hit diagnostic**, run
+`python scripts/clean_checkout_recall.py` from a Git checkout. It makes a
+disposable no-hardlinks clone of committed files, runs the real offline
+ingest/search commands, checks that SQLite contains the reported source hits,
+and prints failure-aware JSON with clone, index, search and total time. This
+**includes local Git clone time but excludes GitHub/network download, Python
+installation, human editing and personal note ingestion**. It does not yet
+establish five-minute end-to-end onboarding; independent full-path platform
+timings are still needed. This probe is under review, not released.
+
 ### Put personal knowledge in a separate local brain (optional)
 
 The first search above explores this repository's documentation, **not your
