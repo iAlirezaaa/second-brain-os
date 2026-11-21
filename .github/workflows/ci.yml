@@ -93,7 +93,7 @@ jobs:
           python scripts/kb.py search "memory"
       # Run both the low-level probe and the copyable private-home onboarding
       # contract; Windows/Ubuntu already exercise these in the full suite.
-      - name: Focused first-recall and onboarding regressions (macOS)
+      # Measure a disposable, committed local Git clone through SQLite-backed\n      # source recall; network download and Python setup are NOT included.\n      - name: Clean local checkout to first keyword hit (macOS JSON)\n        run: python scripts/clean_checkout_recall.py\n      - name: Focused first-recall and onboarding regressions (macOS)
         run: python -m unittest discover -s tests -p "test_first_*.py" -v
       - name: Installed-home first recall (macOS synthetic JSON; excludes clone)
         run: python scripts/first_success.py --installed-home --repeat 1
