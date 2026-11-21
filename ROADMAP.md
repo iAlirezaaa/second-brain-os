@@ -25,6 +25,32 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Refuse keyword-free SQLite evidence in local-clone recall (#144 / PR #145; 2026-11-21)
+
+- [x] **Reproduced code gap:** the first-hit probe previously checked only that
+      SQLite contained the reported count and paths. A synthetic committed
+      Git fixture with a valid SQLite notes row whose title and normalized
+      body *did not contain the query* could still print a source path and
+      be reported as a successful keyword hit.
+- [x] **Bounded fix (S):** require each reported path's indexed title or
+      normalized body to contain the literal documented keyword `memory`,
+      in addition to existing source-path and row-count checks. The existing
+      onboarding test method now covers a valid-but-unrelated SQLite fixture
+      as well as corrupt SQLite. No new dependency, schema, permission,
+      network service, user data or production KB change.
+- [ ] **Merge acceptance:** confirm real lookup and adversarial refusal
+      in final-head CI (all 8 jobs), reconcile #111/#134/#145 and required-
+      check drift #107, then obtain permitted independent review. This
+      measures **local** committed checkout, not GitHub network download or
+      guaranteed sub-five-minute first use. Rollback: revert this isolated
+      benchmark/test/doc change.
+
+**Next 1 (P0):** confirm exact-head Windows, Ubuntu, macOS and restore
+jobs, and resolve protected-main check drift without weakening rules.
+**Next 2 (P1):** collect repeated remote clone-to-first-hit samples,
+including failures and machine/network provenance, before making
+end-user latency or growth claims.
+
 ### P0 — Measure clean local-checkout recall across CI operating systems (#144 / PR #145, 2026-11-21)
 
 - [ ] **Observed baseline:** `scripts/clean_checkout_recall.py` and its local-clone
