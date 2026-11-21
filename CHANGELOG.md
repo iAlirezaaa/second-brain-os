@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Added (issue #144; PR #145 draft — local committed-clone timing)
+- A stdlib-only `scripts/clean_checkout_recall.py` probe creates a temporary
+  no-hardlinks clone of the committed source, executes the real offline
+  `kb.py ingest` / `search "memory"` quickstart, and checks matching
+  source paths against SQLite rows before reporting failure-aware JSON and
+  separate local-clone, index, search and total milliseconds. The existing
+  onboarding regression tests its CLI contract and a dedicated macOS CI step
+  publishes the run. This is **local Git clone**, not GitHub network download,
+  full end-user setup, a semantic-recall benchmark or a released feature.
+  No new dependencies, private user data, production index schema, permissions
+  or architecture change. Gate: final-head CI and independent review;
+  rollback: revert this scoped probe/test/workflow/doc series.
+
 ### Added (issue #144; PR #145 in review — real README keyword witness)
 - CI now runs the README's real scripts/kb.py ingest then
   scripts/kb.py search "memory" on checked-out public Markdown in the
