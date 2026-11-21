@@ -234,6 +234,29 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertGreaterEqual(clone_report["elapsed_ms"],
                                 clone_report["clone_ms"])
 
+        # Repeatability is measured with independent clones, not by timing
+        # one result twice. Preserve individual outcomes for auditing.
+        repeated_probe = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "clean_checkout_recall.py"),
+             "--repeat", "2"],
+            cwd=str(ROOT), capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=480)
+        self.assertEqual(repeated_probe.returncode, 0,
+                         repeated_probe.stdout + repeated_probe.stderr)
+        repeated = json.loads(repeated_probe.stdout)
+        self.assertEqual(repeated["repeat"], 2)
+        self.assertEqual(repeated["successes"], 2)
+        self.assertEqual(repeated["success_rate"], 1.0)
+        self.assertEqual(len(repeated["trials"]), 2)
+        self.assertTrue(all(t["status"] == "pass" for t in repeated["trials"]))
+        self.assertGreater(repeated["median_ms"], 0)
+        self.assertGreaterEqual(repeated["max_ms"], repeated["median_ms"])
+        invalid_repeat = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "clean_checkout_recall.py"),
+             "--repeat", "0"], capture_output=True, text=True, timeout=30)
+        self.assertNotEqual(invalid_repeat.returncode, 0)
+        self.assertIn("between 1 and 5", invalid_repeat.stderr)
+
         # Adversarial Git fixture: plausible text and a real Markdown file
         # are NOT proof of recall when the SQLite index is corrupt.
         import importlib.util
@@ -329,6 +352,19 @@ class FirstSessionOnboarding(unittest.TestCase):
         import importlib.util
         import os
         from unittest import mock
+        # A failed trial must make the aggregate fail even when another
+        # trial passed; count and median always include the failed attempt.
+        with mock.patch.object(clean_module, "measure", side_effect=[
+                {"status": "pass", "elapsed_ms": 10.0},
+                {"status": "fail", "elapsed_ms": 20.0}]) as measured:
+            failed_batch = clean_module.evaluate(2)
+        self.assertEqual(measured.call_count, 2)
+        self.assertEqual(failed_batch["status"], "fail")
+        self.assertEqual(failed_batch["reason"], "one_or_more_trials_failed")
+        self.assertEqual(failed_batch["successes"], 1)
+        self.assertEqual(failed_batch["success_rate"], 0.5)
+        self.assertEqual(failed_batch["median_ms"], 15.0)
+        self.assertEqual(len(failed_batch["trials"]), 2)
         spec = importlib.util.spec_from_file_location(
             "sbo_first_success_installed", ROOT / "scripts" / "first_success.py")
         module = importlib.util.module_from_spec(spec)

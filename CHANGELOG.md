@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Added (issue #144; PR #145 draft — repeatable local-clone recall)
+- The existing offline first-keyword-hit probe supports optional `--repeat 1..5`
+  with a fresh disposable clone for each attempt. JSON records individual
+  outcomes, successes, success rate, inclusive median, and maximum duration;
+  any failure makes the aggregate exit nonzero. The no-argument single-trial
+  output retains its previous fields. Existing onboarding tests cover two
+  real clones, invalid counts and mixed pass/fail aggregation without adding
+  unittest methods. This is **not** a network-clone/real-user benchmark or
+  released functionality. Final-head CI, independent review and #107 remain
+  required. No private data, dependencies or permissions change; rollback is
+  the scoped probe/test/docs commit.
+
 ### Fixed (issue #144; PR #145 draft — source-backed local recall evidence)
 - The clean local-clone keyword diagnostic now independently checks committed
   Markdown text or the source filename for the published query, instead of

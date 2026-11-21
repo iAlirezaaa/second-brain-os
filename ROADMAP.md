@@ -25,6 +25,29 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P1 — Repeatable honest local-clone recall trials (#144 / PR #145; 2026-11-21)
+
+- [x] **Baseline:** the existing committed-checkout probe executes exactly
+      one local Git clone, indexing and keyword lookup, so intermittent first-
+      recall failure and trial-to-trial latency cannot be represented.
+- [x] **Bounded improvement (S):** optional `--repeat 1..5` runs fresh
+      disposable clones, reports all trials plus successful count, success rate,
+      inclusive median and maximum duration; any failure produces a nonzero
+      exit. Existing no-argument single-trial JSON remains compatible. No
+      packages, remote clone, private files, schema migrations or access
+      changes. Rollback: revert this probe/test/docs commit.
+- [ ] **Acceptance:** execute a real two-clone regression, an invalid-count
+      refusal and a mixed success/failure aggregate test; confirm full
+      health, Windows/Ubuntu/macOS checks and cross-host restore on final SHA.
+      Protected-main required-check drift (#107) and independent review still
+      gate merge. Repeated local measurements are **not** independent end-user
+      network-to-first-result evidence.
+
+**Next 1 (P0):** reconcile green exact-head CI, #111/#134 overlap, and
+protected-main context drift #107 before a policy-compliant merge.
+**Next 2 (P1):** separately measure *remote* checkout-to-first-hit trials
+on Windows/macOS/Linux with hardware, network, failures and timestamps.
+
 ### P0 — Verify local-recall evidence against committed Markdown (#144 / PR #145; 2026-11-21)
 
 - [x] **Reproduced in isolation:** the prior local-clone probe could accept a

@@ -7,11 +7,13 @@ runs the documented ingest/search commands there. This includes local Git
 clone time, NOT GitHub download latency, Python installation or editor time.
 No network, LLM, user vault, or package installation is involved.
 """
+import argparse
 import datetime
 import json
 import os
 import re
 import sqlite3
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -21,6 +23,7 @@ from contextlib import closing
 
 ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT = 180
+MAX_REPEAT = 5
 ENV_KEYS = ("PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT",
             "TEMP", "TMP", "TMPDIR", "HOME", "USERPROFILE", "HOMEDRIVE",
             "HOMEPATH", "LANG", "LC_ALL", "LC_CTYPE")
@@ -153,13 +156,48 @@ def measure(source=ROOT, timeout=TIMEOUT):
         result["elapsed_ms"] = round((time.perf_counter() - start) * 1000, 3)
 
 
-def main():
+def evaluate(repeat, source=ROOT, timeout=TIMEOUT):
+    """Repeat the full temporary-clone path; report failures, not just a median.
+
+    Each trial gets a fresh Git clone and SQLite index. Median includes failed
+    trials to avoid silently cherry-picking fast successes.
+    """
+    trials = [measure(source, timeout) for _ in range(repeat)]
+    durations = [trial["elapsed_ms"] for trial in trials]
+    successes = sum(trial["status"] == "pass" for trial in trials)
+    report = {
+        "repeat": repeat,
+        "successes": successes,
+        "success_rate": round(successes / repeat, 3),
+        "median_ms": round(statistics.median(durations), 3),
+        "max_ms": max(durations),
+        "trials": trials,
+    }
+    if repeat == 1:
+        # Keep the existing one-trial JSON keys for CI consumers.
+        report.update(trials[0])
+    else:
+        report.update({
+            "status": "pass" if successes == repeat else "fail",
+            "reason": "ok" if successes == repeat else "one_or_more_trials_failed",
+            "elapsed_ms": round(sum(durations), 3),
+        })
+    return report
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--repeat", type=int, default=1,
+                        help="independent local-clone trials (1..5, default 1)")
+    args = parser.parse_args(argv)
+    if not 1 <= args.repeat <= MAX_REPEAT:
+        parser.error("--repeat must be between 1 and %d" % MAX_REPEAT)
     report = {"schema_version": 1,
               "observed_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
               "probe": "clean_local_git_clone_to_first_keyword_hit",
               "scope": "local committed Git clone + index + keyword search; excludes remote network, Python setup and editor time",
               "python": sys.version.split()[0], "platform": sys.platform}
-    report.update(measure())
+    report.update(evaluate(args.repeat))
     print(json.dumps(report, sort_keys=True, ensure_ascii=False))
     return 0 if report["status"] == "pass" else 1
 

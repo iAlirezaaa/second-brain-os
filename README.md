@@ -97,6 +97,15 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
+For a **repeatability check** on independent temporary clones, use
+`python scripts/clean_checkout_recall.py --repeat 3` (1–5 trials; default 1).
+JSON includes each trial's outcome, successful-trial count, success rate,
+median wall time **including failures**, and maximum trial time. Any failed
+trial gives a nonzero exit. This is still an **offline local-clone diagnostic**,
+not a measure of network download, first-time Python setup, user adoption or
+a guarantee of a five-minute first session. The multi-trial option is proposed
+in PR #145, not released.
+
 ### Put personal knowledge in a separate local brain (optional)
 
 The first search above explores this repository's documentation, **not your
