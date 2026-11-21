@@ -25,6 +25,31 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — macOS first-use evidence must also pass health (#144, PR #145; 2026-11-21)
+
+- [ ] **S, red-first:** the existing focused macOS 15/Python 3.12 CI
+      job proved synthetic install and recall but did not invoke
+      `scripts/health.py`; a separate integrity-gate regression on macOS
+      could therefore coexist with a green first-recall witness.
+      The existing onboarding test asserts the macOS job runs health
+      **before** its focused regression suite. No new discovered test method.
+- [ ] Add a standalone `Vault health (macOS)` step to that same job,
+      without changing the required Ubuntu/Windows matrix, backup/restore,
+      cache, core runtime, dependencies or user files.
+      **Acceptance:** the macOS health step, the macOS focused/installed
+      recall steps and all seven other jobs succeed on the exact new SHA;
+      independent review and the unchanged protected-main rules remain
+      mandatory before merge. This is *not* full macOS-suite coverage or
+      end-to-end Git clone latency. **Rollback:** revert this CI/test/docs
+      delta if an actual supported-runner incompatibility is verified.
+
+**Next 1 (P0):** inspect the exact-head eight-job CI and coordinate #111,
+#134 and #145 with protected-main check-name repair #107; never bypass the
+required checks.
+**Next 2 (P1):** measure clean-clone to source-backed first hit on
+Windows/macOS/Linux, recording repeats, failures and environment provenance
+before claiming a sub-five-minute result.
+
 ### P0 — Bound installed-home verification, not just subprocesses (#144, PR #145; 2026-11-20)
 
 - [ ] In the synthetic installed-home first-recall probe, make SQLite source-row
