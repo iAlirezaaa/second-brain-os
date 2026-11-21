@@ -106,6 +106,13 @@ not a measure of network download, first-time Python setup, user adoption or
 a guarantee of a five-minute first session. The multi-trial option is proposed
 in PR #145, not released.
 
+In the proposed CI, the four Windows/Ubuntu configurations and focused macOS
+job each run **three independent local Git clones** (`--repeat 3`), failing
+if any sample cannot return a source-backed keyword hit. The JSON retains
+all trials rather than cherry-picking one fast result. Remote download,
+Python setup and real-user time-to-first-result remain unknown; PR #145
+is not merged.
+
 ### Put personal knowledge in a separate local brain (optional)
 
 The first search above explores this repository's documentation, **not your

@@ -25,6 +25,33 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P1 — Require repeated local-recall evidence in CI (#144 / PR #145; 2026-11-21)
+
+- [x] **Baseline:** the committed-checkout probe supports 1–5 independent
+      trials, but the five CI platform/Python jobs ran only the default **one**
+      attempt. That cannot show intermittent failures or a per-job denominator.
+- [x] **Scoped CI correction (S):** all four Windows/Ubuntu jobs and the
+      focused macOS job now run `python scripts/clean_checkout_recall.py
+      --repeat 3`. The existing probe uses a disposable clone per trial
+      and reports per-trial failures, success rate, median (including failures)
+      and maximum elapsed time; any failed trial rejects the job. The existing
+      unittest holds the active YAML step against regression. No production
+      index, user data, dependency, permission or architecture change.
+- [ ] **Acceptance:** require 3/3 source-backed *local* hits in each of
+      five platform/Python jobs and eight successful exact-head CI jobs,
+      including cross-host restore. Independent review and protected-main
+      check-context repair (#107) gate any merge. Remote clone-to-first-use
+      latency remains **unknown**. Rollback: revert this CI/test/docs commit.
+
+**Next 1 (P0):** verify exact-head CI; reconcile #111/#134/#145 and repair
+#107 without weakening protected-main checks.
+**Next 2 (P1):** record repeated **remote** clone-to-first-hit trials with
+machine/network context, timestamps and failure counts on three OSes.
+Competitor-risk signal (not a demonstrated SBO defect, no code copied):
+[Letta #5594](https://github.com/letta-ai/letta-code/issues/5594)
+reports Git overhead on large local-memory repositories; independently
+evaluate corpus-size scaling before making a performance claim.
+
 ### P1 — Repeatable honest local-clone recall trials (#144 / PR #145; 2026-11-21)
 
 - [x] **Baseline:** the existing committed-checkout probe executes exactly

@@ -53,10 +53,10 @@ jobs:
         run: |
           python scripts/kb.py ingest
           python scripts/kb.py search "memory"
-      # Include the committed local Git-clone cost in every supported matrix runner.
-      # This stays offline; it does not measure GitHub network download or Python setup.
+      # Require 3 independent committed local Git-clone trials per supported runner.
+      # Report every failure; excludes GitHub download and Python setup.
       - name: Clean local checkout to first keyword hit (matrix JSON)
-        run: python scripts/clean_checkout_recall.py
+        run: python scripts/clean_checkout_recall.py --repeat 3
       # Each OS/Python job emits its own machine-readable, explicitly synthetic
       # offline recall success/latency report. This does NOT measure clone time.
       - name: Offline first-recall smoke (synthetic JSON)
@@ -98,9 +98,9 @@ jobs:
       # Run both the low-level probe and the copyable private-home onboarding
       # contract; Windows/Ubuntu already exercise these in the full suite.
       # Measure a disposable, committed local Git clone through SQLite-backed
-      # source recall; network download and Python setup are NOT included.
+      # source recall, 3 independent attempts; network download and Python setup are NOT included.
       - name: Clean local checkout to first keyword hit (macOS JSON)
-        run: python scripts/clean_checkout_recall.py
+        run: python scripts/clean_checkout_recall.py --repeat 3
       - name: Focused first-recall and onboarding regressions (macOS)
         run: python -m unittest discover -s tests -p "test_first_*.py" -v
       - name: Installed-home first recall (macOS synthetic JSON; excludes clone)

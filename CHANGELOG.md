@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Changed (issue #144; PR #145 draft — three-trial cross-platform CI)
+- The four Windows/Ubuntu jobs and focused macOS first-use job now run
+  `clean_checkout_recall.py --repeat 3` instead of one local trial. Each
+  trial clones committed Markdown independently and validates a SQLite-backed
+  source keyword hit. Existing JSON includes every outcome, success rate and
+  median including failures; any failed trial fails the CI step. A regression
+  holds the executable workflow command, not a comment. This covers **offline
+  local** Git clones only, not network download, Python setup or real users.
+  Final-head eight-job CI, independent review and lawful repair of #107
+  remain required before merge. No production runtime, dependencies, private
+  notes or permissions change. Rollback: revert this CI/test/docs commit.
+
 ### Added (issue #144; PR #145 draft — repeatable local-clone recall)
 - The existing offline first-keyword-hit probe supports optional `--repeat 1..5`
   with a fresh disposable clone for each attempt. JSON records individual

@@ -107,15 +107,15 @@ class FirstSessionOnboarding(unittest.TestCase):
                         matrix_job.index("run: python scripts/first_success.py --repeat 3"),
                         "public README recall must precede synthetic smoke")
         # An executable YAML step, not a comment or a quoted string, must
-        # measure committed-clone recall on both Windows and Ubuntu.
+        # measure three independent committed-clone recall trials on Windows and Ubuntu.
         self.assertRegex(
             matrix_job,
             r'(?m)^      - name: Clean local checkout to first keyword hit \(matrix JSON\)\r?\n'
-            r'        run: python scripts/clean_checkout_recall\.py$',
+            r'        run: python scripts/clean_checkout_recall\.py --repeat 3$',
             "matrix runners must execute local-clone recall as a CI step")
         self.assertLess(
             matrix_job.index(readme_commands),
-            matrix_job.index("run: python scripts/clean_checkout_recall.py"),
+            matrix_job.index("run: python scripts/clean_checkout_recall.py --repeat 3"),
             "real README recall must precede the local-clone measurement")
         # Scope the macOS assertion to its own job, never to matrix commands.
         self.assertIn("  first-recall-macos:\n", ci)
@@ -139,8 +139,8 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertRegex(
             macos_job,
             r'(?m)^      - name: Clean local checkout to first keyword hit \(macOS JSON\)\r?\n'
-            r'        run: python scripts/clean_checkout_recall\.py$',
-            "macOS must execute the checkout probe as a YAML step, not commented text")
+            r'        run: python scripts/clean_checkout_recall\.py --repeat 3$',
+            "macOS must execute all three checkout trials as a YAML step, not commented text")
         self.assertLess(macos_job.index(health_step), macos_job.index(readme_commands),
                         "macOS health must run before the real README witness")
         self.assertLess(macos_job.index(health_step), macos_job.index(focused_step),
