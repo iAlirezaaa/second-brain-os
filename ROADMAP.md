@@ -336,6 +336,32 @@ under-five-minute usability target.
 
 ---
 
+### P0/P1 — Observable local Git checkout to first source hit (#144; PR #145, 2026-11-21)
+
+- [ ] **P0, S:** Run `scripts/clean_checkout_recall.py` from a checkout.
+      A no-hardlinks local Git clone must index only committed Markdown and
+      produce at least one verified SQLite-backed source path for
+      `python scripts/kb.py search "memory"`. Return nonzero and a stable
+      JSON failure reason for missing Git, zero hits, corrupt index or timeout.
+      The existing onboarding test guards its schema and the macOS CI invocation.
+      Record clone/index/search/total milliseconds without claiming remote
+      network speed, Python setup, private data or semantic retrieval.
+- [ ] **P0:** Require final-head health, full Windows/Ubuntu matrix, macOS
+      first-use witness and independent backup/restore CI before merge.
+      Reconcile overlapping #111/#134/#145 and resolve required-check drift
+      #107 through normal admin review, never bypassing branch protection.
+- [ ] **P1:** Independently time *remote* clone through a real first
+      source-backed result on clean Windows/macOS/Linux installations,
+      recording version, repetitions, failures and source provenance.
+      Only then assess the under-five-minute onboarding target.
+
+**Next 1 (P0):** inspect the final-head eight-job CI, fix any red step and
+coordinate overlapping security/probe PRs before a lawful merge.
+**Next 2 (P1):** measure real remote download + Python setup + first hit on
+three platforms with complete failure counts and no synthetic benchmark claim.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the
