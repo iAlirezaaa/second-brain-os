@@ -25,6 +25,33 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Repair a commented-out macOS clean-checkout probe (#144 / PR #145, 2026-11-21)
+
+- [ ] **Measured red baseline:** on draft head `ff50e149`,
+      `.github/workflows/ci.yml` contained literal backslash-n characters
+      in one comment line. The advertised macOS clean-checkout step was
+      commented out rather than executed. The full test run in
+      [Actions #44877287752](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44877287752)
+      reported a missing standalone step; earlier success does not verify
+      the latest branch. Later branch-push workflow records showed zero
+      jobs and remain a separate diagnostic, not a pass.
+- [ ] **S, bounded fix:** serialize that YAML block as actual lines and tighten
+      the existing onboarding regression to match a standalone step plus
+      the immediately following `run:` line. No new test method, library,
+      permission, network service, persistent user data or core change.
+      Rollback: revert this single CI/test/documentation commit.
+- [ ] **Acceptance:** macOS executes the real clean *local* Git-clone
+      probe and reports its JSON; the focused test, four matrix jobs and
+      independent backup/restore jobs all pass on this exact head.
+      Review #111/#134 overlaps and resolve #107 through approved
+      branch-protection review before merge. This does **not** measure
+      remote network clone or guarantee a sub-five-minute first use.
+
+**Next 1 (P0):** verify all exact-head CI jobs, inspect missing-job
+push workflows separately, and reconcile PRs #111/#134/#145 and #107.
+**Next 2 (P1):** run repeatable *remote* clone-to-first-hit trials
+with failure counts on Windows, macOS and Linux before advertising a result.
+
 ### P0 — Guard the published first recall against silent zero-hit drift (#144; PR #145, 2026-11-21)
 
 - [ ] **S, observed gap:** the Windows/Ubuntu and macOS jobs measured

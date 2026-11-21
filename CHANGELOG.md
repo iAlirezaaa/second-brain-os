@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — macOS clean-checkout CI wiring)
+- The macOS workflow's claimed `clean_checkout_recall.py` execution
+  was embedded in a comment by literal escaped newline characters;
+  a passing substring check could not distinguish that from an actual
+  CI step. The YAML now has a standalone executable step and the
+  existing onboarding regression matches the step and adjacent
+  `run:` as physical lines. The recorded red baseline is
+  [Actions #44877287752](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44877287752);
+  final-head eight-job validation, independent review and lawful
+  main-protection repair remain required before release. No new
+  dependency, credentials, personal files or security setting changed.
+
+
 ### Added (issue #144; PR #145 draft — local committed-clone timing)
 - A stdlib-only `scripts/clean_checkout_recall.py` probe creates a temporary
   no-hardlinks clone of the committed source, executes the real offline
