@@ -220,6 +220,41 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertGreaterEqual(clone_report["elapsed_ms"],
                                 clone_report["clone_ms"])
 
+        # Adversarial Git fixture: plausible text and a real Markdown file
+        # are NOT proof of recall when the SQLite index is corrupt.
+        import importlib.util
+        source_spec = importlib.util.spec_from_file_location(
+            "sbo_clean_checkout_probe", ROOT / "scripts" / "clean_checkout_recall.py")
+        clean_module = importlib.util.module_from_spec(source_spec)
+        source_spec.loader.exec_module(clean_module)
+        with tempfile.TemporaryDirectory(prefix="sbo-forged-git-") as directory:
+            fake_repo = Path(directory) / "source"
+            (fake_repo / "scripts").mkdir(parents=True)
+            (fake_repo / "02_WIKI").mkdir()
+            (fake_repo / "02_WIKI" / "memory.md").write_text(
+                "# Fake memory\\n", encoding="utf-8")
+            (fake_repo / "scripts" / "kb.py").write_text(
+                "import pathlib, sys\\n"
+                "if 'ingest' in sys.argv:\\n"
+                "    pathlib.Path('.kb').mkdir(exist_ok=True)\\n"
+                "    pathlib.Path('.kb/kb.sqlite').write_bytes(b'not sqlite')\\n"
+                "    print('indexed 1 notes')\\n"
+                "else:\\n"
+                "    print('02_WIKI/memory.md  [02_WIKI] forged result')\\n",
+                encoding="utf-8")
+            for args in (
+                    ("init", "-q"),
+                    ("add", "."),
+                    ("-c", "user.name=Fixture", "-c",
+                     "user.email=fixture@example.invalid",
+                     "commit", "-qm", "synthetic")):
+                step = subprocess.run(["git", *args], cwd=str(fake_repo),
+                                      capture_output=True, text=True, timeout=30)
+                self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
+            forged = clean_module.measure(fake_repo)
+        self.assertEqual(forged["status"], "fail", forged)
+        self.assertEqual(forged["reason"], "no_source_backed_hit", forged)
+
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
         import importlib.util
