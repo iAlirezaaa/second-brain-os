@@ -125,6 +125,8 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertIn("name: README offline keyword recall (macOS public checkout)",
                       macos_job)
         self.assertIn(readme_commands, macos_job)
+        self.assertIn("run: python scripts/clean_checkout_recall.py", macos_job,
+                      "macOS must measure a clean local Git clone through the real first hit")
         self.assertLess(macos_job.index(health_step), macos_job.index(readme_commands),
                         "macOS health must run before the real README witness")
         self.assertLess(macos_job.index(health_step), macos_job.index(focused_step),
@@ -198,6 +200,25 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(evidence["successes"], 1)
         self.assertEqual(evidence["trials"][0]["matched_paths"], ["02_WIKI/demo.md"])
         self.assertIn("excludes clone", evidence["scope"])
+
+        # A separate, failure-aware probe must include a fresh committed Git
+        # clone and verify its first hit points to a real checkout file.
+        # The clone is LOCAL; it intentionally makes no network-speed claim.
+        clone_probe = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "clean_checkout_recall.py")],
+            cwd=str(ROOT), capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=240)
+        self.assertEqual(clone_probe.returncode, 0,
+                         clone_probe.stdout + clone_probe.stderr)
+        clone_report = json.loads(clone_probe.stdout)
+        self.assertEqual(clone_report["probe"],
+                         "clean_local_git_clone_to_first_keyword_hit")
+        self.assertEqual(clone_report["status"], "pass", clone_report)
+        self.assertGreater(clone_report["indexed_notes"], 0)
+        self.assertTrue(clone_report["matched_paths"])
+        self.assertIn("excludes remote network", clone_report["scope"])
+        self.assertGreaterEqual(clone_report["elapsed_ms"],
+                                clone_report["clone_ms"])
 
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
