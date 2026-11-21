@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Changed (issue #144; PR #145 in review — macOS health before first-use witness)
+- The macOS 15 / Python 3.12 focused onboarding job now runs the real
+  `scripts/health.py` gate *before* its synthetic first-recall tests.
+  Previously macOS recall could be green without proving source-tree
+  integrity there. An existing onboarding regression checks both presence
+  and order of the workflow step. The prior head's eight successful CI
+  jobs do not certify this new step; require exact-head CI, independent
+  review and resolution of protected-main check-name drift (#107).
+  No user memory, production KB, packages, permissions or core architecture
+  change. This is not a full macOS test matrix or clone-to-first-result
+  timing claim. Rollback: revert the scoped CI/test/docs change.
+
 ### Changed (issue #144; PR #145 in review — macOS private-home onboarding regression)
 - The dedicated macOS 15/Python 3.12 job now runs *both* existing
   `test_first_*.py` modules, not just the synthetic low-level probe. That
