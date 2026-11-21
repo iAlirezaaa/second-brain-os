@@ -143,7 +143,7 @@ This bounded, offline smoke probe creates disposable Markdown, invokes the real
 success rate and per-trial/median latency. It exits nonzero on any failed
 trial and cleans up its temporary index. **It does not measure Git clone,
 installation, full first-use time, semantic recall or real-user performance.**
-The under-five-minute end-to-end onboarding goal remains unverified. A dedicated macOS 15/Python 3.12 CI smoke checks the installed-home path only, not full macOS support or clone time.
+The under-five-minute end-to-end onboarding goal remains unverified. A dedicated macOS 15/Python 3.12 CI job exercises the disposable installed-home path and both focused first-recall/onboarding test modules (including bilingual command-order and synthetic environment-canary checks). This is not the full macOS suite, real-user support certification or clone timing.
 
 To measure the optional **installed personal home** path separately, without
 using private notes, run `python scripts/first_success.py --installed-home --repeat 1`
@@ -153,9 +153,10 @@ actual SQLite source rows and declared index count. The measured interval now in
 SQLite validation and treats verification that exceeds the trial deadline as a
 timeout, rather than a successful fast recall; SQLite lock waiting is limited
 by the remaining deadline (not a hard filesystem time limit). It excludes
-Git clone, editor time and macOS unless run there. The CI matrix runs this
-same synthetic probe on Windows and Ubuntu; pass/fail and measured latencies
-are properties of those runners, not promises about user hardware.
+Git clone and editor time. Ubuntu/Windows matrix jobs and a dedicated
+macOS 15/Python 3.12 job run this synthetic installed-home probe; pass/fail
+and measured latencies describe those runners, not user hardware. The wider
+macOS onboarding assertions are pending fresh exact-head CI verification.
 The installed-home synthetic installer and KB subprocesses now receive a
 minimal process environment, not the shell's unrelated API keys or `PYTHONPATH`.
 This is **not** an OS sandbox, permission boundary, or verified host integration;
