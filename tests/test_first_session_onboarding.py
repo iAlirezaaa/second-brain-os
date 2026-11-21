@@ -104,9 +104,15 @@ class FirstSessionOnboarding(unittest.TestCase):
         # macOS must exercise both the probe and the real bilingual/private-home
         # onboarding regression. A single-file smoke could miss installer or
         # privacy-boundary failures that only reproduce on macOS.
-        self.assertIn(
-            'run: python -m unittest discover -s tests -p "test_first_*.py" -v',
-            macos_job)
+        # The macOS job previously covered recall only. Require the actual
+        # source-tree integrity gate before declaring the first-use witness OK.
+        health_step = "run: python scripts/health.py"
+        focused_step = 'run: python -m unittest discover -s tests -p "test_first_*.py" -v'
+        self.assertIn(health_step, macos_job,
+                      "macOS must run the full repository health gate")
+        self.assertIn(focused_step, macos_job)
+        self.assertLess(macos_job.index(health_step), macos_job.index(focused_step),
+                        "macOS health must precede onboarding tests")
         self.assertIn(
             "run: python scripts/first_success.py --installed-home --repeat 1",
             macos_job)
