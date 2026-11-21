@@ -64,18 +64,14 @@ version such as 3.10 is required. Use a UTF-8 terminal for non-ASCII output.
 ```bash
 git clone https://github.com/iAlirezaaa/second-brain-os.git
 cd second-brain-os
-python scripts/health.py
-python -m unittest discover -s tests
+python scripts/kb.py ingest
+python scripts/kb.py search "memory"
 ```
 
 ### Your first local recall (no account or model)
 
-From the cloned repository, run:
-
-```bash
-python scripts/kb.py ingest
-python scripts/kb.py search "memory"
-```
+The final two commands above create a local index and display the first
+keyword matches immediately, without requiring the full maintainer test suite.
 
 The first command builds a local index of the repository's tracked Markdown; the
 second prints matching file paths and excerpts. Your index lives at `.kb/kb.sqlite`,
@@ -86,6 +82,84 @@ knowledge boundaries. Re-run `python scripts/kb.py ingest` after updating to
 remove any older aliases from your derived index. In your own installed brain,
 index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
+
+
+For a **local Git-clone-to-first-hit diagnostic**, run
+`python scripts/clean_checkout_recall.py` from a Git checkout. It makes a
+disposable no-hardlinks clone of committed files, runs the real offline
+ingest/search commands, checks that SQLite contains the reported source hits **and** that each indexed title/body substantiates the `memory` keyword, and independently checks that the committed Markdown text or source filename contains that keyword,
+and prints failure-aware JSON with clone, index, search and total time. This
+**includes local Git clone time but excludes GitHub/network download, Python
+installation, human editing and personal note ingestion**. It does not yet
+establish five-minute end-to-end onboarding; independent full-path platform
+timings are still needed. This probe is under review, not released. The draft CI workflow is
+configured to run the same disposable local-clone probe in all four
+Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
+completed exact-commit runs provide evidence. None measures network download.
+
+For a **repeatability check** on independent temporary clones, use
+`python scripts/clean_checkout_recall.py --repeat 3` (1–5 trials; default 1).
+JSON includes each trial's outcome, successful-trial count, success rate,
+median wall time **including failures**, and maximum trial time. Any failed
+trial gives a nonzero exit. This is still an **offline local-clone diagnostic**,
+not a measure of network download, first-time Python setup, user adoption or
+a guarantee of a five-minute first session. The multi-trial option is proposed
+in PR #145, not released.
+
+In the proposed CI, the four Windows/Ubuntu configurations and focused macOS
+job each run **three independent local Git clones** (`--repeat 3`), failing
+if any sample cannot return a source-backed keyword hit. The JSON retains
+all trials rather than cherry-picking one fast result. Remote download,
+Python setup and real-user time-to-first-result remain unknown; PR #145
+is not merged.
+
+### Put personal knowledge in a separate local brain (optional)
+
+The first search above explores this repository's documentation, **not your
+personal memory**. To make a local home for your own Markdown, choose a new,
+empty directory *outside* this public source checkout:
+
+```bash
+python scripts/install.py --target ../my-private-brain
+cd ../my-private-brain
+```
+
+In that new directory, use a local editor to create
+`02_WIKI/my-first-note.md` containing an original, non-sensitive test
+sentence with the exact word `YOUR_UNIQUE_TERM`. Then run:
+
+```bash
+python scripts/kb.py ingest
+python scripts/kb.py search "YOUR_UNIQUE_TERM"
+```
+
+Confirm that the result names `02_WIKI/my-first-note.md`. The installer
+refuses a nonempty destination; it does not overwrite an existing brain.
+This separate folder is **not inside the cloned project's Git repository**,
+but you must still check whether a parent directory is synced or tracked
+before entering any private information. A local folder is not encryption
+or an OS-enforced permission boundary. Never commit or publish private
+notes or credentials. This is a separate personal-home walkthrough, **not**
+a measured clean-clone timing or evidence of multi-host compatibility.
+
+### Full repository checks (for contributors)
+
+After your first search, return to the **source checkout** before running its
+health gates and complete test suite. This matters if you followed the optional
+private-home installation above: that installed home ships only its own
+installed-home test, not the complete repository suite. Run these checks
+**before proposing code changes**:
+
+```bash
+cd ../second-brain-os
+python scripts/health.py
+python -m unittest discover -s tests
+```
+
+These may take longer than a first search. They are contributor verification
+steps, not prerequisites for using the offline keyword index. The total
+clone-to-first-result time has not been independently measured on all target
+platforms.
 
 To verify this path independently on **synthetic** notes (no private data), run:
 
@@ -98,7 +172,24 @@ This bounded, offline smoke probe creates disposable Markdown, invokes the real
 success rate and per-trial/median latency. It exits nonzero on any failed
 trial and cleans up its temporary index. **It does not measure Git clone,
 installation, full first-use time, semantic recall or real-user performance.**
-The current under-five-minute end-to-end onboarding goal remains unverified.
+The under-five-minute end-to-end onboarding goal remains unverified. A dedicated macOS 15/Python 3.12 CI job exercises the disposable installed-home path and both focused first-recall/onboarding test modules (including bilingual command-order and synthetic environment-canary checks). This is not the full macOS suite, real-user support certification or clone timing.
+
+To measure the optional **installed personal home** path separately, without
+using private notes, run `python scripts/first_success.py --installed-home --repeat 1`
+from the source checkout. Its JSON covers local install, synthetic note creation,
+indexing and keyword retrieval, checks the cited path and verifies the
+actual SQLite source rows and declared index count. The measured interval now includes
+SQLite validation and treats verification that exceeds the trial deadline as a
+timeout, rather than a successful fast recall; SQLite lock waiting is limited
+by the remaining deadline (not a hard filesystem time limit). It excludes
+Git clone and editor time. Ubuntu/Windows matrix jobs and a dedicated
+macOS 15/Python 3.12 job run this synthetic installed-home probe; pass/fail
+and measured latencies describe those runners, not user hardware. The wider
+macOS onboarding assertions are pending fresh exact-head CI verification.
+The installed-home synthetic installer and KB subprocesses now receive a
+minimal process environment, not the shell's unrelated API keys or `PYTHONPATH`.
+This is **not** an OS sandbox, permission boundary, or verified host integration;
+the default first-recall probe has a separate pending fix in PR #134.
 See [first-success acceptance criteria](https://github.com/iAlirezaaa/second-brain-os/issues/93).
 
 Use the CLI to discover skills, open an accountable session and monitor it:

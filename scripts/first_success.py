@@ -11,18 +11,37 @@ Returns JSON and exits nonzero if any synthetic ingest/recall trial fails.
 import argparse
 import datetime
 import json
+import os
 import re
+import sqlite3
 import statistics
 import subprocess
 import sys
 import tempfile
 import time
+from contextlib import closing
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 EXPECTED = "02_WIKI/demo.md"
 QUERY = "ORCHIDMEMORY2026"
 MAX_REPEAT = 10
+
+# Minimize inherited settings for the disposable install+recall subprocesses.
+# This mirrors PR #134's environment boundary; it is not a process sandbox.
+_CHILD_ENV_KEYS = (
+    "PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT",
+    "TEMP", "TMP", "TMPDIR", "HOME", "USERPROFILE",
+    "HOMEDRIVE", "HOMEPATH", "LANG", "LC_ALL", "LC_CTYPE",
+)
+
+
+def _child_environment():
+    env = {key: os.environ[key] for key in _CHILD_ENV_KEYS if key in os.environ}
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONNOUSERSITE"] = "1"
+    return env
+
 
 
 def trial(kb_script, timeout=30):
@@ -38,19 +57,30 @@ def trial(kb_script, timeout=30):
             "# A different note\nThis note has no matching token.\n",
             encoding="utf-8")
 
+        start = time.perf_counter()
+
+        # Ingest and search share one budget. Per-subprocess timeouts could
+        # otherwise double the declared maximum, especially on a hung CLI.
+        def time_left():
+            remaining = timeout - (time.perf_counter() - start)
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired("synthetic first recall", timeout)
+            return remaining
+
         def invoke(*args):
             return subprocess.run(
                 [sys.executable, str(kb_script), *args, "--vault", str(vault)],
                 capture_output=True, text=True, encoding="utf-8", errors="replace",
-                timeout=timeout, check=False)
-
-        start = time.perf_counter()
+                timeout=time_left(), check=False)
         try:
             ingest = invoke("ingest")
             if ingest.returncode != 0:
                 return {"success": False, "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
                         "reason": "ingest_exit_nonzero"}
             search = invoke("search", QUERY)
+            # Compare unrounded time; rounding milliseconds may hide an overrun.
+            if time.perf_counter() - start > timeout:
+                raise subprocess.TimeoutExpired("synthetic first recall", timeout)
             elapsed = round((time.perf_counter() - start) * 1000, 3)
         except subprocess.TimeoutExpired:
             return {"success": False, "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
@@ -72,15 +102,118 @@ def trial(kb_script, timeout=30):
                 "matched_paths": paths}
 
 
-def evaluate(repeat, kb_script):
-    samples = [trial(kb_script) for _ in range(repeat)]
+
+def installed_home_trial(installer_script, timeout=180):
+    """Time actual local installation + keyword recall; clone and editor time excluded."""
+    with tempfile.TemporaryDirectory(prefix="sbo-installed-recall-") as tmp:
+        home = Path(tmp) / "my-private-brain"
+        start = time.perf_counter()
+
+        def failed(reason):
+            return {"success": False,
+                    "elapsed_ms": round((time.perf_counter() - start) * 1000, 3),
+                    "reason": reason}
+
+        # One budget for installation, indexing and search together. Giving
+        # each subprocess the full timeout can silently triple the wall time.
+        def time_left():
+            remaining = timeout - (time.perf_counter() - start)
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired("installed-home first recall", timeout)
+            return remaining
+
+        try:
+            install = subprocess.run(
+                [sys.executable, str(installer_script), "--target", str(home)],
+                cwd=str(HERE.parent), capture_output=True, text=True,
+                encoding="utf-8", errors="replace", timeout=time_left(), check=False,
+                env=_child_environment())
+            if install.returncode != 0:
+                return failed("install_exit_nonzero")
+            kb_script = home / "scripts" / "kb.py"
+            if not kb_script.is_file():
+                return failed("installed_kb_missing")
+
+            notes = home / "02_WIKI"
+            notes.mkdir(parents=True, exist_ok=True)
+            (notes / "demo.md").write_text(
+                "# First personal memory\n" + QUERY + " is a synthetic marker.\n",
+                encoding="utf-8")
+            (notes / "distractor.md").write_text(
+                "# Other note\nContains no recall marker.\n", encoding="utf-8")
+
+            def invoke(*args):
+                return subprocess.run(
+                    [sys.executable, str(kb_script), *args, "--vault", str(home)],
+                    cwd=str(home), capture_output=True, text=True,
+                    encoding="utf-8", errors="replace", timeout=time_left(), check=False,
+                    env=_child_environment())
+
+            ingest = invoke("ingest")
+            if ingest.returncode != 0:
+                return failed("ingest_exit_nonzero")
+            search = invoke("search", QUERY)
+            if time.perf_counter() - start > timeout:
+                return failed("timeout")
+        except subprocess.TimeoutExpired:
+            return failed("timeout")
+        except OSError:
+            return failed("process_or_filesystem_error")
+
+        # Verification of the *actual* index is part of the measured trial.
+        # The previous elapsed_ms snapshot excluded this last phase.
+        index = (home / ".kb" / "kb.sqlite").is_file()
+        indexed = re.search(r"\bindexed (\d+) notes\b", ingest.stdout)
+        paths = re.findall(r"(?m)^((?:[\w-]+/)+[\w.-]+\.md)\s+\[", search.stdout)
+        passed = (search.returncode == 0 and index and indexed is not None
+                  and int(indexed.group(1)) >= 2 and paths == [EXPECTED])
+        if passed:
+            # A CLI can print a plausible result and leave an empty or corrupt
+            # SQLite file. Verify real notes plus the advertised row count.
+            # The installer also ships other Markdown, so NOT exactly 2 rows.
+            try:
+                # Limit SQLite lock waiting to the remaining wall-clock budget.
+                # This is not a hard OS-level deadline for arbitrary disk I/O.
+                with closing(sqlite3.connect(
+                        str(home / ".kb" / "kb.sqlite"),
+                        timeout=max(0.001, time_left()))) as conn:
+                    total = conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
+                    rows = conn.execute(
+                        "SELECT path, body FROM notes WHERE path IN (?, ?)",
+                        (EXPECTED, "02_WIKI/distractor.md")).fetchall()
+                expected = {
+                    EXPECTED: (notes / "demo.md").read_text(encoding="utf-8"),
+                    "02_WIKI/distractor.md":
+                        (notes / "distractor.md").read_text(encoding="utf-8"),
+                }
+                passed = (total == int(indexed.group(1))
+                          and len(rows) == 2 and dict(rows) == expected)
+            except subprocess.TimeoutExpired:
+                return failed("timeout")
+            except (sqlite3.Error, OSError):
+                passed = False
+        if time.perf_counter() - start > timeout:
+            return failed("timeout")
+        elapsed = round((time.perf_counter() - start) * 1000, 3)
+        return {"success": bool(passed), "elapsed_ms": elapsed,
+                "reason": "ok" if passed else "unexpected_search_or_index",
+                "indexed_notes": int(indexed.group(1)) if indexed else None,
+                "matched_paths": paths}
+
+
+def evaluate(repeat, kb_script, installed_home=False):
+    samples = [installed_home_trial(HERE / "install.py") if installed_home
+               else trial(kb_script) for _ in range(repeat)]
     successes = sum(1 for sample in samples if sample["success"])
     durations = [sample["elapsed_ms"] for sample in samples]
     return {
         "schema_version": 1,
         "observed_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-        "probe": "synthetic_keyword_ingest_then_recall",
-        "scope": "local CLI subprocess startup + synthetic indexing + keyword search; excludes clone, health and setup",
+        "probe": ("synthetic_installed_home_keyword_recall" if installed_home
+                  else "synthetic_keyword_ingest_then_recall"),
+        "scope": ("local install + synthetic note creation + indexing + keyword search; excludes clone, editor time and health"
+                  if installed_home else
+                  "local CLI subprocess startup + synthetic indexing + keyword search; excludes clone, health and setup"),
         "dependencies": "Python standard library; no model or account",
         "python": sys.version.split()[0],
         "platform": sys.platform,
@@ -98,11 +231,13 @@ def main(argv=None, kb_script=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repeat", type=int, default=3,
                         help="number of independent synthetic trials (1..10, default 3)")
+    parser.add_argument("--installed-home", action="store_true",
+                        help="time a fresh local install, synthetic indexing and recall (excludes git clone)")
     args = parser.parse_args(argv)
     if not 1 <= args.repeat <= MAX_REPEAT:
         parser.error("--repeat must be between 1 and %d" % MAX_REPEAT)
     script = Path(kb_script) if kb_script is not None else HERE / "kb.py"
-    result = evaluate(args.repeat, script)
+    result = evaluate(args.repeat, script, installed_home=args.installed_home)
     print(json.dumps(result, sort_keys=True, ensure_ascii=False))
     return 0 if result["status"] == "pass" else 1
 
