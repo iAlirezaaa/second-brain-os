@@ -490,6 +490,17 @@ class FirstSessionOnboarding(unittest.TestCase):
                                     encoding="utf-8")
             self.assertTrue(clean_module._source_supports_keyword(
                 checkout, "02_WIKI/ordinary.md"))
+            # Red-first (#146): even if a SQLite row exactly matches the
+            # bytes behind a path, it is not public committed provenance when
+            # that path is denied or masquerades as a symlink/junction.
+            public_row = ("ordinary", "Synthetic public memory.\n",
+                          "synthetic public memory.\n")
+            private_row = ("private", "Synthetic restricted memory.\n",
+                           "synthetic restricted memory.\n")
+            self.assertTrue(clean_module._indexed_row_matches_source(
+                checkout, "02_WIKI/ordinary.md", public_row))
+            self.assertFalse(clean_module._indexed_row_matches_source(
+                checkout, "09_OPERATIONS/private.md", private_row))
             self.assertFalse(clean_module._source_supports_keyword(
                 checkout, "09_OPERATIONS/private.md"))
             self.assertFalse(clean_module._source_supports_keyword(
