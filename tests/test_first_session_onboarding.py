@@ -279,7 +279,30 @@ class FirstSessionOnboarding(unittest.TestCase):
         # connection in CI. file:// forces Git's transfer path instead of
         # the local hardlink-optimized checkout mode; the CLI itself will
         # only offer the fixed public GitHub URL.
-        transferred = clean_module.measure(ROOT.as_uri(), remote=True)
+        # Before this guard, remote children inherited HOME/USERPROFILE.
+        # Watch the actual file:// transfer path, not just a helper in isolation.
+        with patch.object(clean_module, "_child_env",
+                          wraps=clean_module._child_env) as observed_env:
+            transferred = clean_module.measure(ROOT.as_uri(), remote=True)
+        remote_homes = [call.args[0] for call in observed_env.call_args_list]
+        self.assertTrue(remote_homes, "every remote subprocess needs an environment")
+        self.assertTrue(all(home is not None for home in remote_homes))
+        self.assertEqual(len(set(map(str, remote_homes))), 1)
+        for home in remote_homes:
+            self.assertEqual(Path(home).name, "isolated-home")
+            child = clean_module._child_env(home)
+            self.assertEqual(child["HOME"], str(home))
+            self.assertEqual(child["USERPROFILE"], str(home))
+            self.assertNotEqual(child["HOME"],
+                                clean_module.os.environ.get("HOME"))
+            self.assertNotEqual(child["USERPROFILE"],
+                                clean_module.os.environ.get("USERPROFILE"))
+            if clean_module.os.name == "nt":
+                drive, tail = clean_module.os.path.splitdrive(str(home))
+                self.assertEqual(child["HOMEDRIVE"], drive)
+                self.assertEqual(child["HOMEPATH"], tail)
+        self.assertTrue(all(not Path(home).exists() for home in remote_homes),
+                        "temporary remote homes must be cleaned up")
         self.assertEqual(transferred["status"], "pass", transferred)
         self.assertEqual(transferred["transport"], "git_remote")
         self.assertEqual(transferred["commit_sha"], commit.stdout.strip())

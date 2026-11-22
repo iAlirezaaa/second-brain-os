@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — disposable child home for remote measurement)
+- Opt-in remote GitHub clone-to-recall trials now set `HOME`/`USERPROFILE`
+  (and matching Windows home-drive fields) to a disposable per-trial directory
+  for both Git and downloaded Python, rather than forwarding the real home
+  path. The existing file-transfer test inspects the actual environment
+  handoff and cleanup. Offline mode remains unchanged; no dependency or
+  persisted user-data migration. This reduces accidental environment exposure
+  but **is not a sandbox**: downloaded code still has the user's OS permissions.
+  Exact-head CI, independent review and lawful #107 protection remain merge
+  gates. Rollback: revert this scoped diagnostic/test/docs commit.
+
+
 ### Added (issue #147; PR #145 draft — opt-in public GitHub recall timing)
 - `scripts/clean_checkout_recall.py --github --repeat 3` may now
   measure a **fixed public HTTPS GitHub clone** through source-backed

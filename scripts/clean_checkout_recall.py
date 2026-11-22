@@ -38,10 +38,23 @@ ENV_KEYS = ("PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT",
             "HOMEPATH", "LANG", "LC_ALL", "LC_CTYPE")
 
 
-def _child_env():
+def _child_env(remote_home=None):
     env = {k: os.environ[k] for k in ENV_KEYS if k in os.environ}
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONNOUSERSITE"] = "1"
+    if remote_home is not None:
+        # Do not pass the user's real home path to downloaded Python code.
+        # This is environment hygiene, NOT an OS filesystem sandbox.
+        home = str(remote_home)
+        env["HOME"] = home
+        env["USERPROFILE"] = home
+        if os.name == "nt":
+            drive, tail = os.path.splitdrive(home)
+            env["HOMEDRIVE"] = drive
+            env["HOMEPATH"] = tail
+        else:
+            env.pop("HOMEDRIVE", None)
+            env.pop("HOMEPATH", None)
     return env
 
 
@@ -154,6 +167,8 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
               "indexed_notes": None, "matched_paths": [], "commit_sha": None,
               "transport": "git_remote" if remote else "local_git"}
 
+    remote_home = None
+
     def remaining():
         left = timeout - (time.perf_counter() - start)
         if left <= 0:
@@ -161,7 +176,7 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
         return left
 
     def invoke(args, cwd=None):
-        env = _child_env()
+        env = _child_env(remote_home if remote else None)
         if remote:
             # Public HTTPS must not prompt for credentials or read Git configs
             # that could rewrite this URL to a private host.
@@ -192,6 +207,11 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
         result["preflight_ms"] = round((preflight_end - start) * 1000, 3)
         with tempfile.TemporaryDirectory(prefix="sbo-clean-checkout-") as temp:
             checkout = Path(temp) / "second-brain-os"
+            if remote:
+                # Per-trial disposable home, shared by Git and the downloaded
+                # indexer; deleted with the temporary checkout on exit.
+                remote_home = Path(temp) / "isolated-home"
+                remote_home.mkdir()
             clone_cmd = (["git", "-c", "credential.helper=", "clone",
                           "--quiet", "--no-hardlinks"] if remote else
                          ["git", "clone", "--quiet", "--local", "--no-hardlinks"])

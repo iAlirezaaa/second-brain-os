@@ -167,8 +167,12 @@ JSON separates `transport: git_remote`, the exact downloaded `commit_sha`,
 network-inclusive `clone_ms`, total elapsed time, successful trials and failures.
 No arbitrary repository URL can be passed on the command line. Git credential
 helpers, terminal prompts and user/system Git configuration are disabled in
-this mode; the downloaded project's Python indexer still executes as a normal
-local process, **not** in a sandbox. Only run code from a source you trust.
+this mode. Each trial gives Git and the downloaded indexer a disposable
+`HOME` and `USERPROFILE` (plus matching Windows home-drive variables), rather
+than forwarding the caller's home path in the child environment. This reduces
+accidental ambient home/config exposure; it is **not** an OS sandbox.
+Downloaded Python still has the caller's filesystem and network privileges
+and may discover files through other means. Run only trusted source code.
 
 The default command (without `--github`) remains network-free. CI tests
 the alternate Git transfer path via a local `file://` transport and does

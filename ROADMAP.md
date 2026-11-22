@@ -25,6 +25,29 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Reduce ambient home-path exposure in the opt-in GitHub recall probe (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline (reviewed in draft source):** downloaded `scripts/kb.py`
+      was executed with child `HOME`/`USERPROFILE` inherited from the caller.
+      Git credential-helper suppression alone does not hide the local home
+      path from downloaded Python.
+- [x] **Bounded fix (S):** per remote trial, create a throwaway home
+      and set child `HOME`/`USERPROFILE` plus Windows home-drive fields.
+      Extend the existing file-transfer regression to observe this environment
+      on Git and indexer calls and check temporary cleanup. The offline
+      default is unchanged; no dependency, schema, or permission changes.
+- [ ] **Acceptance:** verify exact-head eight-job CI on Windows, Ubuntu,
+      macOS; obtain independent review and resolve protected-main #107
+      without bypass. This is environment hygiene, **not** process sandboxing:
+      the downloaded indexer retains filesystem/network privileges.
+      Rollback: revert this scoped diagnostic/test/docs commit.
+
+**Next 1 (P0):** verify CI and independent review for #145; reconcile #107
+and overlapping PRs before merging.
+**Next 2 (P1):** measure actual HTTPS GitHub-to-first-hit on three OS
+families with failure counts, date and SHA; real-user under-five-minute
+success remains unknown.
+
 ### P1 — Optional real public GitHub clone to first recall (#147 / PR #145; 2026-11-22)
 
 - [x] **Baseline:** the prior local no-hardlinks clone omits remote GitHub
