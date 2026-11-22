@@ -86,8 +86,8 @@ index your notes with the same command from that brain's directory. See the
 
 The local-clone diagnostic accepts search-result Markdown paths with spaces or
 square brackets; its Git-tree and SQLite/source checks still have to validate
-each match. It does not test the remote GitHub download or guarantee first-use
-latency.
+each match. In default (offline) mode it does not test the remote GitHub download
+or guarantee first-use latency.
 
 For a **local Git-clone-to-first-hit diagnostic**, run
 `python scripts/clean_checkout_recall.py` from a Git checkout. It makes a
@@ -157,6 +157,26 @@ if any sample cannot return a source-backed keyword hit. The JSON retains
 all trials rather than cherry-picking one fast result. Remote download,
 Python setup and real-user time-to-first-result remain unknown; PR #145
 is not merged.
+
+### Optional public GitHub download-to-first-recall diagnostic (in review)
+
+`python scripts/clean_checkout_recall.py --github --repeat 3` opts in to
+a real **HTTPS clone from this project's fixed public GitHub URL**, followed
+by the same committed-tree, SQLite and Markdown checks as the offline probe.
+JSON separates `transport: git_remote`, the exact downloaded `commit_sha`,
+network-inclusive `clone_ms`, total elapsed time, successful trials and failures.
+No arbitrary repository URL can be passed on the command line. Git credential
+helpers, terminal prompts and user/system Git configuration are disabled in
+this mode; the downloaded project's Python indexer still executes as a normal
+local process, **not** in a sandbox. Only run code from a source you trust.
+
+The default command (without `--github`) remains network-free. CI tests
+the alternate Git transfer path via a local `file://` transport and does
+**not** claim to benchmark real GitHub HTTPS latency. The optional mode
+does not time Python installation, user typing or editor setup; independent
+Windows/macOS/Linux HTTPS measurements with observed failures are still
+needed before claiming a five-minute first use. This is a **Draft PR #145**
+feature tracked by issue #147, not a released capability.
 
 ### Put personal knowledge in a separate local brain (optional)
 

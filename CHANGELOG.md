@@ -6,6 +6,21 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Added (issue #147; PR #145 draft — opt-in public GitHub recall timing)
+- `scripts/clean_checkout_recall.py --github --repeat 3` may now
+  measure a **fixed public HTTPS GitHub clone** through source-backed
+  offline indexing and keyword recall, with exact Git SHA and failure-aware
+  JSON. Default mode is still offline and measures only local clone.
+  Public-mode Git credential helpers, global/system Git config and terminal
+  prompts are disabled; this is not process isolation or a security sandbox.
+  Existing onboarding regression tests an alternative Git `file://`
+  transfer on real temporary clones; that is **not** evidence of measured
+  GitHub HTTPS speed. Windows/macOS/Linux first-use network results remain
+  unknown. No new dependency, model, data migration or permission change.
+  Merge requires exact-head CI, review and protected-main #107 repair;
+  rollback is a scoped revert of this flag, test and documentation.
+
+
 ### Fixed (issue #144; PR #145 draft — spaced Markdown paths in local recall)
 - The offline clean-checkout witness now parses normal KB hit headers for
   Markdown filenames containing spaces or square brackets; the former regex

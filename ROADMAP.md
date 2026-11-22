@@ -25,6 +25,30 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P1 — Optional real public GitHub clone to first recall (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline:** the prior local no-hardlinks clone omits remote GitHub
+      download; existing measured milliseconds cannot substantiate a user's
+      network first-run time. GitHub issue #147 records the acceptance and
+      rollback; no performance result is inferred.
+- [x] **Bounded change (S):** add opt-in `--github` to the existing
+      stdlib probe. The fixed public HTTPS source cannot be redirected by a
+      CLI argument. Preserve HEAD/Markdown/SQLite verification, committed SHA,
+      per-run results and strict failure handling. Avoid credential helpers,
+      terminal prompts and user/system Git config; no core KB or storage change.
+- [ ] **Acceptance:** the existing onboarding unittest exercises real Git
+      transfer over `file://` on Windows/Ubuntu/macOS and keeps default
+      offline mode. Verify exact-head eight-job CI and independent review.
+      This is NOT a verified GitHub HTTPS latency benchmark or a sandbox.
+      Rollback: revert the optional flag, regression and bilingual docs;
+      no schema, permission or user-data migration.
+
+**Next 1 (P0):** check exact-head CI and independent review of #145;
+reconcile #107's obsolete main protection contexts without weakening checks.
+**Next 2 (P1):** run actual public GitHub HTTPS-to-first-hit measurements
+with independent attempts and failure counts on Windows, macOS and Linux,
+capturing dates, commit SHAs and network environment before a five-minute claim.
+
 ### P0 — Recheck the public-source boundary for SQLite evidence (#146 / PR #145; 2026-11-22)
 
 - [x] **Reproduced synthetic baseline:** the old SQLite/source row comparator read
