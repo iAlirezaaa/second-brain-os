@@ -241,18 +241,6 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertIsInstance(clone_report["preflight_ms"], float)
         self.assertGreaterEqual(clone_report["preflight_ms"], 0)
 
-        # Regression for issue #147: opt-in Git transport must exercise the
-        # same committed-source/SQLite witness without needing an internet
-        # connection in CI. file:// forces Git's transfer path instead of
-        # the local hardlink-optimized checkout mode; the CLI itself will
-        # only offer the fixed public GitHub URL.
-        transferred = clean_module.measure(ROOT.as_uri(), remote=True)
-        self.assertEqual(transferred["status"], "pass", transferred)
-        self.assertEqual(transferred["transport"], "git_remote")
-        self.assertEqual(transferred["commit_sha"], commit.stdout.strip())
-        self.assertTrue(transferred["matched_paths"])
-        self.assertGreaterEqual(transferred["elapsed_ms"], transferred["clone_ms"])
-
         # Repeatability is measured with independent clones, not by timing
         # one result twice. Preserve individual outcomes for auditing.
         repeated_probe = subprocess.run(
@@ -286,6 +274,18 @@ class FirstSessionOnboarding(unittest.TestCase):
             "sbo_clean_checkout_probe", ROOT / "scripts" / "clean_checkout_recall.py")
         clean_module = importlib.util.module_from_spec(source_spec)
         source_spec.loader.exec_module(clean_module)
+        # Regression for issue #147: opt-in Git transport must exercise the
+        # same committed-source/SQLite witness without needing an internet
+        # connection in CI. file:// forces Git's transfer path instead of
+        # the local hardlink-optimized checkout mode; the CLI itself will
+        # only offer the fixed public GitHub URL.
+        transferred = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertEqual(transferred["status"], "pass", transferred)
+        self.assertEqual(transferred["transport"], "git_remote")
+        self.assertEqual(transferred["commit_sha"], commit.stdout.strip())
+        self.assertTrue(transferred["matched_paths"])
+        self.assertGreaterEqual(transferred["elapsed_ms"], transferred["clone_ms"])
+
         # A real KB search prints the entire Markdown path before "  [zone]".
         # Spaces and brackets inside a valid filename must not disappear from
         # the recall witness; the indented excerpt is NOT another search hit.
