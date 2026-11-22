@@ -141,6 +141,15 @@ def measure(source=ROOT, timeout=TIMEOUT):
                 result["reason"] = "commit_unverified"
                 return result
             result["commit_sha"] = commit_sha
+            # Snapshot the tracked tree BEFORE running the indexer. A fake
+            # ingest may create a plausible Markdown note inside this clone;
+            # existing files are not necessarily committed source evidence.
+            tree = invoke(["git", "ls-tree", "-r", "-z", "--name-only", "HEAD"],
+                          cwd=checkout)
+            if tree.returncode != 0:
+                result["reason"] = "tracked_paths_unavailable"
+                return result
+            tracked_paths = set(tree.stdout.split("\0"))
             clone_end = time.perf_counter()
             result["clone_ms"] = round((clone_end - preflight_end) * 1000, 3)
             if not _checkout_paths_safe(checkout):
@@ -171,7 +180,8 @@ def measure(source=ROOT, timeout=TIMEOUT):
                 return result
             # Every reported hit must be a real local checked-in source.
             valid_hits = bool(hits) and all(
-                (checkout / path).is_file()
+                path in tracked_paths
+                and (checkout / path).is_file()
                 and ".." not in Path(path).parts
                 and _source_supports_keyword(checkout, path)
                 and not path.casefold().startswith(("09_operations/", "11_control/",
