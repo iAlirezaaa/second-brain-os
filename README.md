@@ -101,7 +101,8 @@ The diagnostic snapshots the committed Git tree **before ingest**. A path
 created by the indexing process (even if its Markdown, SQLite row and printed
 hit agree) is **not** a committed-source hit and fails with
 `no_source_backed_hit`. An unavailable Git tree is reported as
-`tracked_paths_unavailable`. This is a check on benchmark evidence only, not
+`tracked_paths_unavailable`. The HEAD-tree enumeration counts toward `clone_ms`,
+not `preflight_ms`. This is a check on benchmark evidence only, not
 on production note creation or a security sandbox.
 
 The draft local-clone diagnostic also refuses symlinked executable or
