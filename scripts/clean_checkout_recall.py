@@ -66,13 +66,26 @@ def _source_supports_keyword(checkout, relative_path, keyword="memory"):
     disposable checkout. Malformed/unreadable sources fail closed.
     """
     try:
-        source = (checkout / relative_path).resolve(strict=True)
-        if checkout.resolve() not in source.parents or not source.is_file():
+        relative = Path(relative_path)
+        if relative.is_absolute() or ".." in relative.parts:
             return False
-        if keyword.casefold() in Path(relative_path).stem.casefold():
+        # Even an alias that stays INSIDE the checkout can point at a denied
+        # human plane (e.g. 02_WIKI/alias.md -> 09_OPERATIONS/private.md).
+        # Compare the fully resolved source with the canonical expected path;
+        # this also catches symlinked parent directories and Windows junctions.
+        root = checkout.resolve(strict=True)
+        candidate = checkout / relative
+        source = candidate.resolve(strict=True)
+        denied = ("09_operations", "11_control", "12_runtime",
+                  "13_lab", "14_candidates", "15_system")
+        if (candidate.is_symlink() or source != root.joinpath(*relative.parts)
+                or root not in source.parents or not source.is_file()
+                or source.relative_to(root).parts[0].casefold() in denied):
+            return False
+        if keyword.casefold() in relative.stem.casefold():
             return True
         return keyword.casefold() in source.read_text(encoding="utf-8").casefold()
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, RuntimeError, ValueError):
         return False
 
 

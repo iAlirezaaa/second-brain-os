@@ -420,6 +420,43 @@ class FirstSessionOnboarding(unittest.TestCase):
             else:
                 self.assertFalse(clean_module._checkout_paths_safe(checkout))
 
+        # RED-FIRST: the old helper followed an in-checkout symlink from
+        # public 02_WIKI to denied 09_OPERATIONS, then called it a public hit.
+        # A synthetic Path.is_symlink alias proves this gate on Windows where
+        # creating real symlinks may require elevated privileges.
+        with tempfile.TemporaryDirectory(prefix="sbo-source-alias-") as directory:
+            checkout = Path(directory) / "checkout"
+            public = checkout / "02_WIKI"
+            restricted = checkout / "09_OPERATIONS"
+            public.mkdir(parents=True)
+            restricted.mkdir()
+            (public / "ordinary.md").write_text("Synthetic public memory.\n",
+                                                encoding="utf-8")
+            (public / "mock-alias.md").write_text("Synthetic public memory.\n",
+                                                  encoding="utf-8")
+            private_note = restricted / "private.md"
+            private_note.write_text("Synthetic restricted memory.\n",
+                                    encoding="utf-8")
+            self.assertTrue(clean_module._source_supports_keyword(
+                checkout, "02_WIKI/ordinary.md"))
+            self.assertFalse(clean_module._source_supports_keyword(
+                checkout, "09_OPERATIONS/private.md"))
+            self.assertFalse(clean_module._source_supports_keyword(
+                checkout, "../outside.md"))
+            actual_is_symlink = Path.is_symlink
+            with patch.object(Path, "is_symlink",
+                              lambda item: (item.name == "mock-alias.md"
+                                            or actual_is_symlink(item))):
+                self.assertFalse(clean_module._source_supports_keyword(
+                    checkout, "02_WIKI/mock-alias.md"))
+            try:
+                (public / "alias.md").symlink_to(private_note)
+            except (OSError, NotImplementedError):
+                pass  # Windows symlink privilege is optional; mock above is required.
+            else:
+                self.assertFalse(clean_module._source_supports_keyword(
+                    checkout, "02_WIKI/alias.md"))
+
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
         import importlib.util

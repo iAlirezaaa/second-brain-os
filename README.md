@@ -102,6 +102,11 @@ SQLite-cache paths (`scripts/`, `scripts/kb.py`, `.kb/`, `.kb/kb.sqlite`)
 with `unsafe_checkout_path` before launching the indexer and before
 checking index results. This prevents following obvious linked paths outside
 the disposable clone; it is **not** an OS-level execution sandbox.
+Reported Markdown hits are also rejected when their source path traverses a
+symlink or directory junction, **even if the target is inside the checkout**:
+a public-looking `02_WIKI/` alias must never validate text from the denied
+`09_OPERATIONS/` plane. This is a fail-closed diagnostic witness, not a
+claim that the operating system prevents a malicious local process.
 
 **Clean-source requirement:** the diagnostic refuses staged changes, modified
 tracked files and nonignored untracked files with `source_dirty` rather than

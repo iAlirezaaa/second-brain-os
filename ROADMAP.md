@@ -25,6 +25,28 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Reject Markdown aliases crossing memory-zone boundaries in recall evidence (#146 / PR #145; 2026-11-22)
+
+- [x] **Reproduced baseline:** the draft diagnostic's source verifier resolved
+      `02_WIKI/alias.md` into `09_OPERATIONS/restricted.md` inside the
+      same checkout, found the word `memory`, and incorrectly accepted that
+      as an independent public-source witness. Isolated Python symlink test
+      reproduced this false-positive; no real private data was read.
+- [x] **Bounded fix (S):** require regular, non-aliased Markdown paths, reject
+      links/junctions in any path segment and denied source planes, and keep
+      ordinary public Markdown hits working. An existing onboarding test method
+      covers regular, direct-restricted, traversal, simulated alias (Windows)
+      and real alias where permitted. No new dependency or runtime KB change.
+      A rejected witness yields the existing `no_source_backed_hit` reason.
+- [ ] **Merge gate:** final SHA must pass eight CI jobs, independent review
+      and #107 protected-main status reconciliation. Rollback: revert this
+      small probe/test/docs commit; no schema or private-data migration.
+
+**Next 1 (P0):** verify exact-head #145 CI, review source-path containment,
+and resolve protected-main required-context drift (#107) without bypass.
+**Next 2 (P1):** benchmark complete remote download to the first useful
+result on real Windows/macOS/Linux environments with failure counts.
+
 ### P0 — Reject linked scripts and SQLite cache paths in first-recall probe (#146 / PR #145; 2026-11-22)
 
 - [x] **Observed baseline:** `Path.is_file()` follows links. The draft local-clone

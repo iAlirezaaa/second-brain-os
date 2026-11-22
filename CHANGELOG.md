@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #146; PR #145 draft — reject aliased Markdown evidence)
+- The disposable local recall diagnostic no longer treats a symlinked
+  `02_WIKI` Markdown alias to `09_OPERATIONS` as a public source witness.
+  It rejects links/junctions in source path segments and direct denied-zone
+  references; real ordinary Markdown stays valid. Existing onboarding
+  regression tests cover aliases with synthetic data on Windows/macOS/Linux.
+  This fixes diagnostic evidence only, not core indexing or OS isolation.
+  No dependency, schema, user data or permission change; revert this scoped
+  commit to roll back. Final-head CI, independent review and #107 block merge.
+
 ### Fixed (issue #146; PR #145 draft — confine diagnostic paths)
 - The disposable clean-clone recall probe now rejects linked `scripts/`,
   `scripts/kb.py`, `.kb/` and `.kb/kb.sqlite` paths (including resolved
