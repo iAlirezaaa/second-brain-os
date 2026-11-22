@@ -84,6 +84,11 @@ index your notes with the same command from that brain's directory. See the
 [first-session guide](skills/first-session/SKILL.md) if you are working as an agent.
 
 
+The local-clone diagnostic accepts search-result Markdown paths with spaces or
+square brackets; its Git-tree and SQLite/source checks still have to validate
+each match. It does not test the remote GitHub download or guarantee first-use
+latency.
+
 For a **local Git-clone-to-first-hit diagnostic**, run
 `python scripts/clean_checkout_recall.py` from a Git checkout. It makes a
 disposable no-hardlinks clone of committed files, runs the real offline
