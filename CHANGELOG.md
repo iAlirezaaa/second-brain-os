@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #146; PR #145 draft — repeat source-zone validation)
+- The disposable clean-clone recall witness now uses the same fail-closed
+  public Markdown path guard when checking a SQLite row's complete title/body
+  as when verifying its keyword. A direct row comparison previously accepted
+  matching synthetic bytes from `09_OPERATIONS/` or an aliased file without
+  enforcing the source-plane boundary. A test-first negative fixture and an
+  ordinary public-note positive guard both branches. No production KB,
+  stored user data, dependency or schema changes. This remains a diagnostic
+  consistency check, not a race-free sandbox; release is pending CI, review
+  and lawful protected-main checks. Rollback: revert this probe/test/docs slice.
+
 ### Fixed (issue #144; PR #145 draft — source/SQLite agreement)
 - The disposable clean-clone recall diagnostic now compares each indexed hit's
   exact title, body and normalized body with the committed Markdown parsed
