@@ -177,6 +177,12 @@ Before launching the indexer, the probe also checks that `scripts/kb.py`
 belongs to cloned HEAD and is unchanged after checkout. It refuses with
 `kb_not_committed` or `kb_checkout_modified` otherwise. This checks
 benchmark provenance, **not** whether committed third-party code is safe.
+After ingest and search, the diagnostic also uses `git diff HEAD` to
+reject **any tracked file changed during the trial** with
+`tracked_checkout_modified`. Without this check, an indexer could rewrite
+a committed note and make SQLite agree with the *rewritten* text, producing
+a false claim of recall from unmodified HEAD. Generated `.kb/` cache files
+remain allowed. This is a benchmark-integrity check, not a sandbox.
 
 The default command (without `--github`) remains network-free. CI tests
 the alternate Git transfer path via a local `file://` transport and does

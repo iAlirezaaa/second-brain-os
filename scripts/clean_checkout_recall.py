@@ -278,6 +278,16 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
                 return result
+            # An ingest/search process can rewrite tracked Markdown in the
+            # disposable clone. Comparing SQLite to those *modified* bytes
+            # would falsely certify a hit as originating from committed HEAD.
+            # Git diff covers staged and unstaged tracked changes, but ignores
+            # the intentionally untracked/ignored .kb/ cache.
+            changed = invoke(["git", "diff", "--quiet", "--no-ext-diff",
+                              "HEAD", "--"], cwd=checkout)
+            if changed.returncode != 0:
+                result["reason"] = "tracked_checkout_modified"
+                return result
             # Every reported hit must be a real local checked-in source.
             valid_hits = bool(hits) and all(
                 path in tracked_paths

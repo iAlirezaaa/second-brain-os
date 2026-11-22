@@ -25,6 +25,32 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Reject tracked-source mutation during first-recall measurement (#147 / PR #145; 2026-11-22)
+
+- [x] **Reproduced integrity gap:** the previous diagnostic checked source
+      paths against HEAD's tree but compared SQLite with *current* checkout
+      Markdown bytes. An indexer editing tracked Markdown after clone could
+      make both agree and produce a false committed-source success.
+- [x] **Bounded fix (S):** after ingest/search, fail closed on any nonzero
+      `git diff --quiet --no-ext-diff HEAD --` and report
+      `tracked_checkout_modified`. Extend the existing onboarding test
+      with a real disposable `file://` checkout whose README is edited
+      during ingest. No new test method, dependencies, schema, core KB or
+      persisted user-data changes. Gitignored derived `.kb/` stays allowed.
+- [ ] **Acceptance:** exact-head CI on four Windows/Ubuntu matrix jobs,
+      focused macOS and three independent backup jobs; independent review
+      and lawful resolution of protected-main required contexts (#107).
+      No claim of an OS sandbox or live HTTPS onboarding duration.
+      **Rollback:** revert this diagnostic/test/bilingual-doc slice.
+
+**Next 1 (P0):** verify exact-head CI, independent source review and
+protected-main #107 before any merge; coordinate #111/#134 overlap.
+**Next 2 (P1):** run actual public GitHub HTTPS-to-first-hit measurements
+on Windows/macOS/Linux with observed SHA, failures and environment; until
+then first-use duration and real-user success are unknown.
+
+---
+
 ### P0 — Validate executable provenance before clean-clone recall (#147 / PR #145; 2026-11-22)
 
 - [x] **Baseline (reviewed):** Markdown evidence was verified against HEAD,

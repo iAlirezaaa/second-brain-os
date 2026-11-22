@@ -346,6 +346,25 @@ class FirstSessionOnboarding(unittest.TestCase):
                          modified_executable)
         self.assertEqual(launched_kb, [], "modified Python must not execute")
 
+        # RED-FIRST (#147): modifying tracked Markdown during ingest left
+        # source/SQLite/printed hits mutually consistent in the old probe,
+        # which then claimed those post-clone bytes came from committed HEAD.
+        # Use the actual Git file:// path; no live user notes are touched.
+        def rewrite_tracked_during_ingest(args, **kwargs):
+            if (len(args) >= 3 and args[0] == sys.executable
+                    and Path(args[1]).name == "kb.py" and args[2] == "ingest"):
+                readme = Path(kwargs["cwd"]) / "README.md"
+                readme.write_text(readme.read_text(encoding="utf-8")
+                                  + "\nSynthetic probe-only edit.\n",
+                                  encoding="utf-8")
+            return original_run(args, **kwargs)
+        with patch.object(clean_module.subprocess, "run",
+                          side_effect=rewrite_tracked_during_ingest):
+            altered_source = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertEqual(altered_source["status"], "fail", altered_source)
+        self.assertEqual(altered_source["reason"], "tracked_checkout_modified",
+                         altered_source)
+
         # A real KB search prints the entire Markdown path before "  [zone]".
         # Spaces and brackets inside a valid filename must not disappear from
         # the recall witness; the indented excerpt is NOT another search hit.

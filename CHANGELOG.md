@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — tracked source immutability)
+- The disposable clean-clone recall witness now rejects a trial if
+  ingest/search changes **any Git-tracked file** after checkout, even when
+  SQLite and the rewritten Markdown agree. Formerly this could falsely
+  certify post-clone text as a committed-source hit. A real `file://`
+  transfer regression mutates a synthetic checkout README during ingest.
+  Ignored `.kb/` data is still permitted. This is diagnostic integrity,
+  not executable sandboxing, and does not change the production KB or
+  persisted personal notes. CI/review/#107 remain merge gates; rollback
+  is a scoped revert of this probe/test/bilingual-doc update.
+
 ### Fixed (issue #147; PR #145 draft — tracked clean-clone executable)
 - The opt-in GitHub and offline clean-clone recall probe now refuses to
   execute `scripts/kb.py` if the file is absent from the cloned commit
