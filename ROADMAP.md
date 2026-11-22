@@ -28,7 +28,7 @@ over something it cannot see is a silent gate, not a clean house.
 ### P0 — Recheck the public-source boundary for SQLite evidence (#146 / PR #145; 2026-11-22)
 
 - [x] **Reproduced synthetic baseline:** the old SQLite/source row comparator read
-      a supplied `09_OPERATIONS/private.md` directly and accepted perfectly
+      a synthetic path under the denied `09_OPERATIONS/` zone and accepted perfectly
       matching synthetic restricted bytes. The keyword verifier rejected that
       path, but the independent row comparator did not. This is a diagnostic
       consistency gap, not an observed production data leak.
