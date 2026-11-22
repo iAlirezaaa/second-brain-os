@@ -25,6 +25,32 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Require committed sources in the clean-checkout recall witness (#144 / PR #145; 2026-11-22)
+
+- [x] **Red-first reproduced (synthetic):** a temporary clone can be made to
+      ingest a note created by its own test executable, print a matching
+      keyword hit and store a consistent SQLite row. Existence and keyword
+      checks alone accept this as "committed" Markdown despite the path not
+      existing in the commit. An isolated Git tree fixture confirms the
+      generated note is absent from `HEAD`; no personal files used.
+- [x] **Bounded fix (S):** snapshot `git ls-tree -r -z --name-only HEAD`
+      before running the indexer, require every reported path to be in that
+      immutable list and preserve all existing SQLite/source checks. An
+      existing onboarding test method carries the forged generated-hit
+      regression without changing discovered-test counts. A missing tree
+      query fails closed as `tracked_paths_unavailable`; a generated hit
+      remains `no_source_backed_hit`. Stdlib-only, no runtime KB change.
+- [ ] **Acceptance:** exact-head health plus all eight Windows/Ubuntu/macOS
+      and backup CI jobs; independent review; protected-main correction
+      (#107). No claim about network clone or real users. Rollback: revert
+      this narrow test/probe/docs series; no migration.
+
+**Next 1 (P0):** verify the final #145 SHA with all CI jobs, review Git
+path provenance and reconcile #107 without bypassing branch protection.
+**Next 2 (P1):** measure complete remote download-to-first-result with
+independent failures, clock, OS/Python and network provenance, then decide
+whether the quickstart meets five minutes.
+
 ### P0 — Reject Markdown aliases crossing memory-zone boundaries in recall evidence (#146 / PR #145; 2026-11-22)
 
 - [x] **Reproduced baseline:** the draft diagnostic's source verifier resolved
