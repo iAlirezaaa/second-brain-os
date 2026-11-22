@@ -28,8 +28,8 @@ over something it cannot see is a silent gate, not a clean house.
 ### P0 — Reject Markdown aliases crossing memory-zone boundaries in recall evidence (#146 / PR #145; 2026-11-22)
 
 - [x] **Reproduced baseline:** the draft diagnostic's source verifier resolved
-      `02_WIKI/alias.md` into `09_OPERATIONS/restricted.md` inside the
-      same checkout, found the word `memory`, and incorrectly accepted that
+      a synthetic Markdown alias under `02_WIKI/` into the existing restricted
+      `09_OPERATIONS/` zone in a disposable fixture, then incorrectly accepted that
       as an independent public-source witness. Isolated Python symlink test
       reproduced this false-positive; no real private data was read.
 - [x] **Bounded fix (S):** require regular, non-aliased Markdown paths, reject
