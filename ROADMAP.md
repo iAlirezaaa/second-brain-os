@@ -25,6 +25,35 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Keep remote benchmark scratch files outside caller temp dirs (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline:** the remote benchmark replaced child `HOME` and
+      `USERPROFILE`, but `_child_env` still forwarded ambient
+      `TMP`, `TEMP` and `TMPDIR` values to downloaded Python.
+      Reproduced with synthetic parent-only temp paths on Linux / Python
+      3.13.5 (old: 3/3 inherited; isolated mapping: 3/3 redirected).
+      No private files or secrets were read.
+- [x] **Bounded repair (S):** create a per-trial `isolated-home/tmp`
+      and point all three child temp variables there for opt-in
+      `--github` transfers. The existing file-transfer onboarding test
+      checks those values **during actual subprocess launch** and verifies
+      cleanup; the default local/offline mode is untouched. No dependency,
+      schema migration, new test method or change in KB behavior.
+- [ ] **Merge acceptance:** full exact-head CI (Windows/Ubuntu Python
+      3.9/3.12, focused macOS and backup/restore), independent review
+      and lawful protection-context reconciliation (#107); local fixture
+      comparisons are not real HTTPS performance evidence. Downloaded
+      Python retains filesystem/network access: this is not a sandbox.
+      **Rollback:** revert this small probe/test/docs patch.
+
+**Next 1 (P0):** independently review the growing Draft PR #145 and reconcile
+#107 required checks before merging; report all exact-head CI conclusions.
+**Next 2 (P1):** run repeatable HTTPS-to-first-hit measurements on
+Windows/macOS/Linux with SHA, dated conditions, successes and failures;
+first-use latency and real-user adoption remain unknown.
+
+---
+
 ### P1 — Record failed HTTPS clone attempts honestly (#147 / PR #145; 2026-11-22)
 
 - [x] **Reproduced source defect:** on clone return code != 0, the
