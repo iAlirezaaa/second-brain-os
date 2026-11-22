@@ -63,21 +63,17 @@ def _checkout_paths_safe(checkout):
         return False
 
 
-def _source_supports_keyword(checkout, relative_path, keyword="memory"):
-    """Independently verify committed Markdown, not only derived SQLite metadata.
+def _public_markdown_source(checkout, relative_path):
+    """Return a non-aliased public Markdown path, or None for a denied path.
 
-    A source filename can itself satisfy a keyword query. Resolve before
-    reading, so the diagnostic never follows a tracked link outside its
-    disposable checkout. Malformed/unreadable sources fail closed.
+    Both keyword and SQLite/source comparisons must enforce this boundary;
+    the earlier keyword check cannot authorize a later unvalidated read.
+    This is a best-effort diagnostic guard, not an atomic OS sandbox.
     """
     try:
         relative = Path(relative_path)
         if relative.is_absolute() or ".." in relative.parts:
-            return False
-        # Even an alias that stays INSIDE the checkout can point at a denied
-        # human plane (e.g. 02_WIKI/alias.md -> 09_OPERATIONS/private.md).
-        # Compare the fully resolved source with the canonical expected path;
-        # this also catches symlinked parent directories and Windows junctions.
+            return None
         root = checkout.resolve(strict=True)
         candidate = checkout / relative
         source = candidate.resolve(strict=True)
@@ -86,8 +82,19 @@ def _source_supports_keyword(checkout, relative_path, keyword="memory"):
         if (candidate.is_symlink() or source != root.joinpath(*relative.parts)
                 or root not in source.parents or not source.is_file()
                 or source.relative_to(root).parts[0].casefold() in denied):
-            return False
-        if keyword.casefold() in relative.stem.casefold():
+            return None
+        return source
+    except (OSError, RuntimeError, ValueError):
+        return None
+
+
+def _source_supports_keyword(checkout, relative_path, keyword="memory"):
+    """Independently verify non-aliased committed Markdown, not only SQLite."""
+    source = _public_markdown_source(checkout, relative_path)
+    if source is None:
+        return False
+    try:
+        if keyword.casefold() in Path(relative_path).stem.casefold():
             return True
         return keyword.casefold() in source.read_text(encoding="utf-8").casefold()
     except (OSError, UnicodeError, RuntimeError, ValueError):
@@ -105,7 +112,10 @@ def _indexed_row_matches_source(checkout, relative_path, row):
         return False
     try:
         title, body, norm = row
-        source = (checkout / relative_path).read_text(encoding="utf-8", errors="replace")
+        source_path = _public_markdown_source(checkout, relative_path)
+        if source_path is None:
+            return False
+        source = source_path.read_text(encoding="utf-8", errors="replace")
         frontmatter, expected_body = parse_frontmatter(source)
         heading = None
         for line in expected_body.splitlines():
