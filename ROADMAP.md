@@ -48,7 +48,7 @@ protected `main` contexts (#107), and independent review.
 **Next 2 (P1):** measure repeatable remote clone-to-first-recall latency,
 failures and hardware/network provenance across three OS families.
 
-### P0 — Refuse misleading local-recall benchmarks### P0 — Refuse misleading local-recall benchmarks from dirty sources (#144 / PR #145; 2026-11-21)
+### P0 — Refuse misleading local-recall benchmarks from dirty sources (#144 / PR #145; 2026-11-21)
 
 - [x] **Baseline (reproduced by adversarial fixture):** `git clone --local`
       ignores staged, modified and untracked source work. The previous

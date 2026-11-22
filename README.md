@@ -103,7 +103,7 @@ with `unsafe_checkout_path` before launching the indexer and before
 checking index results. This prevents following obvious linked paths outside
 the disposable clone; it is **not** an OS-level execution sandbox.
 
-**Clean-source requirement:****Clean-source requirement:** the diagnostic refuses staged changes, modified
+**Clean-source requirement:** the diagnostic refuses staged changes, modified
 tracked files and nonignored untracked files with `source_dirty` rather than
 silently cloning the last commit and ignoring those edits. Commit the work or
 run from a clean worktree before comparing results. Gitignored local indexes

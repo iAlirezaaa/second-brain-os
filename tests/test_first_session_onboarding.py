@@ -381,7 +381,6 @@ class FirstSessionOnboarding(unittest.TestCase):
             self.assertEqual(blocked_link["reason"], "unsafe_checkout_path",
                              blocked_link)
             self.assertGreaterEqual(blocked_guard.call_count, 1)
-            dirty_tracked = clean_module.measure(fake_repo)
         for dirty in (dirty_untracked, dirty_tracked):
             self.assertEqual(dirty["status"], "fail", dirty)
             self.assertEqual(dirty["reason"], "source_dirty", dirty)
@@ -421,7 +420,6 @@ class FirstSessionOnboarding(unittest.TestCase):
             else:
                 self.assertFalse(clean_module._checkout_paths_safe(checkout))
 
-        # Execute the real installed-home installer, ingest and search with
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
         import importlib.util

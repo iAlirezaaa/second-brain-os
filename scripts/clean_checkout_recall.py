@@ -58,7 +58,7 @@ def _checkout_paths_safe(checkout):
         return False
 
 
-def _source_supports_keyworddef _source_supports_keyword(checkout, relative_path, keyword="memory"):
+def _source_supports_keyword(checkout, relative_path, keyword="memory"):
     """Independently verify committed Markdown, not only derived SQLite metadata.
 
     A source filename can itself satisfy a keyword query. Resolve before
@@ -133,7 +133,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
                 return result
-            kb = checkout / "scripts" / "kb.py"            kb = checkout / "scripts" / "kb.py"
+            kb = checkout / "scripts" / "kb.py"
             if not kb.is_file():
                 result["reason"] = "kb_missing"
                 return result
@@ -146,7 +146,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
                 return result
-            searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)            searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)
+            searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)
             search_end = time.perf_counter()
             result["search_ms"] = round((search_end - ingest_end) * 1000, 3)
             count = re.search(r"\bindexed (\d+) notes\b", indexed.stdout)
@@ -156,7 +156,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
                 return result
-            # Every reported hit must be a real local checked-in source.            # Every reported hit must be a real local checked-in source.
+            # Every reported hit must be a real local checked-in source.
             valid_hits = bool(hits) and all(
                 (checkout / path).is_file()
                 and ".." not in Path(path).parts

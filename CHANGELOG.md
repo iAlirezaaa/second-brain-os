@@ -19,8 +19,6 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   Merge requires exact-head eight-job CI, independent review and #107
   branch-protection reconciliation. Rollback: revert this bounded change.
 
-## [Unreleased]
-
 ### Fixed (issue #144; PR #145 draft — clean-source benchmark preflight)
 - The local-clone-to-first-keyword-hit diagnostic now rejects uncommitted
   tracked/staged or nonignored untracked source changes with `source_dirty`.
