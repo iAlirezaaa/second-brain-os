@@ -25,6 +25,30 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Recheck the public-source boundary for SQLite evidence (#146 / PR #145; 2026-11-22)
+
+- [x] **Reproduced synthetic baseline:** the old SQLite/source row comparator read
+      a supplied `09_OPERATIONS/private.md` directly and accepted perfectly
+      matching synthetic restricted bytes. The keyword verifier rejected that
+      path, but the independent row comparator did not. This is a diagnostic
+      consistency gap, not an observed production data leak.
+- [x] **Test-first bounded fix (S):** a single non-aliased public Markdown
+      path resolver now governs both keyword and row/source comparisons.
+      Synthetic assertions cover a public positive, restricted-zone negative,
+      and a mocked linked-path negative on Windows. No dependency, schema,
+      permission default or production KB change; this does not eliminate
+      filesystem races or implement sandboxing.
+- [ ] **Acceptance:** exact-head CI health plus eight jobs, independent
+      security review, conflict reconciliation (#111/#134) and protected-main
+      required-check repair (#107). Rollback: revert the scoped test/diagnostic/
+      documentation commits; no personal state migration.
+
+**Next 1 (P0):** finish exact-SHA CI and independent provenance review; reconcile
+#107 without disabling branch protection.
+**Next 2 (P1):** benchmark remote GitHub download to the first real keyword
+hit on Windows, macOS and Linux, recording run count, errors and provenance;
+five-minute end-to-end usability remains unknown.
+
 ### P0 — Verify index content against committed note bytes (#144 / PR #145; 2026-11-22)
 
 - [x] **Synthetic red-first case:** a fabricated KB command can write a SQLite
