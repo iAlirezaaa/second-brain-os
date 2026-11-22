@@ -29,10 +29,10 @@ over something it cannot see is a silent gate, not a clean house.
 
 - [x] **Observed baseline:** `Path.is_file()` follows links. The draft local-clone
       diagnostic could launch a symlinked `scripts/kb.py` or consult a linked
-      `.kb/kb.sqlite` outside its disposable clone. Isolated synthetic path
+      the `kb.sqlite` cache outside its disposable clone. Isolated synthetic path
       tests reproduced this API behavior; no real secrets or user vaults used.
 - [x] **Bounded fix (S):** refuse symlinks/junction escapes for `scripts/`,
-      `scripts/kb.py`, `.kb/` and `.kb/kb.sqlite` before launching the
+      `scripts/kb.py`, `.kb/` and the `kb.sqlite` cache before launching the
       indexer and recheck after ingest and search. Explicit failure reason:
       `unsafe_checkout_path`. Extend the existing onboarding regression,
       with Windows-compatible synthetic alias checks and a real symlink check
