@@ -373,7 +373,7 @@ class FirstSessionOnboarding(unittest.TestCase):
             dirty_tracked = clean_module.measure(fake_repo)
             # A linked executable/cache can escape the disposable checkout.
             # Assert that the guard runs before any KB subprocess is launched.
-            tracked.write_text("# Ordinary note\\nOnly unrelated facts.\\n",
+            tracked.write_text("# Ordinary note\nOnly unrelated facts.\n",
                                encoding="utf-8")
             with patch.object(clean_module, "_checkout_paths_safe",
                               return_value=False) as blocked_guard:
@@ -402,7 +402,7 @@ class FirstSessionOnboarding(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="sbo-path-guard-") as directory:
             checkout = Path(directory) / "checkout"
             (checkout / "scripts").mkdir(parents=True)
-            (checkout / "scripts" / "kb.py").write_text("# synthetic\\n",
+            (checkout / "scripts" / "kb.py").write_text("# synthetic\n",
                                                           encoding="utf-8")
             self.assertTrue(clean_module._checkout_paths_safe(checkout))
             actual_is_symlink = Path.is_symlink
