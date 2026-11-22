@@ -7,7 +7,8 @@ runs the documented ingest/search commands there. This includes local Git
 clone time, NOT GitHub download latency, Python installation or editor time.
 The source worktree must be clean: unstaged, staged and nonignored untracked
 files are refused, because a local clone would silently omit them.
-No network, LLM, user vault, or package installation is involved.
+Default mode uses no network, LLM, user vault, or package installation.
+Use --github to opt in to transferring this public repository over HTTPS.
 """
 import argparse
 import datetime
@@ -31,6 +32,7 @@ from common import parse_frontmatter
 ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT = 180
 MAX_REPEAT = 5
+PUBLIC_GITHUB_URL = "https://github.com/iAlirezaaa/second-brain-os.git"
 ENV_KEYS = ("PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT",
             "TEMP", "TMP", "TMPDIR", "HOME", "USERPROFILE", "HOMEDRIVE",
             "HOMEPATH", "LANG", "LC_ALL", "LC_CTYPE")
@@ -143,13 +145,14 @@ def _reported_hit_paths(output):
     return re.findall(r"(?m)^([^\s\r\n][^\r\n]*\.md)  \[", output)
 
 
-def measure(source=ROOT, timeout=TIMEOUT):
+def measure(source=ROOT, timeout=TIMEOUT, remote=False):
     """Return a failure-aware JSON-ready record; always delete the clone."""
     start = time.perf_counter()
     result = {"status": "fail", "reason": None, "elapsed_ms": None,
               "preflight_ms": None, "clone_ms": None,
               "ingest_ms": None, "search_ms": None,
-              "indexed_notes": None, "matched_paths": [], "commit_sha": None}
+              "indexed_notes": None, "matched_paths": [], "commit_sha": None,
+              "transport": "git_remote" if remote else "local_git"}
 
     def remaining():
         left = timeout - (time.perf_counter() - start)
@@ -158,31 +161,41 @@ def measure(source=ROOT, timeout=TIMEOUT):
         return left
 
     def invoke(args, cwd=None):
+        env = _child_env()
+        if remote:
+            # Public HTTPS must not prompt for credentials or read Git configs
+            # that could rewrite this URL to a private host.
+            env.update({"GIT_TERMINAL_PROMPT": "0",
+                        "GIT_CONFIG_NOSYSTEM": "1",
+                        "GIT_CONFIG_GLOBAL": os.devnull})
         return subprocess.run(args, cwd=str(cwd) if cwd else None,
                               capture_output=True, text=True, encoding="utf-8",
                               errors="replace", timeout=remaining(),
-                              env=_child_env(), check=False)
+                              env=env, check=False)
 
     try:
         # A local clone contains committed bytes only. Reject a dirty source
         # instead of silently benchmarking an older revision than the user sees.
         # Porcelain status is machine-readable, locale-independent, and ignores
         # generated .kb/ indexes via the repository's .gitignore.
-        source_status = invoke(
-            ["git", "-C", str(source), "status", "--porcelain=v1",
-             "--untracked-files=normal"])
-        if source_status.returncode != 0:
-            result["reason"] = "source_status_unavailable"
-            return result
-        if source_status.stdout.strip():
-            result["reason"] = "source_dirty"
-            return result
+        if not remote:
+            source_status = invoke(
+                ["git", "-C", str(source), "status", "--porcelain=v1",
+                 "--untracked-files=normal"])
+            if source_status.returncode != 0:
+                result["reason"] = "source_status_unavailable"
+                return result
+            if source_status.stdout.strip():
+                result["reason"] = "source_dirty"
+                return result
         preflight_end = time.perf_counter()
         result["preflight_ms"] = round((preflight_end - start) * 1000, 3)
         with tempfile.TemporaryDirectory(prefix="sbo-clean-checkout-") as temp:
             checkout = Path(temp) / "second-brain-os"
-            cloned = invoke(["git", "clone", "--quiet", "--local", "--no-hardlinks",
-                             str(source), str(checkout)])
+            clone_cmd = (["git", "-c", "credential.helper=", "clone",
+                          "--quiet", "--no-hardlinks"] if remote else
+                         ["git", "clone", "--quiet", "--local", "--no-hardlinks"])
+            cloned = invoke(clone_cmd + [str(source), str(checkout)])
             if cloned.returncode != 0:
                 result["reason"] = "local_clone_failed"
                 return result
@@ -289,13 +302,13 @@ def measure(source=ROOT, timeout=TIMEOUT):
         result["elapsed_ms"] = round((time.perf_counter() - start) * 1000, 3)
 
 
-def evaluate(repeat, source=ROOT, timeout=TIMEOUT):
+def evaluate(repeat, source=ROOT, timeout=TIMEOUT, remote=False):
     """Repeat the full temporary-clone path; report failures, not just a median.
 
     Each trial gets a fresh Git clone and SQLite index. Median includes failed
     trials to avoid silently cherry-picking fast successes.
     """
-    trials = [measure(source, timeout) for _ in range(repeat)]
+    trials = [measure(source, timeout, remote=remote) for _ in range(repeat)]
     durations = [trial["elapsed_ms"] for trial in trials]
     successes = sum(trial["status"] == "pass" for trial in trials)
     commits = [trial.get("commit_sha") for trial in trials]
@@ -330,15 +343,26 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repeat", type=int, default=1,
                         help="independent local-clone trials (1..5, default 1)")
+    parser.add_argument("--github", action="store_true",
+                        help="opt-in public GitHub HTTPS clone measurement")
     args = parser.parse_args(argv)
     if not 1 <= args.repeat <= MAX_REPEAT:
         parser.error("--repeat must be between 1 and %d" % MAX_REPEAT)
     report = {"schema_version": 1,
               "observed_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-              "probe": "clean_local_git_clone_to_first_keyword_hit",
-              "scope": "clean-source Git status preflight + local committed clone + index + keyword search; excludes remote network, Python setup and editor time",
+              "probe": ("public_github_https_clone_to_first_keyword_hit"
+                        if args.github else "clean_local_git_clone_to_first_keyword_hit"),
+              "scope": ("fixed public GitHub HTTPS clone + committed source checks + "
+                        "index + keyword search; includes network download, excludes "
+                        "Python setup and editor time"
+                        if args.github else
+                        "clean-source Git status preflight + local committed clone + "
+                        "index + keyword search; excludes remote network, "
+                        "Python setup and editor time"),
               "python": sys.version.split()[0], "platform": sys.platform}
-    report.update(evaluate(args.repeat))
+    report.update(evaluate(args.repeat,
+                           source=PUBLIC_GITHUB_URL if args.github else ROOT,
+                           remote=args.github))
     print(json.dumps(report, sort_keys=True, ensure_ascii=False))
     return 0 if report["status"] == "pass" else 1
 
