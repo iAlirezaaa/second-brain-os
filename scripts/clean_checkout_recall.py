@@ -132,6 +132,17 @@ def _indexed_row_matches_source(checkout, relative_path, row):
         return False
 
 
+
+def _reported_hit_paths(output):
+    """Parse KB search headers without dropping spaces or brackets in note names.
+
+    The KB prints "path.md  [zone]  title" on unindented lines, followed by
+    indented excerpts. The downstream Git tree and source checks still decide
+    whether each parsed path can substantiate a successful recall.
+    """
+    return re.findall(r"(?m)^([^\s\r\n][^\r\n]*\.md)  \[", output)
+
+
 def measure(source=ROOT, timeout=TIMEOUT):
     """Return a failure-aware JSON-ready record; always delete the clone."""
     start = time.perf_counter()
@@ -216,7 +227,7 @@ def measure(source=ROOT, timeout=TIMEOUT):
             result["search_ms"] = round((search_end - ingest_end) * 1000, 3)
             count = re.search(r"\bindexed (\d+) notes\b", indexed.stdout)
             result["indexed_notes"] = int(count.group(1)) if count else None
-            hits = re.findall(r"(?m)^((?:[\w.-]+/)*[\w.-]+\.md)\s+\[", searched.stdout)
+            hits = _reported_hit_paths(searched.stdout)
             result["matched_paths"] = hits
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
