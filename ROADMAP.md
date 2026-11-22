@@ -25,6 +25,31 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Validate executable provenance before clean-clone recall (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline (reviewed):** Markdown evidence was verified against HEAD,
+      but the Python indexer was only checked for existence and non-symlink
+      path. Modified executable bytes after clone could run under the original
+      `commit_sha`; a source commit alone did not certify the launched code.
+- [x] **Small stdlib fix (S):** require `scripts/kb.py` in cloned HEAD's
+      tracked file list and a clean Git worktree diff for that path before
+      executing Python. Existing onboarding unittest now exercises a missing
+      tracked entry and post-clone code tampering via real local file-transfer
+      clones, without new discovered test count or dependencies.
+- [ ] **Merge acceptance:** exact-head health and all CI jobs plus
+      independent security review and lawful #107 required-check resolution.
+      This verifies provenance, not the safety of malicious *committed* code.
+      No core KB/storage/schema change. Rollback: revert this scoped
+      diagnostic, regression and bilingual documentation patch.
+
+**Next 1 (P0):** verify all exact-head CI conclusions and independent review,
+then reconcile #107 and overlapping PRs without bypassing protection.
+**Next 2 (P1):** measure real HTTPS GitHub clone-to-first-hit on
+Windows/macOS/Linux with times, SHA, trial failures and environment;
+local file-transfer results cannot substitute for real-user onboarding.
+
+---
+
 ### P0 — Reduce ambient home-path exposure in the opt-in GitHub recall probe (#147 / PR #145; 2026-11-22)
 
 - [x] **Baseline (reviewed in draft source):** downloaded `scripts/kb.py`

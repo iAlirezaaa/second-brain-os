@@ -246,6 +246,19 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             if not kb.is_file():
                 result["reason"] = "kb_missing"
                 return result
+            # The program about to run must be a file from the measured HEAD,
+            # not one created or edited after clone by a checkout filter or
+            # another process. This is a provenance check, not a sandbox.
+            if "scripts/kb.py" not in tracked_paths:
+                result["reason"] = "kb_not_committed"
+                return result
+            # Git compares checked-out bytes with HEAD while honoring platform
+            # conversions such as Windows CRLF. Reject post-clone modifications.
+            kb_diff = invoke(["git", "diff", "--quiet", "--no-ext-diff",
+                              "HEAD", "--", "scripts/kb.py"], cwd=checkout)
+            if kb_diff.returncode != 0:
+                result["reason"] = "kb_checkout_modified"
+                return result
             indexed = invoke([sys.executable, str(kb), "ingest"], cwd=checkout)
             ingest_end = time.perf_counter()
             result["ingest_ms"] = round((ingest_end - clone_end) * 1000, 3)

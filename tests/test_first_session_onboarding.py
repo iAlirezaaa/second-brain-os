@@ -310,6 +310,42 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertTrue(transferred["matched_paths"])
         self.assertGreaterEqual(transferred["elapsed_ms"], transferred["clone_ms"])
 
+        # The downloaded executable must belong to the Git commit being
+        # benchmarked. Simulate a missing tree entry during a real file:// clone.
+        original_run = subprocess.run
+        def omit_committed_kb(args, **kwargs):
+            output = original_run(args, **kwargs)
+            if args[:2] == ["git", "ls-tree"] and output.returncode == 0:
+                output.stdout = output.stdout.replace("scripts/kb.py\0", "")
+            return output
+        with patch.object(clean_module.subprocess, "run",
+                          side_effect=omit_committed_kb):
+            missing_executable = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertEqual(missing_executable["status"], "fail", missing_executable)
+        self.assertEqual(missing_executable["reason"], "kb_not_committed",
+                         missing_executable)
+
+        # Alter the indexer *after* a real clone, before launching Python.
+        # Before the fix, this would execute bytes absent from measured HEAD.
+        launched_kb = []
+        def tamper_after_clone(args, **kwargs):
+            output = original_run(args, **kwargs)
+            if "clone" in args and args[0] == "git" and output.returncode == 0:
+                (Path(args[-1]) / "scripts" / "kb.py").write_text(
+                    "raise RuntimeError('modified indexer was launched')\n",
+                    encoding="utf-8")
+            if args and args[0] == sys.executable and "kb.py" in str(args[1]):
+                launched_kb.append(args)
+            return output
+        with patch.object(clean_module.subprocess, "run",
+                          side_effect=tamper_after_clone):
+            modified_executable = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertEqual(modified_executable["status"], "fail",
+                         modified_executable)
+        self.assertEqual(modified_executable["reason"], "kb_checkout_modified",
+                         modified_executable)
+        self.assertEqual(launched_kb, [], "modified Python must not execute")
+
         # A real KB search prints the entire Markdown path before "  [zone]".
         # Spaces and brackets inside a valid filename must not disappear from
         # the recall witness; the indented excerpt is NOT another search hit.

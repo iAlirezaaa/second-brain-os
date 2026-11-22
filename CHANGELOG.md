@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — tracked clean-clone executable)
+- The opt-in GitHub and offline clean-clone recall probe now refuses to
+  execute `scripts/kb.py` if the file is absent from the cloned commit
+  or its worktree bytes changed after checkout. The existing onboarding
+  regression uses real local Git transfers and synthetic mismatches to
+  prove both failures. This is diagnostic provenance, **not a sandbox**:
+  malicious code present in a trusted commit remains in scope for human
+  review. No runtime KB changes, new dependencies or data migration.
+  Exact-head CI, independent review and lawful #107 protection are required
+  before merge. Rollback: revert this probe/test/docs patch.
+
 ### Fixed (issue #147; PR #145 draft — disposable child home for remote measurement)
 - Opt-in remote GitHub clone-to-recall trials now set `HOME`/`USERPROFILE`
   (and matching Windows home-drive fields) to a disposable per-trial directory

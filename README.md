@@ -173,6 +173,10 @@ than forwarding the caller's home path in the child environment. This reduces
 accidental ambient home/config exposure; it is **not** an OS sandbox.
 Downloaded Python still has the caller's filesystem and network privileges
 and may discover files through other means. Run only trusted source code.
+Before launching the indexer, the probe also checks that `scripts/kb.py`
+belongs to cloned HEAD and is unchanged after checkout. It refuses with
+`kb_not_committed` or `kb_checkout_modified` otherwise. This checks
+benchmark provenance, **not** whether committed third-party code is safe.
 
 The default command (without `--github`) remains network-free. CI tests
 the alternate Git transfer path via a local `file://` transport and does
