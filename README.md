@@ -117,6 +117,11 @@ symlink or directory junction, **even if the target is inside the checkout**:
 a public-looking `02_WIKI/` alias must never validate text from the denied
 `09_OPERATIONS/` plane. This is a fail-closed diagnostic witness, not a
 claim that the operating system prevents a malicious local process.
+The SQLite row/source comparator also independently applies this public-plane
+path check; checking only the keyword first cannot authorize a later read of
+restricted or linked Markdown. These checks are not atomic against filesystem
+races and do not constitute a sandbox. This draft change is not released.
+
 
 **Clean-source requirement:** the diagnostic refuses staged changes, modified
 tracked files and nonignored untracked files with `source_dirty` rather than
