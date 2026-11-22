@@ -310,6 +310,9 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertTrue(transferred["matched_paths"])
         self.assertGreaterEqual(transferred["elapsed_ms"], transferred["clone_ms"])
 
+        # Keep the real subprocess entrypoint before installing the stub;
+        # the prior CI run caught this reference being assigned too late.
+        original_run = subprocess.run
         # Failure-aware #147 regression: a transfer failure must retain the
         # attempted clone duration, not report the remote as a local error.
         # The stub makes no network requests and preserves real Git preflight.
