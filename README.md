@@ -97,6 +97,13 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
+The diagnostic snapshots the committed Git tree **before ingest**. A path
+created by the indexing process (even if its Markdown, SQLite row and printed
+hit agree) is **not** a committed-source hit and fails with
+`no_source_backed_hit`. An unavailable Git tree is reported as
+`tracked_paths_unavailable`. This is a check on benchmark evidence only, not
+on production note creation or a security sandbox.
+
 The draft local-clone diagnostic also refuses symlinked executable or
 SQLite-cache paths (`scripts/`, `scripts/kb.py`, `.kb/`, `.kb/kb.sqlite`)
 with `unsafe_checkout_path` before launching the indexer and before
