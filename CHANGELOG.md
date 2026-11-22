@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — committed-path recall provenance)
+- The local disposable-clone keyword probe now snapshots the exact `HEAD`
+  tree before indexing and accepts a result only when its source path is
+  committed there. Previously a generated Markdown note and internally
+  consistent SQLite/search output could falsely certify a "committed clone"
+  recall. A synthetic adversarial Git fixture in the existing onboarding
+  test method covers this false-positive. A Git-tree query error fails
+  with `tracked_paths_unavailable`. Only diagnostic evidence changes:
+  production KB indexing may still create notes normally. Stdlib-only;
+  no user-data migration, permission changes or claimed network timing.
+  Exact-head CI, independent review and #107 block merge; rollback: revert
+  the scoped test/probe/docs commits.
+
 ### Fixed (issue #146; PR #145 draft — reject aliased Markdown evidence)
 - The disposable local recall diagnostic no longer treats a symlinked
   `02_WIKI` Markdown alias to `09_OPERATIONS` as a public source witness.
