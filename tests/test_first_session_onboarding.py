@@ -511,6 +511,10 @@ class FirstSessionOnboarding(unittest.TestCase):
                                             or actual_is_symlink(item))):
                 self.assertFalse(clean_module._source_supports_keyword(
                     checkout, "02_WIKI/mock-alias.md"))
+                self.assertFalse(clean_module._indexed_row_matches_source(
+                    checkout, "02_WIKI/mock-alias.md",
+                    ("mock-alias", "Synthetic public memory.\n",
+                     "synthetic public memory.\n")))
             try:
                 (public / "alias.md").symlink_to(private_note)
             except (OSError, NotImplementedError):
@@ -518,6 +522,10 @@ class FirstSessionOnboarding(unittest.TestCase):
             else:
                 self.assertFalse(clean_module._source_supports_keyword(
                     checkout, "02_WIKI/alias.md"))
+                self.assertFalse(clean_module._indexed_row_matches_source(
+                    checkout, "02_WIKI/alias.md",
+                    ("alias", "Synthetic restricted memory.\n",
+                     "synthetic restricted memory.\n")))
 
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
