@@ -25,6 +25,27 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Verify index content against committed note bytes (#144 / PR #145; 2026-11-22)
+
+- [x] **Synthetic red-first case:** a fabricated KB command can write a SQLite
+      row for committed `memory.md`, print the same path and quote the keyword,
+      yet store a body that never occurred in that Markdown. The prior path,
+      keyword and row-count assertions accepted the mismatch.
+- [x] **Bounded stdlib fix:** compare each SQLite hit's full title, body and
+      normalized body with the committed source, using existing frontmatter
+      parsing rules; reject disagreement as `no_source_backed_hit`. A regression
+      uses a synthetic Git fixture in an existing test method. No new packages,
+      runtime KB change, user-data migration or test-count drift.
+- [ ] **Merge gate:** full final-head health, all eight CI jobs, independent
+      review and lawful protected-main required-check repair (#107).
+      Rollback: revert this small diagnostic/test/docs commit.
+
+**Next 1 (P0):** verify #145 exact-head CI and provenance review; reconcile
+overlap with #111/#134 and fix #107 without reducing protections.
+**Next 2 (P1):** measure remote GitHub download-to-first-hit on Windows,
+macOS and Linux with timestamp, failure counts, network and host details;
+the full under-five-minute outcome is unknown.
+
 ### P0 — Require committed sources in the clean-checkout recall witness (#144 / PR #145; 2026-11-22)
 
 - [x] **Red-first reproduced (synthetic):** a temporary clone can be made to

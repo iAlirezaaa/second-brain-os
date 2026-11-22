@@ -88,7 +88,9 @@ For a **local Git-clone-to-first-hit diagnostic**, run
 `python scripts/clean_checkout_recall.py` from a Git checkout. It makes a
 disposable no-hardlinks clone of committed files, runs the real offline
 ingest/search commands, checks that SQLite contains the reported source hits **and** that each indexed title/body substantiates the `memory` keyword, and independently checks that the committed Markdown text or source filename contains that keyword,
-and prints failure-aware JSON with clone, index, search and total time. This
+and prints failure-aware JSON with clone, index, search and total time. It
+also cross-checks the indexed title, full body and normalized body against the
+committed source; a fabricated SQLite row is not source-backed recall evidence. This
 **includes local Git clone time but excludes GitHub/network download, Python
 installation, human editing and personal note ingestion**. It does not yet
 establish five-minute end-to-end onboarding; independent full-path platform

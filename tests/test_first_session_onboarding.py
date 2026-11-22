@@ -381,6 +381,28 @@ class FirstSessionOnboarding(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
                 self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
             forged_generated = clean_module.measure(fake_repo)
+            # A fabricated row can quote the keyword and the exact committed
+            # path while storing text absent from that Markdown.
+            (fake_repo / "scripts" / "kb.py").write_text(
+                "import pathlib, sqlite3, sys\n"
+                "if 'ingest' in sys.argv:\n"
+                "    pathlib.Path('.kb').mkdir(exist_ok=True)\n"
+                "    db = sqlite3.connect('.kb/kb.sqlite')\n"
+                "    db.execute('CREATE TABLE notes (path TEXT PRIMARY KEY, title TEXT, zone TEXT, body TEXT, norm TEXT, updated TEXT)')\n"
+                "    db.execute(\"INSERT INTO notes VALUES ('02_WIKI/memory.md','Fake memory','02_WIKI','Invented memory claim','invented memory claim','2026-11-22')\")\n"
+                "    db.commit(); db.close()\n"
+                "    print('indexed 1 notes')\n"
+                "else:\n"
+                "    print('02_WIKI/memory.md  [02_WIKI] forged result')\n",
+                encoding="utf-8")
+            for args in (("add", "scripts/kb.py"),
+                         ("-c", "user.name=Fixture", "-c",
+                          "user.email=fixture@example.invalid", "commit", "-qm",
+                          "synthetic fabricated SQLite body")):
+                step = subprocess.run(["git", *args], cwd=str(fake_repo),
+                                      capture_output=True, text=True, timeout=30)
+                self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
+            forged_body = clean_module.measure(fake_repo)
             # A local clone ignores uncommitted work; accepting it as a live
             # source benchmark would conceal the files a newcomer is editing.
             untracked = fake_repo / "02_WIKI" / "draft-untracked.md"
@@ -417,6 +439,9 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(forged_generated["status"], "fail", forged_generated)
         self.assertEqual(forged_generated["reason"],
                          "no_source_backed_hit", forged_generated)
+        self.assertEqual(forged_body["matched_paths"], ["02_WIKI/memory.md"])
+        self.assertEqual(forged_body["status"], "fail", forged_body)
+        self.assertEqual(forged_body["reason"], "no_source_backed_hit", forged_body)
         self.assertEqual(forged_source_only["reason"],
                          "no_source_backed_hit", forged_source_only)
 

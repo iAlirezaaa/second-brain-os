@@ -17,11 +17,16 @@ import re
 import sqlite3
 import statistics
 import subprocess
+import unicodedata
 import sys
 import tempfile
 import time
 from pathlib import Path
 from contextlib import closing
+
+# Parse committed Markdown with the same standard-library contract as KB ingest.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common import parse_frontmatter
 
 ROOT = Path(__file__).resolve().parents[1]
 TIMEOUT = 180
@@ -86,6 +91,34 @@ def _source_supports_keyword(checkout, relative_path, keyword="memory"):
             return True
         return keyword.casefold() in source.read_text(encoding="utf-8").casefold()
     except (OSError, UnicodeError, RuntimeError, ValueError):
+        return False
+
+
+
+def _indexed_row_matches_source(checkout, relative_path, row):
+    """Compare a stored hit's complete content to the committed Markdown.
+
+    A CLI can print a real source path and forge an SQLite keyword match while
+    silently indexing unrelated bytes. Such a row is not recall provenance.
+    """
+    if row is None or len(row) != 3 or not all(isinstance(item, str) for item in row):
+        return False
+    try:
+        title, body, norm = row
+        source = (checkout / relative_path).read_text(encoding="utf-8", errors="replace")
+        frontmatter, expected_body = parse_frontmatter(source)
+        heading = None
+        for line in expected_body.splitlines():
+            if line.startswith("# "):
+                heading = line[2:].strip()
+                break
+            if line.strip() and not line.startswith("#"):
+                break
+        expected_title = str(frontmatter.get("title") or heading or Path(relative_path).stem)
+        expected_norm = unicodedata.normalize("NFKC", expected_body).casefold().translate(
+            str.maketrans({"ي": "ی", "ك": "ک"}))
+        return title == expected_title and body == expected_body and norm == expected_norm
+    except (OSError, UnicodeError, RuntimeError, TypeError, ValueError):
         return False
 
 
@@ -199,16 +232,16 @@ def measure(source=ROOT, timeout=TIMEOUT):
                         # the published search term, not just a forged CLI hit.
                         indexed_rows = [
                             conn.execute(
-                                "SELECT title, norm FROM notes WHERE path = ?",
+                                "SELECT title, body, norm FROM notes WHERE path = ?",
                                 (path,)).fetchone()
                             for path in hits
                         ]
                     valid_hits = (
                         actual_count == result["indexed_notes"]
                         and all(
-                            row is not None and
-                            "memory" in " ".join(str(value or "") for value in row).casefold()
-                            for row in indexed_rows
+                            _indexed_row_matches_source(checkout, path, row)
+                            and "memory" in (row[0] + " " + row[2]).casefold()
+                            for path, row in zip(hits, indexed_rows)
                         )
                     )
                 except sqlite3.Error:

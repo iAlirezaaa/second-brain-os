@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — source/SQLite agreement)
+- The disposable clean-clone recall diagnostic now compares each indexed hit's
+  exact title, body and normalized body with the committed Markdown parsed
+  using the KB's existing frontmatter rules. A fabricated row containing the
+  correct keyword and path but unrelated body previously passed the diagnostic.
+  The existing onboarding test covers the false positive with a synthetic Git
+  fixture. This validates evidence, not process isolation. No new packages,
+  production KB modifications, private data or schema migration. Merge needs
+  final-head eight-job CI, independent review and #107 protection repair.
+  Rollback: revert this scoped test/probe/docs change.
+
 ### Fixed (issue #144; PR #145 draft — committed-path recall provenance)
 - The local disposable-clone keyword probe now snapshots the exact `HEAD`
   tree before indexing and accepts a result only when its source path is
