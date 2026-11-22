@@ -48,6 +48,11 @@ def _child_env(remote_home=None):
         home = str(remote_home)
         env["HOME"] = home
         env["USERPROFILE"] = home
+        # Downloaded code should not inherit a caller-owned scratch path.
+        # This is environment isolation, not filesystem permission isolation.
+        isolated_temp = str(Path(remote_home) / "tmp")
+        for key in ("TEMP", "TMP", "TMPDIR"):
+            env[key] = isolated_temp
         if os.name == "nt":
             drive, tail = os.path.splitdrive(home)
             env["HOMEDRIVE"] = drive
@@ -212,6 +217,7 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                 # indexer; deleted with the temporary checkout on exit.
                 remote_home = Path(temp) / "isolated-home"
                 remote_home.mkdir()
+                (remote_home / "tmp").mkdir()
             clone_cmd = (["git", "-c", "credential.helper=", "clone",
                           "--quiet", "--no-hardlinks"] if remote else
                          ["git", "clone", "--quiet", "--local", "--no-hardlinks"])
