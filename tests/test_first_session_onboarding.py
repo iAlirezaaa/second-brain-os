@@ -274,6 +274,19 @@ class FirstSessionOnboarding(unittest.TestCase):
             "sbo_clean_checkout_probe", ROOT / "scripts" / "clean_checkout_recall.py")
         clean_module = importlib.util.module_from_spec(source_spec)
         source_spec.loader.exec_module(clean_module)
+        # A real KB search prints the entire Markdown path before "  [zone]".
+        # Spaces and brackets inside a valid filename must not disappear from
+        # the recall witness; the indented excerpt is NOT another search hit.
+        printed_hits = (
+            "02_WIKI/Team Memory Notes.md  [02_WIKI]  Team memory\\n"
+            "    02_WIKI/snippet.md  [02_WIKI]  excerpt only\\n"
+            "02_WIKI/[Weekly] memory.md  [02_WIKI]  Weekly\\n"
+        )
+        self.assertEqual(
+            ["02_WIKI/Team Memory Notes.md", "02_WIKI/[Weekly] memory.md"],
+            clean_module._reported_hit_paths(printed_hits),
+            "the CLI witness must retain Markdown names with spaces/brackets"
+        )
         # Two green trials from different revisions are NOT one reproducible
         # benchmark. Use measured-looking synthetic records, not a fake Git repo.
         from unittest.mock import patch
