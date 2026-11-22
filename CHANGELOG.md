@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #144; PR #145 draft — spaced Markdown paths in local recall)
+- The offline clean-checkout witness now parses normal KB hit headers for
+  Markdown filenames containing spaces or square brackets; the former regex
+  ignored such valid source paths. The existing onboarding regression checks
+  two source names plus an indented excerpt that must not become a hit. An
+  isolated Python stdlib parser reproduction went from 0/2 to 2/2 parsed
+  valid paths; this does **not** certify end-to-end CI or a real user session.
+  The subsequent Git-HEAD, public-path and SQLite content checks are unchanged.
+  No production KB change, dependency, stored data migration or permission
+  change. Rollback: revert this parser/test/docs slice; merge remains gated by
+  exact-head CI, independent review and protected-main checks (#107).
+
 ### Fixed (issue #146; PR #145 draft — repeat source-zone validation)
 - The disposable clean-clone recall witness now uses the same fail-closed
   public Markdown path guard when checking a SQLite row's complete title/body
