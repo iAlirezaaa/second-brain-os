@@ -6,6 +6,20 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — isolated remote scratch paths)
+- Opt-in GitHub clone-to-recall trials previously forwarded the parent's
+  `TMP`, `TEMP` and `TMPDIR` values to downloaded Python, even
+  though `HOME` had been isolated. All three now point to an existing
+  per-trial disposable temp directory. An extended real `file://`
+  transport regression inspects child settings while the trial is active
+  and checks cleanup; a synthetic parent-env comparison reproduced
+  the former gap (3/3 leaked test variables) and the new mapping
+  (3/3 isolated). The default offline path, Python 3.9 floor, KB,
+  dependencies, schemas and user data are unchanged. Environment
+  isolation is **not** an OS filesystem sandbox or proof of real HTTPS
+  first-use latency. Exact-head CI, independent review and #107 still
+  block merge. Rollback: revert this scoped probe/test/docs patch.
+
 ### Fixed (issue #147; PR #145 draft — failed remote clone reporting)
 - The opt-in GitHub clone-to-first-recall diagnostic now distinguishes
   `remote_clone_failed` from `local_clone_failed` and includes elapsed
