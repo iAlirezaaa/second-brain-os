@@ -653,6 +653,31 @@ three platforms with complete failure counts and no synthetic benchmark claim.
 
 ---
 
+### P0 — Keep spaced Markdown names in local first-recall evidence (#144 / draft PR #145; 2026-11-22)
+
+- [x] **Reproduced a real parser false negative (S):** the old diagnostic
+      hit-header regex returned no results for the KB's normal output when a
+      Markdown path had spaces or square brackets. An isolated Python stdlib
+      demonstration returned 0 of 2 valid paths with the previous regex and
+      2 of 2 with the corrected parser; an indented excerpt was not counted.
+- [x] **Scoped correction:** parse the KB's unindented `path.md  [zone]`
+      output without rejecting legal Git filenames. The existing onboarding
+      unittest method checks both valid names and the indented non-hit, without
+      increasing the measured test-method count. All paths remain subject to
+      exact HEAD tracking, public-source and SQLite row/content checks. No
+      production KB change, new dependency or user-data migration.
+- [ ] **Acceptance:** run the exact-head Ubuntu/Windows/macOS and backup CI,
+      obtain independent review, and resolve the stale protected-main required
+      checks (#107) legally. No merge while any gate is incomplete. Rollback:
+      revert this parser/test/docs slice only.
+
+**Next 1 (P0):** check eight exact-head CI jobs, reconcile existing #145 and
+#107, and request independent review before merge.
+**Next 2 (P1):** measure network clone through the first usable result on
+Windows, macOS and Linux, including environment, failures and timestamps.
+
+---
+
 ## P0 — Auditable committed-revision recall timings (#93, PR #145; under review)
 
 - [ ] **S** Record the actual `git rev-parse HEAD` of the disposable checkout
