@@ -215,9 +215,18 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             clone_cmd = (["git", "-c", "credential.helper=", "clone",
                           "--quiet", "--no-hardlinks"] if remote else
                          ["git", "clone", "--quiet", "--local", "--no-hardlinks"])
-            cloned = invoke(clone_cmd + [str(source), str(checkout)])
+            try:
+                cloned = invoke(clone_cmd + [str(source), str(checkout)])
+            except subprocess.TimeoutExpired:
+                # Even a timed-out transfer is a measured failed attempt.
+                result["clone_ms"] = round(
+                    (time.perf_counter() - preflight_end) * 1000, 3)
+                raise
             if cloned.returncode != 0:
-                result["reason"] = "local_clone_failed"
+                result["clone_ms"] = round(
+                    (time.perf_counter() - preflight_end) * 1000, 3)
+                result["reason"] = ("remote_clone_failed" if remote
+                                    else "local_clone_failed")
                 return result
             # Pin the actual commit cloned (not the potentially moving source branch).
             # This Git query is included in clone_ms and the shared timeout.

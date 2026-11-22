@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — failed remote clone reporting)
+- The opt-in GitHub clone-to-first-recall diagnostic now distinguishes
+  `remote_clone_failed` from `local_clone_failed` and includes elapsed
+  `clone_ms` for nonzero clone exits and clone timeouts. Previously a failed
+  HTTPS attempt looked like a local-clone error with no attempt duration.
+  The existing onboarding regression simulates transport failure and timeout
+  without a network or credentials, and ensures no raw Git stderr enters JSON.
+  Offline behavior, runtime KB, dependencies and stored user data are unchanged.
+  Neither simulation nor local CI measures real HTTPS onboarding. This remains
+  draft until exact-head CI, independent review and protected-main #107.
+  Rollback: revert the scoped probe/test/bilingual-doc change.
+
 ### Fixed (issue #147; PR #145 draft — tracked source immutability)
 - The disposable clean-clone recall witness now rejects a trial if
   ingest/search changes **any Git-tracked file** after checkout, even when

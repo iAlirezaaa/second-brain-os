@@ -310,6 +310,44 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertTrue(transferred["matched_paths"])
         self.assertGreaterEqual(transferred["elapsed_ms"], transferred["clone_ms"])
 
+        # Failure-aware #147 regression: a transfer failure must retain the
+        # attempted clone duration, not report the remote as a local error.
+        # The stub makes no network requests and preserves real Git preflight.
+        def fail_clone(args, **kwargs):
+            if args and args[0] == "git" and "clone" in args:
+                return subprocess.CompletedProcess(
+                    args, 128, "", "synthetic transport-only error")
+            return original_run(args, **kwargs)
+
+        for remote_mode, reason in ((True, "remote_clone_failed"),
+                                    (False, "local_clone_failed")):
+            with self.subTest(failed_clone_remote=remote_mode):
+                with patch.object(clean_module.subprocess, "run",
+                                  side_effect=fail_clone):
+                    failed = clean_module.measure(
+                        ROOT.as_uri() if remote_mode else ROOT,
+                        remote=remote_mode)
+                self.assertEqual(failed["status"], "fail", failed)
+                self.assertEqual(failed["reason"], reason, failed)
+                self.assertIsInstance(failed["clone_ms"], float)
+                self.assertGreaterEqual(failed["clone_ms"], 0)
+                self.assertGreaterEqual(failed["elapsed_ms"], failed["clone_ms"])
+                self.assertIsNone(failed["indexed_notes"])
+                self.assertNotIn("synthetic transport-only error", str(failed))
+
+        def timeout_clone(args, **kwargs):
+            if args and args[0] == "git" and "clone" in args:
+                raise subprocess.TimeoutExpired(args, 0.001)
+            return original_run(args, **kwargs)
+
+        with patch.object(clean_module.subprocess, "run",
+                          side_effect=timeout_clone):
+            timed_out = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertEqual(timed_out["status"], "fail", timed_out)
+        self.assertEqual(timed_out["reason"], "timeout", timed_out)
+        self.assertIsInstance(timed_out["clone_ms"], float)
+        self.assertGreaterEqual(timed_out["elapsed_ms"], timed_out["clone_ms"])
+
         # The downloaded executable must belong to the Git commit being
         # benchmarked. Simulate a missing tree entry during a real file:// clone.
         original_run = subprocess.run

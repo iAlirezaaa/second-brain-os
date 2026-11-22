@@ -184,6 +184,12 @@ a committed note and make SQLite agree with the *rewritten* text, producing
 a false claim of recall from unmodified HEAD. Generated `.kb/` cache files
 remain allowed. This is a benchmark-integrity check, not a sandbox.
 
+A failed HTTPS clone reports `remote_clone_failed` (rather than the offline
+`local_clone_failed`) and preserves the attempted `clone_ms`; a clone
+timeout reports `timeout` with the same timing. Failed trials never substitute
+a local clone or include raw Git stderr in JSON. These timings are attempted
+transfer duration, **not** successful first-use measurements.
+
 The default command (without `--github`) remains network-free. CI tests
 the alternate Git transfer path via a local `file://` transport and does
 **not** claim to benchmark real GitHub HTTPS latency. The optional mode

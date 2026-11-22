@@ -25,6 +25,32 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P1 — Record failed HTTPS clone attempts honestly (#147 / PR #145; 2026-11-22)
+
+- [x] **Reproduced source defect:** on clone return code != 0, the
+      diagnostic always reported `local_clone_failed` even for opt-in
+      public GitHub HTTPS and left `clone_ms: null`; network attempts could
+      not be distinguished or timed in per-trial JSON.
+- [x] **Bounded repair (S):** report `remote_clone_failed` for HTTPS
+      failures, preserve attempted transfer time on nonzero exit and clone
+      timeout; local failures remain `local_clone_failed`. Extend the
+      existing onboarding regression with simulated transport failure and
+      timeout, no actual network, no new dependency/test method/schema change.
+      Never print raw transport stderr in benchmark JSON.
+- [ ] **Acceptance:** verify the exact-head four Ubuntu/Windows matrix,
+      focused macOS and three backup jobs; independent security review and
+      protected-main #107 must be reconciled before merge. Actual HTTPS
+      throughput, under-five-minute first use and user adoption remain
+      unknown. Rollback: revert this scoped probe/test/bilingual-doc change.
+
+**Next 1 (P0):** reconcile #107 required checks and independent review;
+check all exact-head CI jobs, do not bypass protection or merge a Draft PR.
+**Next 2 (P1):** run real HTTPS-to-first-hit trials on Windows/macOS/Linux
+with SHA, dated conditions and failed-attempt counts; do not extrapolate
+from simulated error tests.
+
+---
+
 ### P0 — Reject tracked-source mutation during first-recall measurement (#147 / PR #145; 2026-11-22)
 
 - [x] **Reproduced integrity gap:** the previous diagnostic checked source
