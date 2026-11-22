@@ -360,6 +360,27 @@ class FirstSessionOnboarding(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
                 self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
             forged_source_only = clean_module.measure(fake_repo)
+            # RED FIRST: a fake ingest can create a plausible Markdown file
+            # INSIDE the clone only, then echo it in a consistent SQLite row.
+            # That path is not in HEAD, so it cannot substantiate a measured
+            # committed-clone recall even though both the row and file agree.
+            generated_cli = fake_repo / "scripts" / "kb.py"
+            generated_cli.write_text(
+                generated_cli.read_text(encoding="utf-8")
+                .replace("02_WIKI/claim.md", "02_WIKI/generated-memory.md")
+                .replace("    pathlib.Path('.kb').mkdir(exist_ok=True)\\n",
+                         "    pathlib.Path('02_WIKI/generated-memory.md').write_text("
+                         "'synthetic memory\\\\n', encoding='utf-8')\\n"
+                         "    pathlib.Path('.kb').mkdir(exist_ok=True)\\n"),
+                encoding="utf-8")
+            for args in (("add", "scripts/kb.py"),
+                         ("-c", "user.name=Fixture", "-c",
+                          "user.email=fixture@example.invalid", "commit", "-qm",
+                          "synthetic generated but untracked hit")):
+                step = subprocess.run(["git", *args], cwd=str(fake_repo),
+                                      capture_output=True, text=True, timeout=30)
+                self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
+            forged_generated = clean_module.measure(fake_repo)
             # A local clone ignores uncommitted work; accepting it as a live
             # source benchmark would conceal the files a newcomer is editing.
             untracked = fake_repo / "02_WIKI" / "draft-untracked.md"
@@ -391,6 +412,11 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(forged_valid_sqlite["reason"],
                          "no_source_backed_hit", forged_valid_sqlite)
         self.assertEqual(forged_source_only["status"], "fail", forged_source_only)
+        self.assertEqual(forged_generated["matched_paths"],
+                         ["02_WIKI/generated-memory.md"], forged_generated)
+        self.assertEqual(forged_generated["status"], "fail", forged_generated)
+        self.assertEqual(forged_generated["reason"],
+                         "no_source_backed_hit", forged_generated)
         self.assertEqual(forged_source_only["reason"],
                          "no_source_backed_hit", forged_source_only)
 
