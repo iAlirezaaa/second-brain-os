@@ -25,7 +25,30 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
-### P0 — Refuse misleading local-recall benchmarks from dirty sources (#144 / PR #145; 2026-11-21)
+### P0 — Reject linked scripts and SQLite cache paths in first-recall probe (#146 / PR #145; 2026-11-22)
+
+- [x] **Observed baseline:** `Path.is_file()` follows links. The draft local-clone
+      diagnostic could launch a symlinked `scripts/kb.py` or consult a linked
+      `.kb/kb.sqlite` outside its disposable clone. Isolated synthetic path
+      tests reproduced this API behavior; no real secrets or user vaults used.
+- [x] **Bounded fix (S):** refuse symlinks/junction escapes for `scripts/`,
+      `scripts/kb.py`, `.kb/` and `.kb/kb.sqlite` before launching the
+      indexer and recheck after ingest and search. Explicit failure reason:
+      `unsafe_checkout_path`. Extend the existing onboarding regression,
+      with Windows-compatible synthetic alias checks and a real symlink check
+      where permitted. No dependency, production KB schema, permission or
+      persisted personal data change; this is not a process sandbox.
+- [ ] **Gate:** 8/8 final-head CI jobs including macOS, Windows/Ubuntu and
+      cross-host restore; independent security review; protected-main
+      required-check correction (#107) before merge. Rollback: revert this
+      scoped diagnostic/test/docs commit.
+
+**Next 1 (P0):** verify #145's exact-head CI and reconcile #111/#134/#145,
+protected `main` contexts (#107), and independent review.
+**Next 2 (P1):** measure repeatable remote clone-to-first-recall latency,
+failures and hardware/network provenance across three OS families.
+
+### P0 — Refuse misleading local-recall benchmarks### P0 — Refuse misleading local-recall benchmarks from dirty sources (#144 / PR #145; 2026-11-21)
 
 - [x] **Baseline (reproduced by adversarial fixture):** `git clone --local`
       ignores staged, modified and untracked source work. The previous

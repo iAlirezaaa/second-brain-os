@@ -371,6 +371,17 @@ class FirstSessionOnboarding(unittest.TestCase):
                 tracked.read_text(encoding="utf-8") + "Uncommitted edit\n",
                 encoding="utf-8")
             dirty_tracked = clean_module.measure(fake_repo)
+            # A linked executable/cache can escape the disposable checkout.
+            # Assert that the guard runs before any KB subprocess is launched.
+            tracked.write_text("# Ordinary note\\nOnly unrelated facts.\\n",
+                               encoding="utf-8")
+            with patch.object(clean_module, "_checkout_paths_safe",
+                              return_value=False) as blocked_guard:
+                blocked_link = clean_module.measure(fake_repo)
+            self.assertEqual(blocked_link["reason"], "unsafe_checkout_path",
+                             blocked_link)
+            self.assertGreaterEqual(blocked_guard.call_count, 1)
+            dirty_tracked = clean_module.measure(fake_repo)
         for dirty in (dirty_untracked, dirty_tracked):
             self.assertEqual(dirty["status"], "fail", dirty)
             self.assertEqual(dirty["reason"], "source_dirty", dirty)
@@ -384,6 +395,33 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(forged_source_only["reason"],
                          "no_source_backed_hit", forged_source_only)
 
+
+        # Repro: Path.is_file() can be true for an out-of-checkout link.
+        # Mocked alias checks work on Windows runners without symlink privilege;
+        # a real directory symlink is also covered where the OS allows it.
+        with tempfile.TemporaryDirectory(prefix="sbo-path-guard-") as directory:
+            checkout = Path(directory) / "checkout"
+            (checkout / "scripts").mkdir(parents=True)
+            (checkout / "scripts" / "kb.py").write_text("# synthetic\\n",
+                                                          encoding="utf-8")
+            self.assertTrue(clean_module._checkout_paths_safe(checkout))
+            actual_is_symlink = Path.is_symlink
+            for basename in ("scripts", "kb.py", ".kb", "kb.sqlite"):
+                with self.subTest(unsafe_alias=basename):
+                    with patch.object(Path, "is_symlink",
+                                      lambda item, name=basename:
+                                      item.name == name or actual_is_symlink(item)):
+                        self.assertFalse(clean_module._checkout_paths_safe(checkout))
+            external = Path(directory) / "external"
+            external.mkdir()
+            try:
+                (checkout / ".kb").symlink_to(external, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                pass  # Windows may deny symlink creation; mock cases above remain.
+            else:
+                self.assertFalse(clean_module._checkout_paths_safe(checkout))
+
+        # Execute the real installed-home installer, ingest and search with
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.
         import importlib.util

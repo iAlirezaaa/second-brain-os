@@ -6,6 +6,21 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #146; PR #145 draft — confine diagnostic paths)
+- The disposable clean-clone recall probe now rejects linked `scripts/`,
+  `scripts/kb.py`, `.kb/` and `.kb/kb.sqlite` paths (including resolved
+  escapes through a directory junction) before launching code and after each
+  ingest/search phase. It reports `unsafe_checkout_path` instead of
+  following a linked executable or SQLite cache outside the cloned tree.
+  The existing onboarding regression tests normal and synthetic linked
+  path conditions without new discovered test methods. No real secrets,
+  user vaults, production index schema, packages or permissions involved.
+  This guard is not an OS sandbox; the feature is still unreleased.
+  Merge requires exact-head eight-job CI, independent review and #107
+  branch-protection reconciliation. Rollback: revert this bounded change.
+
+## [Unreleased]
+
 ### Fixed (issue #144; PR #145 draft — clean-source benchmark preflight)
 - The local-clone-to-first-keyword-hit diagnostic now rejects uncommitted
   tracked/staged or nonignored untracked source changes with `source_dirty`.

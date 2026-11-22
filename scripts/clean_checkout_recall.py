@@ -38,7 +38,27 @@ def _child_env():
     return env
 
 
-def _source_supports_keyword(checkout, relative_path, keyword="memory"):
+
+def _checkout_paths_safe(checkout):
+    """Refuse executable/cache symlink aliases in a disposable Git checkout.
+
+    Resolve existing paths to catch Windows directory junctions as well as
+    Unix symlinks. This is a diagnostic guard, not an OS process sandbox.
+    """
+    try:
+        root = checkout.resolve(strict=True)
+        for path in (checkout / "scripts", checkout / "scripts" / "kb.py",
+                     checkout / ".kb", checkout / ".kb" / "kb.sqlite"):
+            if path.is_symlink():
+                return False
+            if path.exists() and root not in path.resolve(strict=True).parents:
+                return False
+        return True
+    except (OSError, RuntimeError):
+        return False
+
+
+def _source_supports_keyworddef _source_supports_keyword(checkout, relative_path, keyword="memory"):
     """Independently verify committed Markdown, not only derived SQLite metadata.
 
     A source filename can itself satisfy a keyword query. Resolve before
@@ -110,7 +130,10 @@ def measure(source=ROOT, timeout=TIMEOUT):
             result["commit_sha"] = commit_sha
             clone_end = time.perf_counter()
             result["clone_ms"] = round((clone_end - preflight_end) * 1000, 3)
-            kb = checkout / "scripts" / "kb.py"
+            if not _checkout_paths_safe(checkout):
+                result["reason"] = "unsafe_checkout_path"
+                return result
+            kb = checkout / "scripts" / "kb.py"            kb = checkout / "scripts" / "kb.py"
             if not kb.is_file():
                 result["reason"] = "kb_missing"
                 return result
@@ -120,14 +143,20 @@ def measure(source=ROOT, timeout=TIMEOUT):
             if indexed.returncode != 0:
                 result["reason"] = "ingest_failed"
                 return result
-            searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)
+            if not _checkout_paths_safe(checkout):
+                result["reason"] = "unsafe_checkout_path"
+                return result
+            searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)            searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)
             search_end = time.perf_counter()
             result["search_ms"] = round((search_end - ingest_end) * 1000, 3)
             count = re.search(r"\bindexed (\d+) notes\b", indexed.stdout)
             result["indexed_notes"] = int(count.group(1)) if count else None
             hits = re.findall(r"(?m)^((?:[\w.-]+/)*[\w.-]+\.md)\s+\[", searched.stdout)
             result["matched_paths"] = hits
-            # Every reported hit must be a real local checked-in source.
+            if not _checkout_paths_safe(checkout):
+                result["reason"] = "unsafe_checkout_path"
+                return result
+            # Every reported hit must be a real local checked-in source.            # Every reported hit must be a real local checked-in source.
             valid_hits = bool(hits) and all(
                 (checkout / path).is_file()
                 and ".." not in Path(path).parts

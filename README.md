@@ -97,7 +97,13 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
-**Clean-source requirement:** the diagnostic refuses staged changes, modified
+The draft local-clone diagnostic also refuses symlinked executable or
+SQLite-cache paths (`scripts/`, `scripts/kb.py`, `.kb/`, `.kb/kb.sqlite`)
+with `unsafe_checkout_path` before launching the indexer and before
+checking index results. This prevents following obvious linked paths outside
+the disposable clone; it is **not** an OS-level execution sandbox.
+
+**Clean-source requirement:****Clean-source requirement:** the diagnostic refuses staged changes, modified
 tracked files and nonignored untracked files with `source_dirty` rather than
 silently cloning the last commit and ignoring those edits. Commit the work or
 run from a clean worktree before comparing results. Gitignored local indexes
