@@ -282,9 +282,28 @@ class FirstSessionOnboarding(unittest.TestCase):
         # Before this guard, remote children inherited HOME/USERPROFILE.
         # Watch the actual file:// transfer path, not just a helper in isolation.
         from unittest.mock import patch
+        # RED-FIRST (#147): HOME was isolated, but TMP/TEMP/TMPDIR still
+        # pointed at caller-owned directories for downloaded Git/Python code.
+        # Inspect the environment while the real file:// trial is active.
+        real_child_env = clean_module._child_env
+        isolated_temp_seen = []
+
+        def capture_remote_env(home):
+            env = real_child_env(home)
+            if home is not None:
+                isolated_tmp = Path(home) / "tmp"
+                isolated_temp_seen.append(
+                    isolated_tmp.is_dir()
+                    and all(env.get(key) == str(isolated_tmp)
+                            for key in ("TMP", "TEMP", "TMPDIR")))
+            return env
+
         with patch.object(clean_module, "_child_env",
-                          wraps=clean_module._child_env) as observed_env:
+                          side_effect=capture_remote_env) as observed_env:
             transferred = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertTrue(isolated_temp_seen, "remote mode must spawn children")
+        self.assertTrue(all(isolated_temp_seen),
+                        "remote subprocesses must use a real throwaway temp dir")
         remote_homes = [call.args[0] for call in observed_env.call_args_list]
         self.assertTrue(remote_homes, "every remote subprocess needs an environment")
         self.assertTrue(all(home is not None for home in remote_homes))
