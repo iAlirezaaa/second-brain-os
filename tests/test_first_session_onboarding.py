@@ -368,10 +368,10 @@ class FirstSessionOnboarding(unittest.TestCase):
             generated_cli.write_text(
                 generated_cli.read_text(encoding="utf-8")
                 .replace("02_WIKI/claim.md", "02_WIKI/generated-memory.md")
-                .replace("    pathlib.Path('.kb').mkdir(exist_ok=True)\\n",
+                .replace("    pathlib.Path('.kb').mkdir(exist_ok=True)\n",
                          "    pathlib.Path('02_WIKI/generated-memory.md').write_text("
-                         "'synthetic memory\\\\n', encoding='utf-8')\\n"
-                         "    pathlib.Path('.kb').mkdir(exist_ok=True)\\n"),
+                         "'synthetic memory\\n', encoding='utf-8')\n"
+                         "    pathlib.Path('.kb').mkdir(exist_ok=True)\n"),
                 encoding="utf-8")
             for args in (("add", "scripts/kb.py"),
                          ("-c", "user.name=Fixture", "-c",
