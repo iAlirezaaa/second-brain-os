@@ -281,6 +281,7 @@ class FirstSessionOnboarding(unittest.TestCase):
         # only offer the fixed public GitHub URL.
         # Before this guard, remote children inherited HOME/USERPROFILE.
         # Watch the actual file:// transfer path, not just a helper in isolation.
+        from unittest.mock import patch
         with patch.object(clean_module, "_child_env",
                           wraps=clean_module._child_env) as observed_env:
             transferred = clean_module.measure(ROOT.as_uri(), remote=True)
@@ -324,7 +325,6 @@ class FirstSessionOnboarding(unittest.TestCase):
         )
         # Two green trials from different revisions are NOT one reproducible
         # benchmark. Use measured-looking synthetic records, not a fake Git repo.
-        from unittest.mock import patch
         with patch.object(clean_module, "measure", side_effect=[
             {"status": "pass", "elapsed_ms": 10.0, "commit_sha": "a" * 40},
             {"status": "pass", "elapsed_ms": 12.0, "commit_sha": "b" * 40},
