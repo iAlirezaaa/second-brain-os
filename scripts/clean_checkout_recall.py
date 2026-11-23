@@ -170,8 +170,10 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
               "preflight_ms": None, "clone_ms": None,
               "ingest_ms": None, "search_ms": None,
               "indexed_notes": None, "matched_paths": [], "commit_sha": None,
+              "timeout_phase": None,
               "transport": "git_remote" if remote else "local_git"}
 
+    phase = "preflight"
     remote_home = None
 
     def remaining():
@@ -222,6 +224,7 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                           "--quiet", "--no-hardlinks"] if remote else
                          ["git", "clone", "--quiet", "--local", "--no-hardlinks"])
             try:
+                phase = "clone"
                 cloned = invoke(clone_cmd + [str(source), str(checkout)])
             except subprocess.TimeoutExpired:
                 # Even a timed-out transfer is a measured failed attempt.
@@ -274,6 +277,7 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             if kb_diff.returncode != 0:
                 result["reason"] = "kb_checkout_modified"
                 return result
+            phase = "ingest"
             indexed = invoke([sys.executable, str(kb), "ingest"], cwd=checkout)
             ingest_end = time.perf_counter()
             result["ingest_ms"] = round((ingest_end - clone_end) * 1000, 3)
@@ -283,9 +287,11 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
                 return result
+            phase = "search"
             searched = invoke([sys.executable, str(kb), "search", "memory"], cwd=checkout)
             search_end = time.perf_counter()
             result["search_ms"] = round((search_end - ingest_end) * 1000, 3)
+            phase = "validation"
             count = re.search(r"\bindexed (\d+) notes\b", indexed.stdout)
             result["indexed_notes"] = int(count.group(1)) if count else None
             hits = _reported_hit_paths(searched.stdout)
@@ -346,12 +352,14 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                 return result
             if time.perf_counter() - start > timeout:
                 result["reason"] = "timeout"
+                result["timeout_phase"] = phase
                 return result
             result["status"] = "pass"
             result["reason"] = "ok"
             return result
     except subprocess.TimeoutExpired:
         result["reason"] = "timeout"
+        result["timeout_phase"] = phase
         return result
     except (OSError, ValueError):
         result["reason"] = "process_or_filesystem_error"

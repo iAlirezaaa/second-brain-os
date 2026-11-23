@@ -187,7 +187,10 @@ remain allowed. This is a benchmark-integrity check, not a sandbox.
 
 A failed HTTPS clone reports `remote_clone_failed` (rather than the offline
 `local_clone_failed`) and preserves the attempted `clone_ms`; a clone
-timeout reports `timeout` with the same timing. Failed trials never substitute
+timeout reports `timeout` and `timeout_phase: "clone"` with the same timing.
+Later timeouts identify `ingest`, `search` or `validation` in `timeout_phase`
+(`preflight` for a local source check); successful trials return `null`.
+Failed trials never substitute
 a local clone or include raw Git stderr in JSON. These timings are attempted
 transfer duration, **not** successful first-use measurements.
 

@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — timed-out stage provenance)
+- The optional clean checkout and public GitHub clone-to-recall probe now
+  reports an additive `timeout_phase` alongside `reason: timeout`, identifying
+  preflight, clone, ingest, search or final validation. Successful trials
+  report `null`. The existing regression forces clone/index/search timeouts
+  over a synthetic local `file://` Git transfer with no network. This does
+  not prove actual HTTPS first-use latency or isolate downloaded code at
+  the OS level. No new dependency, data migration, permission or KB change.
+  Exact-head CI, independent review and #107 still gate merge. Rollback:
+  revert this small probe/test/bilingual-documentation change.
+
 ### Fixed (issue #147; PR #145 draft — isolated remote scratch paths)
 - Opt-in GitHub clone-to-recall trials previously forwarded the parent's
   `TMP`, `TEMP` and `TMPDIR` values to downloaded Python, even

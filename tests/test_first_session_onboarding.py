@@ -325,6 +325,7 @@ class FirstSessionOnboarding(unittest.TestCase):
                         "temporary remote homes must be cleaned up")
         self.assertEqual(transferred["status"], "pass", transferred)
         self.assertEqual(transferred["transport"], "git_remote")
+        self.assertIsNone(transferred["timeout_phase"])
         self.assertEqual(transferred["commit_sha"], commit.stdout.strip())
         self.assertTrue(transferred["matched_paths"])
         self.assertGreaterEqual(transferred["elapsed_ms"], transferred["clone_ms"])
@@ -367,9 +368,30 @@ class FirstSessionOnboarding(unittest.TestCase):
             timed_out = clean_module.measure(ROOT.as_uri(), remote=True)
         self.assertEqual(timed_out["status"], "fail", timed_out)
         self.assertEqual(timed_out["reason"], "timeout", timed_out)
+        self.assertEqual(timed_out["timeout_phase"], "clone", timed_out)
         self.assertIsInstance(timed_out["clone_ms"], float)
         self.assertGreaterEqual(timed_out["elapsed_ms"], timed_out["clone_ms"])
 
+        # Distinguish network transfer from an indexer or search timeout.
+        # The tests use an actual disposable local file:// clone, no HTTPS.
+        def timeout_kb_step(step):
+            def intercept(args, **kwargs):
+                if (len(args) >= 3 and args[0] == sys.executable
+                        and Path(args[1]).name == "kb.py" and args[2] == step):
+                    raise subprocess.TimeoutExpired(args, 0.001)
+                return original_run(args, **kwargs)
+            return intercept
+        
+        for phase in ("ingest", "search"):
+            with self.subTest(timeout_phase=phase):
+                with patch.object(clean_module.subprocess, "run",
+                                  side_effect=timeout_kb_step(phase)):
+                    phase_failure = clean_module.measure(ROOT.as_uri(), remote=True)
+                self.assertEqual(phase_failure["reason"], "timeout", phase_failure)
+                self.assertEqual(phase_failure["timeout_phase"], phase, phase_failure)
+                self.assertIsInstance(phase_failure["elapsed_ms"], float)
+        
+        
         # The downloaded executable must belong to the Git commit being
         # benchmarked. Simulate a missing tree entry during a real file:// clone.
         original_run = subprocess.run

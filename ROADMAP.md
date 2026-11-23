@@ -25,6 +25,28 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P1 — Attribute first-recall timeouts to their actual stage (#147 / PR #145; 2026-11-23)
+
+- [x] **Observed diagnostic gap:** `reason: timeout` did not distinguish
+      clone/download delays from an indexer stall, keyword search or
+      validation timeout. Failed attempts were hard to interpret.
+- [x] **Bounded fix (S):** additive `timeout_phase` JSON field labels
+      `preflight`, `clone`, `ingest`, `search` or `validation` on timeout
+      and is `null` on successful runs. The existing test method forces
+      clone, ingest and search timeouts via local `file://` Git transport;
+      no real HTTPS performance or new dependency is claimed.
+- [ ] **Merge acceptance:** complete exact-head Ubuntu/Windows matrix, macOS
+      focus and backup/restore CI, independent review and lawful resolution of
+      #107. No merge while PR #145 remains Draft or protected checks drift.
+      **Rollback:** revert this probe/test/bilingual-doc change.
+
+**Next 1 (P0):** reconcile protected-main required check contexts (#107) through
+authorized review and verify all exact-head CI results before merging #145.
+**Next 2 (P1):** collect dated real HTTPS first-recall success/failure timings
+on Windows/macOS/Linux, with commit SHA and timeout phases; unknown stays unknown.
+
+---
+
 ### P0 — Keep remote benchmark scratch files outside caller temp dirs (#147 / PR #145; 2026-11-22)
 
 - [x] **Baseline:** the remote benchmark replaced child `HOME` and
