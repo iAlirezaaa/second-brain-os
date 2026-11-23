@@ -25,6 +25,15 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Complete Unicode folding at the final indexed-hit gate (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Isolated regression reproduced:** the probe's last SQLite-hit check still used casefold alone on (title + normalized body), so a source-backed fullwidth title such as `ｍｅｍｏｒｙ` was rejected by this *diagnostic predicate*. The actual KB's FTS5 behavior for title-only matches remains a separate compatibility question; **no real-user failure is claimed**.
+- [x] **Bounded change:** the last check uses the same NFKC/casefold/Persian-letter helper already used for committed Markdown and indexed body; add a synthetic direct regression in the existing onboarding unittest (including a negative control). No dependency, schema, runtime KB change or permission expansion.
+- [ ] **Release gate:** verify eight exact-head jobs (the previous head completed 7/8; macOS was canceled), get independent review, reconcile obsolete protected-main checks in #107. **Rollback:** revert the narrow verifier/test/docs commit; no data migration.
+
+**Next 1 (P0):** finish exact-head CI including macOS without weakening protection; record cancellation causes and independent review.
+**Next 2 (P1):** collect repeatable public HTTPS clone-to-first-recall timings on Windows/macOS/Linux with SHA, failures and clear exclusion of Python setup; unknown until measured.
+
 ### P0 — Match Unicode source terms with the real KB normalizer (#147 / draft PR #145; 2026-11-23)
 
 - [x] **False-negative reproduced in isolation:** Python casefold-only search does not find `memory` in committed Markdown containing the compatibility-width string `ｍｅｍｏｒｙ`, although the KB index applies NFKC normalization. This is a local predicate reproduction, **not** a user report or an HTTPS speed measurement.

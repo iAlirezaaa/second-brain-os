@@ -119,6 +119,18 @@ def _normalise_source(text):
         str.maketrans({"ي": "ی", "ك": "ک"}))
 
 
+def _indexed_hit_supports_keyword(row, keyword="memory"):
+    """Apply KB's Unicode folding at the *last* SQLite-hit validation gate.
+
+    The body norm is pre-folded by KB ingest, but titles are kept verbatim in
+    notes. Do not reject a source-backed Unicode title on casefold alone.
+    """
+    if (row is None or len(row) != 3
+            or not all(isinstance(item, str) for item in row)):
+        return False
+    return _normalise_source(keyword) in _normalise_source(row[0] + " " + row[2])
+
+
 def _source_supports_keyword(checkout, relative_path, keyword="memory"):
     """Verify committed Markdown with the same Unicode folding as KB search."""
     source = _public_markdown_source(checkout, relative_path)
@@ -386,7 +398,7 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                         actual_count == result["indexed_notes"]
                         and all(
                             _indexed_row_matches_source(checkout, path, row)
-                            and "memory" in (row[0] + " " + row[2]).casefold()
+                            and _indexed_hit_supports_keyword(row)
                             for path, row in zip(hits, indexed_rows)
                         )
                     )

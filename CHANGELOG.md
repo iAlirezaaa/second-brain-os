@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; draft PR #145 — final Unicode indexed-hit gate)
+- The disposable clean-clone recall probe's final SQLite-hit test still used
+  casefold alone on the stored title plus normalized body. A fullwidth
+  source-backed title could therefore fail that diagnostic predicate even
+  after the earlier source-path NFKC fix. This is an isolated consistency
+  issue, **not** proof of an FTS5 title-only result in a user's repository.
+- Reuse the KB-compatible NFKC/casefold/Persian-letter helper in that final
+  check; the existing onboarding unittest now covers compatibility-width and
+  Persian titles, unrelated content and missing rows. No runtime KB changes,
+  dependencies, schema migration, user data or permissions. Full exact-head
+  CI and independent review remain required; rollback is a scoped revert.
+
 ### Fixed (issue #147; draft PR #145 — Unicode-normalized source evidence)
 - An offline keyword index uses NFKC/casefold/Persian-letter folding, but the
   clean-clone probe independently searched committed Markdown filenames and

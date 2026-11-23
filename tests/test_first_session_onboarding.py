@@ -538,6 +538,18 @@ class FirstSessionOnboarding(unittest.TestCase):
             self.assertTrue(clean_module._source_supports_keyword(
                 checkout, "02_WIKI/plain.md", keyword="کلمه"))
 
+        # Regression (#147): the LAST SQLite validation gate must use the
+        # same Unicode folding as the source predicate. The old casefold-only
+        # expression rejects valid compatibility-width titles.
+        self.assertFalse("memory" in ("ｍｅｍｏｒｙ" + " " + "unrelated").casefold())
+        self.assertTrue(clean_module._indexed_hit_supports_keyword(
+            ("ｍｅｍｏｒｙ", "unrelated body", "unrelated body")))
+        self.assertTrue(clean_module._indexed_hit_supports_keyword(
+            ("كلمه", "unrelated body", "unrelated body"), keyword="کلمه"))
+        self.assertFalse(clean_module._indexed_hit_supports_keyword(
+            ("unrelated", "nothing relevant", "nothing relevant")))
+        self.assertFalse(clean_module._indexed_hit_supports_keyword(None))
+
         # Two green trials from different revisions are NOT one reproducible
         # benchmark. Use measured-looking synthetic records, not a fake Git repo.
         with patch.object(clean_module, "measure", side_effect=[
