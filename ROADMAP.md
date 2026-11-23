@@ -25,6 +25,35 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Prevent duplicate-source inflation in clean-clone recall (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Reproduced a false-green predicate:** an isolated stdlib SQLite
+      fixture with no unique key stored two rows for one path: row count 2,
+      unique committed source count 1. The prior membership/count check
+      accepted both paths (2/2), although the report would overstate notes.
+      This was a local predicate reproduction, **not** a completed GitHub
+      clone or a demonstrated production KB bug.
+- [x] **S-sized test-first change:** extend the existing disposable Git
+      onboarding integration fixture to write identical, source-matching
+      SQLite rows for a single committed Markdown path; require
+      duplicate_index_path. The verifier now refuses duplicate corpus
+      paths before certifying indexed notes. No change to runtime KB,
+      schema, personal notes, external dependencies or permissions.
+- [ ] **Release gate:** final-head 8/8 Actions jobs on Ubuntu/Windows/
+      macOS plus cross-host backup, independent review and authorized
+      repair of stale protected-main required contexts (#107).
+      **Rollback:** revert the scoped test/probe/docs commits; no migration.
+
+**Next 1 (P0):** verify exact-head full CI and independently reconcile #107
+before considering Draft PR #145 for merge.
+**Next 2 (P1):** obtain honest HTTPS download-to-first-recall measurements,
+including failures and exact commits, on Windows/macOS/Linux; separate
+Python setup time. External parallel risk input: Basic Memory #1771
+reports duplicate SQLite search-index rows (2026-10-17), **not** evidence
+that Second Brain OS's runtime index has the same defect.
+
+---
+
 ### P0 — Read-only SQLite verification for disposable first-recall evidence (#147 / draft PR #145; 2026-11-23)
 
 - [x] **Measured isolated baseline:** standard-library `sqlite3.connect(path)`
