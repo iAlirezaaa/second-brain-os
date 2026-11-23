@@ -6,6 +6,21 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; draft PR #145 — duplicate indexed-source rows)
+- A disposable first-recall index with two SQLite rows for the same
+  committed Markdown path could report two indexed notes and pass
+  source-backed verification if the table omitted a uniqueness constraint.
+  The benchmark now refuses duplicate source paths with reason
+  duplicate_index_path, rather than accepting inflated note counts.
+  The existing onboarding integration test builds a committed synthetic
+  Git fixture with duplicate source-matching rows; no additional unittest
+  method, network call, dependency or production KB change is needed.
+- Isolated stdlib baseline: 2 rows / 1 unique path were accepted by the
+  old membership-and-count predicate; this is not full-suite or real HTTPS
+  proof. Exact-head CI, independent review and protected-main issue #107
+  still gate release. Rollback: revert these scoped test/probe/docs commits.
+
+
 ### Fixed (issue #147; PR #145 draft — read-only SQLite evidence inspection)
 - The disposable first-recall verifier previously used SQLite's writable
   default connection to validate an existing derived cache. It now opens
