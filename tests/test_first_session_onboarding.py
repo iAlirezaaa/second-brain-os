@@ -700,6 +700,36 @@ class FirstSessionOnboarding(unittest.TestCase):
                              forged_committed_row)
             self.assertEqual(forged_committed_row["reason"],
                              "indexed_source_mismatch", forged_committed_row)
+            # RED-FIRST (#147): a synthetic index can count the same genuine
+            # committed note twice if its table omits the path uniqueness
+            # constraint. Every row then matches Markdown, but "indexed 2"
+            # is not evidence of two distinct source notes.
+            (fake_repo / "scripts" / "kb.py").write_text(
+                "import pathlib, sqlite3, sys\n"
+                "if 'ingest' in sys.argv:\n"
+                "    pathlib.Path('.kb').mkdir(exist_ok=True)\n"
+                "    db = sqlite3.connect('.kb/kb.sqlite')\n"
+                "    db.execute('CREATE TABLE notes (path TEXT, title TEXT, zone TEXT, body TEXT, norm TEXT, updated TEXT)')\n"
+                "    db.executemany('INSERT INTO notes VALUES (?,?,?,?,?,?)', "
+                "[('02_WIKI/memory.md','Fake memory','02_WIKI',"
+                "'# Fake memory\\n','# fake memory\\n','synthetic')]*2)\n"
+                "    db.commit(); db.close()\n"
+                "    print('indexed 2 notes')\n"
+                "else:\n"
+                "    print('02_WIKI/memory.md  [02_WIKI] Fake memory')\n",
+                encoding="utf-8")
+            for args in (("add", "scripts/kb.py"),
+                         ("-c", "user.name=Fixture", "-c",
+                          "user.email=fixture@example.invalid", "commit", "-qm",
+                          "synthetic duplicated committed index path")):
+                step = subprocess.run(["git", *args], cwd=str(fake_repo),
+                                      capture_output=True, text=True, timeout=30)
+                self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
+            duplicated = clean_module.measure(fake_repo)
+            self.assertEqual(duplicated["status"], "fail", duplicated)
+            self.assertEqual(duplicated["reason"], "duplicate_index_path",
+                             duplicated)
+
             # A local clone ignores uncommitted work; accepting it as a live
             # source benchmark would conceal the files a newcomer is editing.
             untracked = fake_repo / "02_WIKI" / "draft-untracked.md"
