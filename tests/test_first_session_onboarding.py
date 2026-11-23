@@ -598,6 +598,14 @@ class FirstSessionOnboarding(unittest.TestCase):
                                       capture_output=True, text=True, timeout=30)
                 self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
             forged_generated = clean_module.measure(fake_repo)
+            # RED FIRST (#147): an untrusted search header may advertise a
+            # made-up tracked path or a restricted operational-zone path.
+            # Neither label belongs in the public JSON evidence on failure.
+            with patch.object(clean_module, "_reported_hit_paths",
+                              return_value=["09_OPERATIONS/client-memory.md"]):
+                denied_report = clean_module.measure(fake_repo)
+            self.assertEqual(denied_report["status"], "fail", denied_report)
+            self.assertEqual(denied_report["matched_paths"], [], denied_report)
             # A fabricated row can quote the keyword and the exact committed
             # path while storing text absent from that Markdown.
             (fake_repo / "scripts" / "kb.py").write_text(
@@ -707,8 +715,7 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(forged_valid_sqlite["reason"],
                          "indexed_source_mismatch", forged_valid_sqlite)
         self.assertEqual(forged_source_only["status"], "fail", forged_source_only)
-        self.assertEqual(forged_generated["matched_paths"],
-                         ["02_WIKI/generated-memory.md"], forged_generated)
+        self.assertEqual(forged_generated["matched_paths"], [], forged_generated)
         self.assertEqual(forged_generated["status"], "fail", forged_generated)
         self.assertEqual(forged_generated["reason"],
                          "no_source_backed_hit", forged_generated)
