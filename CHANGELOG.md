@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — untrusted search header paths)
+- A failed disposable first-recall diagnostic formerly echoed raw search
+  headers in JSON `matched_paths`, even for uncommitted generated notes or
+  denied operational-zone labels. It now exposes only HEAD-tracked,
+  allowed, Markdown-supported filenames, while **any** rejected hit still
+  fails the full trial. The existing disposable Git onboarding fixture and
+  a denied-zone parser override test this red-first case without network
+  or personal data. No runtime KB permission, dependency, schema or OS
+  sandbox change. This is a diagnostic output-hygiene fix, not proof of
+  HTTPS onboarding latency or resolution of privacy issue #140. Merge
+  remains gated on exact-head CI, independent review and #107.
+  Rollback: revert this scoped probe/test/docs change.
+
 ### Fixed (issue #147; PR #145 draft — unreported fabricated SQLite body)
 - The disposable clean-clone recall witness previously verified all SQLite
   paths against committed HEAD but compared full source bytes only for
