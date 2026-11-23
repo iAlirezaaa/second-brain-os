@@ -25,6 +25,18 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Match Unicode source terms with the real KB normalizer (#147 / draft PR #145; 2026-11-23)
+
+- [x] **False-negative reproduced in isolation:** Python casefold-only search does not find `memory` in committed Markdown containing the compatibility-width string `ｍｅｍｏｒｙ`, although the KB index applies NFKC normalization. This is a local predicate reproduction, **not** a user report or an HTTPS speed measurement.
+- [x] **S-sized fix and regression:** share one stdlib NFKC/casefold/Persian-letter normalizer between the probe's guarded Markdown keyword check and SQLite/source comparison. Extend the existing synthetic unittest for fullwidth source text, fullwidth filename, Persian letter variants and a negative match. No new dependency, OS sandbox, runtime KB modification or schema change.
+- [ ] **Merge gate:** exact-head cross-platform CI, independent review and authorized protected-main required-check reconciliation (#107). **Rollback:** revert this single probe/test/docs commit; no migration.
+
+**Next 1 (P0):** inspect all eight exact-commit CI jobs and resolve #107 without bypasses; keep PR #145 Draft until reviews and required checks permit merge.
+**Next 2 (P1):** benchmark public HTTPS clone to real first recall on Windows/macOS/Linux, including failures and commit provenance; installation time remains a separate unknown.
+Competitive watch: [Letta shared-memory conflict repair #4832](https://github.com/letta-ai/letta-code/issues/4832) flags concurrent-write caution; no external code copied.
+
+---
+
 ### P0 — Prevent duplicate-source inflation in clean-clone recall (#147 / draft PR #145; 2026-11-23)
 
 - [x] **Reproduced a false-green predicate:** an isolated stdlib SQLite

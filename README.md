@@ -96,7 +96,9 @@ ingest/search commands, checks that SQLite contains the reported source hits **a
 and prints failure-aware JSON with clone, index, search and total time. It
 also cross-checks the indexed title, full body and normalized body against the
 committed source; a fabricated SQLite row is not source-backed recall evidence. This
-**includes local Git clone time but excludes GitHub/network download, Python
+uses the KB's NFKC/casefold and Persian-letter folding for the independent
+keyword check, so compatibility-width Markdown terms do not become false failures.
+**This includes local Git clone time but excludes GitHub/network download, Python
 installation, human editing and personal note ingestion**. It does not yet
 establish five-minute end-to-end onboarding; independent full-path platform
 timings are still needed. This probe is under review, not released. The draft CI workflow is

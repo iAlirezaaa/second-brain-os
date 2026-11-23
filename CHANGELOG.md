@@ -6,6 +6,20 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; draft PR #145 — Unicode-normalized source evidence)
+- An offline keyword index uses NFKC/casefold/Persian-letter folding, but the
+  clean-clone probe independently searched committed Markdown filenames and
+  text with casefold alone. Valid compatibility-width `ｍｅｍｏｒｙ` sources
+  could therefore fail a legitimate `memory` recall check.
+- The probe now applies the exact same stdlib normalization on both its
+  committed-source keyword predicate and indexed-body verification.
+  The existing synthetic unittest covers fullwidth text/filename,
+  Persian spelling variants and an unrelated negative source. Baseline:
+  one isolated Python predicate reproduction (old false, new true);
+  no real HTTPS timing, installed-user outcome or full-suite local claim.
+  Exact-head CI, independent review and issue #107 still gate merge.
+  Rollback: revert this bounded probe/test/docs commit.
+
 ### Fixed (issue #147; draft PR #145 — failed ingest/search timing)
 - The disposable clone-to-first-recall benchmark now records attempted
   `ingest_ms` or `search_ms` when that subprocess times out, instead of

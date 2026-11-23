@@ -514,6 +514,30 @@ class FirstSessionOnboarding(unittest.TestCase):
             clean_module._reported_hit_paths(printed_hits),
             "the CLI witness must retain Markdown names with spaces/brackets"
         )
+        # Regression (#147): the real KB normalises compatibility-width and
+        # Arabic/Persian letters before matching. A valid committed Unicode
+        # source must not be rejected by a casefold-only witness.
+        with tempfile.TemporaryDirectory(prefix="sbo-unicode-recall-") as temp:
+            checkout = Path(temp)
+            notes = checkout / "02_WIKI"
+            notes.mkdir()
+            note = notes / "plain.md"
+            note.write_text("# Unicode text\nAn offline ｍｅｍｏｒｙ can be searched.\n",
+                            encoding="utf-8")
+            self.assertTrue(
+                clean_module._source_supports_keyword(checkout, "02_WIKI/plain.md"),
+                "NFKC width folding must agree with KB search")
+            note.write_text("# unrelated\nNo target keyword.\n", encoding="utf-8")
+            self.assertFalse(
+                clean_module._source_supports_keyword(checkout, "02_WIKI/plain.md"))
+            wide_name = notes / "ｍｅｍｏｒｙ-note.md"
+            wide_name.write_text("# unrelated\nNo target keyword.\n", encoding="utf-8")
+            self.assertTrue(clean_module._source_supports_keyword(
+                checkout, "02_WIKI/ｍｅｍｏｒｙ-note.md"))
+            note.write_text("# كلمات\nتست كلمه\n", encoding="utf-8")
+            self.assertTrue(clean_module._source_supports_keyword(
+                checkout, "02_WIKI/plain.md", keyword="کلمه"))
+
         # Two green trials from different revisions are NOT one reproducible
         # benchmark. Use measured-looking synthetic records, not a fake Git repo.
         with patch.object(clean_module, "measure", side_effect=[

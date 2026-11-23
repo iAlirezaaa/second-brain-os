@@ -113,18 +113,24 @@ def _public_markdown_source(checkout, relative_path, integrity_only=False):
         return None
 
 
+def _normalise_source(text):
+    """Match KB.normalise: compatibility forms, case and Persian spellings."""
+    return unicodedata.normalize("NFKC", str(text)).casefold().translate(
+        str.maketrans({"ي": "ی", "ك": "ک"}))
+
+
 def _source_supports_keyword(checkout, relative_path, keyword="memory"):
-    """Independently verify non-aliased committed Markdown, not only SQLite."""
+    """Verify committed Markdown with the same Unicode folding as KB search."""
     source = _public_markdown_source(checkout, relative_path)
     if source is None:
         return False
     try:
-        if keyword.casefold() in Path(relative_path).stem.casefold():
+        term = _normalise_source(keyword)
+        if term in _normalise_source(Path(relative_path).stem):
             return True
-        return keyword.casefold() in source.read_text(encoding="utf-8").casefold()
+        return term in _normalise_source(source.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, RuntimeError, ValueError):
         return False
-
 
 
 def _indexed_row_matches_source(checkout, relative_path, row,
@@ -152,8 +158,7 @@ def _indexed_row_matches_source(checkout, relative_path, row,
             if line.strip() and not line.startswith("#"):
                 break
         expected_title = str(frontmatter.get("title") or heading or Path(relative_path).stem)
-        expected_norm = unicodedata.normalize("NFKC", expected_body).casefold().translate(
-            str.maketrans({"ي": "ی", "ك": "ک"}))
+        expected_norm = _normalise_source(expected_body)
         return title == expected_title and body == expected_body and norm == expected_norm
     except (OSError, UnicodeError, RuntimeError, TypeError, ValueError):
         return False
