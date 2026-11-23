@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — count failed HEAD/tree verification time)
+- A successful Git transport followed by failed commit verification or a
+  failed/timed-out tracked-tree query previously produced `clone_ms: null`,
+  concealing the cost of that failed first-use attempt. The disposable
+  local `file://` transport regression now forces those outcomes and checks
+  that attempted clone+verification time is non-null and bounded by total
+  elapsed time. No external network, new dependency, production KB, private
+  data or schema change. This is still not an HTTPS performance measurement.
+  Exact-head CI, independent review and protected-main #107 gate merge.
+  Rollback: revert the scoped probe/test/bilingual-doc commit.
+
 ### Fixed (issue #147; PR #145 draft — timed-out stage provenance)
 - The optional clean checkout and public GitHub clone-to-recall probe now
   reports an additive `timeout_phase` alongside `reason: timeout`, identifying

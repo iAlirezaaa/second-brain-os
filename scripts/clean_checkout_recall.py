@@ -365,6 +365,12 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
         result["reason"] = "process_or_filesystem_error"
         return result
     finally:
+        # HEAD lookup or tree enumeration can fail AFTER a successful transfer.
+        # Preserve that failed clone/verification cost, including its timeout.
+        if (phase == "clone" and result["clone_ms"] is None
+                and result["preflight_ms"] is not None):
+            result["clone_ms"] = round(
+                (time.perf_counter() - preflight_end) * 1000, 3)
         result["elapsed_ms"] = round((time.perf_counter() - start) * 1000, 3)
 
 

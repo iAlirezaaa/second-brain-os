@@ -188,6 +188,9 @@ remain allowed. This is a benchmark-integrity check, not a sandbox.
 A failed HTTPS clone reports `remote_clone_failed` (rather than the offline
 `local_clone_failed`) and preserves the attempted `clone_ms`; a clone
 timeout reports `timeout` and `timeout_phase: "clone"` with the same timing.
+If Git transferred the checkout but HEAD verification or tracked-tree enumeration
+fails (or times out), the failed attempt still has a numeric `clone_ms` rather
+than `null`; this is not a successful first-recall duration.
 Later timeouts identify `ingest`, `search` or `validation` in `timeout_phase`
 (`preflight` for a local source check); successful trials return `null`.
 Failed trials never substitute

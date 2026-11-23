@@ -25,6 +25,34 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P1 — Account for failed post-transfer Git verification (#147 / PR #145; 2026-11-23)
+
+- [x] **Observed diagnostic defect:** after Git finished transferring a disposable
+      clone, a failed `git rev-parse HEAD` or `git ls-tree HEAD` returned
+      `commit_unverified` / `tracked_paths_unavailable` with `clone_ms: null`.
+      A verification timeout in this same stage also lost its attempted time.
+- [x] **Bounded fix (S):** preserve elapsed clone-and-Git-verification time
+      in those failed trials without treating them as successes. The existing
+      file-transfer regression injects failed HEAD, failed tree and timed-out
+      tree queries; `elapsed_ms >= clone_ms` must hold in every case. No real
+      network, runtime KB, dependency, schema or user-data change.
+- [ ] **Acceptance:** exact-head Ubuntu/Windows matrix, focused macOS and backup
+      CI green, independent review and lawful reconciliation of obsolete
+      protected-main checks (#107); PR #145 remains Draft until then.
+      **Rollback:** revert this one probe/test/bilingual-doc commit.
+
+**Next 1 (P0):** secure independent review and reconcile #107 without weakening
+branch protection; verify exact-head CI before any merge.
+**Next 2 (P1):** run dated real HTTPS download-to-first-hit trials on
+Windows/macOS/Linux with SHA, successful and failed attempts; do not substitute
+simulated Git errors for live user experience.
+
+Research inputs, not copied features: [Basic Memory SQLite duplicate-index report](https://github.com/basicmachines-co/basic-memory/issues/1771)
+and [Letta's stale skill-index report](https://github.com/letta-ai/letta-code/issues/4337).
+Neither is evidence of the same defect in this repository.
+
+---
+
 ### P1 — Attribute first-recall timeouts to their actual stage (#147 / PR #145; 2026-11-23)
 
 - [x] **Observed diagnostic gap:** `reason: timeout` did not distinguish

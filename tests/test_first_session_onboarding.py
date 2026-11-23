@@ -372,6 +372,38 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertIsInstance(timed_out["clone_ms"], float)
         self.assertGreaterEqual(timed_out["elapsed_ms"], timed_out["clone_ms"])
 
+        # Transfer can complete even when HEAD or the committed-tree query fails.
+        # Earlier reports gave both failures clone_ms=null, hiding spent time.
+        for git_step, expected_reason in (
+                ("rev-parse", "commit_unverified"),
+                ("ls-tree", "tracked_paths_unavailable")):
+            with self.subTest(failed_clone_metadata=git_step):
+                def fail_git_metadata(args, **kwargs):
+                    if args[:2] == ["git", git_step]:
+                        return subprocess.CompletedProcess(
+                            args, 128, "", "synthetic metadata failure")
+                    return original_run(args, **kwargs)
+                with patch.object(clean_module.subprocess, "run",
+                                  side_effect=fail_git_metadata):
+                    incomplete = clean_module.measure(ROOT.as_uri(), remote=True)
+                self.assertEqual(incomplete["status"], "fail", incomplete)
+                self.assertEqual(incomplete["reason"], expected_reason, incomplete)
+                self.assertIsInstance(incomplete["clone_ms"], float, incomplete)
+                self.assertGreaterEqual(incomplete["elapsed_ms"], incomplete["clone_ms"])
+                self.assertIsNone(incomplete["indexed_notes"])
+
+        def timeout_tree_metadata(args, **kwargs):
+            if args[:2] == ["git", "ls-tree"]:
+                raise subprocess.TimeoutExpired(args, 0.001)
+            return original_run(args, **kwargs)
+        with patch.object(clean_module.subprocess, "run",
+                          side_effect=timeout_tree_metadata):
+            timed_out_tree = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertEqual(timed_out_tree["reason"], "timeout", timed_out_tree)
+        self.assertEqual(timed_out_tree["timeout_phase"], "clone", timed_out_tree)
+        self.assertIsInstance(timed_out_tree["clone_ms"], float, timed_out_tree)
+        self.assertGreaterEqual(timed_out_tree["elapsed_ms"], timed_out_tree["clone_ms"])
+
         # Distinguish network transfer from an indexer or search timeout.
         # The tests use an actual disposable local file:// clone, no HTTPS.
         def timeout_kb_step(step):
