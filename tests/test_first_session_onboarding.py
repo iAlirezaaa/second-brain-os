@@ -867,6 +867,18 @@ class FirstSessionOnboarding(unittest.TestCase):
                            "synthetic restricted memory.\n")
             self.assertTrue(clean_module._indexed_row_matches_source(
                 checkout, "02_WIKI/ordinary.md", public_row))
+            # A tracked regular file is not necessarily a Markdown note.
+            # Corpus integrity mode must not accept non-note file types.
+            for suffix in ("txt", "json"):
+                filename = "ordinary." + suffix
+                (public / filename).write_text("Synthetic public memory.\n",
+                                               encoding="utf-8")
+                with self.subTest(non_markdown=suffix):
+                    self.assertFalse(clean_module._indexed_row_matches_source(
+                        checkout, "02_WIKI/" + filename, public_row,
+                        integrity_only=True))
+                    self.assertFalse(clean_module._source_supports_keyword(
+                        checkout, "02_WIKI/" + filename))
             self.assertFalse(clean_module._indexed_row_matches_source(
                 checkout, "09_OPERATIONS/private.md", private_row))
             # The default recall boundary still denies operational notes;
