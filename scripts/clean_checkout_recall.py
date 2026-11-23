@@ -83,8 +83,12 @@ def _checkout_paths_safe(checkout):
         return False
 
 
-def _public_markdown_source(checkout, relative_path):
-    """Return a non-aliased public Markdown path, or None for a denied path.
+def _public_markdown_source(checkout, relative_path, integrity_only=False):
+    """Return a non-aliased Markdown path; deny restricted zones for recall.
+
+    integrity_only reads only the disposable *public Git clone* when validating
+    every SQLite row against source bytes. It never authorizes a search hit
+    from an operational zone or reading anything outside the checkout.
 
     Both keyword and SQLite/source comparisons must enforce this boundary;
     the earlier keyword check cannot authorize a later unvalidated read.
@@ -101,7 +105,8 @@ def _public_markdown_source(checkout, relative_path):
                   "13_lab", "14_candidates", "15_system")
         if (candidate.is_symlink() or source != root.joinpath(*relative.parts)
                 or root not in source.parents or not source.is_file()
-                or source.relative_to(root).parts[0].casefold() in denied):
+                or (not integrity_only
+                    and source.relative_to(root).parts[0].casefold() in denied)):
             return None
         return source
     except (OSError, RuntimeError, ValueError):
@@ -122,7 +127,8 @@ def _source_supports_keyword(checkout, relative_path, keyword="memory"):
 
 
 
-def _indexed_row_matches_source(checkout, relative_path, row):
+def _indexed_row_matches_source(checkout, relative_path, row,
+                                integrity_only=False):
     """Compare a stored hit's complete content to the committed Markdown.
 
     A CLI can print a real source path and forge an SQLite keyword match while
@@ -132,7 +138,8 @@ def _indexed_row_matches_source(checkout, relative_path, row):
         return False
     try:
         title, body, norm = row
-        source_path = _public_markdown_source(checkout, relative_path)
+        source_path = _public_markdown_source(
+            checkout, relative_path, integrity_only=integrity_only)
         if source_path is None:
             return False
         source = source_path.read_text(encoding="utf-8", errors="replace")
@@ -349,7 +356,8 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                     # One honest printed hit cannot validate every other row.
                     # Apply the same public-source and symlink policy to all.
                     if any(not _indexed_row_matches_source(
-                            checkout, path, (title, body, norm))
+                            checkout, path, (title, body, norm),
+                            integrity_only=True)
                            for path, title, body, norm in corpus_rows):
                         result["reason"] = "indexed_source_mismatch"
                         return result

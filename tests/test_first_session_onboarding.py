@@ -774,6 +774,13 @@ class FirstSessionOnboarding(unittest.TestCase):
                 checkout, "02_WIKI/ordinary.md", public_row))
             self.assertFalse(clean_module._indexed_row_matches_source(
                 checkout, "09_OPERATIONS/private.md", private_row))
+            # The default recall boundary still denies operational notes;
+            # only the integrity check of an in-clone indexed row may read
+            # committed operational Markdown to avoid a false failure on
+            # the current corpus, which legitimately includes zone 09.
+            self.assertTrue(clean_module._indexed_row_matches_source(
+                checkout, "09_OPERATIONS/private.md", private_row,
+                integrity_only=True))
             self.assertFalse(clean_module._source_supports_keyword(
                 checkout, "09_OPERATIONS/private.md"))
             self.assertFalse(clean_module._source_supports_keyword(
@@ -799,6 +806,10 @@ class FirstSessionOnboarding(unittest.TestCase):
                     checkout, "02_WIKI/alias.md",
                     ("alias", "Synthetic restricted memory.\n",
                      "synthetic restricted memory.\n")))
+                self.assertFalse(clean_module._indexed_row_matches_source(
+                    checkout, "02_WIKI/alias.md",
+                    ("alias", "Synthetic restricted memory.\n",
+                     "synthetic restricted memory.\n"), integrity_only=True))
 
         # Execute the real installed-home installer, ingest and search with
         # synthetic parent-only credentials. None may inherit those values.

@@ -108,7 +108,12 @@ The diagnostic also validates **every** SQLite `notes` row against its
 committed Markdown source, not just returned keyword hits: a plausible,
 unreported row with a tracked path but fabricated content fails with
 `indexed_source_mismatch` (the untrusted path is not printed). This
-extra verification is included in measured total time, but is not an OS sandbox.
+extra verification is included in measured total time. To avoid a false
+failure while the existing KB still indexes committed operational Markdown,
+integrity-only comparisons may read those files **inside the disposable public
+clone**; they do not authorize restricted search hits, read a personal home
+or provide an OS sandbox. Privacy isolation of the runtime KB remains tracked
+separately in issue #140 / PR #141.
 
 The diagnostic snapshots the committed Git tree **before ingest**. A path
 created by the indexing process (even if its Markdown, SQLite row and printed

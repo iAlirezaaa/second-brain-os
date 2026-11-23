@@ -13,7 +13,12 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   body could survive a successful benchmark. It now checks every indexed
   row's title/body/norm against its guarded Markdown source and fails
   `indexed_source_mismatch` without revealing the path. Existing onboarding
-  tests exercise a disposable two-file Git fixture, with no new test method,
+  tests exercise a disposable two-file Git fixture, with no new test method.
+  The initial exact-head macOS CI failed because current KB includes
+  committed `09_OPERATIONS` Markdown in its index while ordinary recall
+  must deny that zone. A follow-up uses a narrower *integrity-only* source
+  read inside the public temporary checkout; search hits remain denied in
+  that zone. This is not a fix for runtime privacy issue #140 / PR #141,
   runtime KB change, schema migration or dependency. This adds measured
   validation work; it is not OS isolation, nor a real HTTPS latency result.
   Exact-head CI, independent review and issue #107 gate release.

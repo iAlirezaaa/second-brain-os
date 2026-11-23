@@ -32,7 +32,13 @@ over something it cannot see is a silent gate, not a clean house.
       hits. A synthetic two-note index with one correct hit and another
       *committed* path carrying fabricated bytes could pass.
 - [x] **Bounded fix (S):** verify the title, complete body and folded text of
-      every SQLite note against its guarded Markdown source. Return
+      every SQLite note against its guarded Markdown source. The existing
+      corpus includes committed `09_OPERATIONS` Markdown; integrity-only
+      checking can read such bytes inside a disposable PUBLIC checkout,
+      while normal source-hit checks still reject restricted zones. A CI
+      macOS red run on SHA `924f4e39` caught the mismatch; the follow-up
+      preserves the recall boundary and adds that exact regression.
+      This does not resolve runtime KB privacy issue #140 / PR #141. Return
       `indexed_source_mismatch` without printing a suspect path. Extend the
       existing disposable Git fixture and unittest; stdlib only; no runtime
       KB, schema, credential or dependency changes. **Rollback:** revert the
