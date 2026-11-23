@@ -302,7 +302,8 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             count = re.search(r"\bindexed (\d+) notes\b", indexed.stdout)
             result["indexed_notes"] = int(count.group(1)) if count else None
             hits = _reported_hit_paths(searched.stdout)
-            result["matched_paths"] = hits
+            # Search headers are untrusted strings. Keep them for validation,
+            # but do not echo uncommitted or denied-plane filenames in JSON.
             if not _checkout_paths_safe(checkout):
                 result["reason"] = "unsafe_checkout_path"
                 return result
@@ -317,15 +318,19 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                 result["reason"] = "tracked_checkout_modified"
                 return result
             # Every reported hit must be a real local checked-in source.
-            valid_hits = bool(hits) and all(
-                path in tracked_paths
+            safe_hits = [
+                path for path in hits
+                if path in tracked_paths
                 and (checkout / path).is_file()
                 and ".." not in Path(path).parts
                 and _source_supports_keyword(checkout, path)
                 and not path.casefold().startswith(("09_operations/", "11_control/",
                                                     "12_runtime/", "13_lab/",
                                                     "14_candidates/", "15_system/"))
-                for path in hits)
+            ]
+            result["matched_paths"] = safe_hits
+            # Any unsafe printed hit still invalidates the entire trial.
+            valid_hits = bool(hits) and len(safe_hits) == len(hits)
             # Do not trust printed success alone: inspect actual SQLite rows.
             cache = checkout / ".kb" / "kb.sqlite"
             if valid_hits and cache.is_file():
