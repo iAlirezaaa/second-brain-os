@@ -6,6 +6,544 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; draft PR #145 — Markdown evidence boundary)
+- The clean-clone recall validator no longer accepts non-Markdown regular files as indexed note evidence, even when a synthetic SQLite row matches their bytes. The path guard now follows the actual corpus's platform-aware `*.md` pattern. Existing onboarding regression covers .txt and .json refusals while retaining the Markdown positive control.
+- Isolated path-predicate evidence: 3/3 assertions; full exact-head CI and independent review pending. No runtime KB, dependency, data migration or permission change. Rollback: revert scoped test/validator/docs commits. No actual HTTPS timing claimed.
+
+### Fixed (issue #147; draft PR #145 — final Unicode indexed-hit gate)
+- The disposable clean-clone recall probe's final SQLite-hit test still used
+  casefold alone on the stored title plus normalized body. A fullwidth
+  source-backed title could therefore fail that diagnostic predicate even
+  after the earlier source-path NFKC fix. This is an isolated consistency
+  issue, **not** proof of an FTS5 title-only result in a user's repository.
+- Reuse the KB-compatible NFKC/casefold/Persian-letter helper in that final
+  check; the existing onboarding unittest now covers compatibility-width and
+  Persian titles, unrelated content and missing rows. No runtime KB changes,
+  dependencies, schema migration, user data or permissions. Full exact-head
+  CI and independent review remain required; rollback is a scoped revert.
+
+### Fixed (issue #147; draft PR #145 — Unicode-normalized source evidence)
+- An offline keyword index uses NFKC/casefold/Persian-letter folding, but the
+  clean-clone probe independently searched committed Markdown filenames and
+  text with casefold alone. Valid compatibility-width `ｍｅｍｏｒｙ` sources
+  could therefore fail a legitimate `memory` recall check.
+- The probe now applies the exact same stdlib normalization on both its
+  committed-source keyword predicate and indexed-body verification.
+  The existing synthetic unittest covers fullwidth text/filename,
+  Persian spelling variants and an unrelated negative source. Baseline:
+  one isolated Python predicate reproduction (old false, new true);
+  no real HTTPS timing, installed-user outcome or full-suite local claim.
+  Exact-head CI, independent review and issue #107 still gate merge.
+  Rollback: revert this bounded probe/test/docs commit.
+
+### Fixed (issue #147; draft PR #145 — failed ingest/search timing)
+- The disposable clone-to-first-recall benchmark now records attempted
+  `ingest_ms` or `search_ms` when that subprocess times out, instead of
+  omitting the time spent in the failed stage. Existing offline `file://`
+  timeout regressions require these durations and a failure result.
+  No change to real KB behavior, network transfer, dependencies, schema or
+  private data. Timing on actual HTTPS first-use remains unknown.
+  Exact-head CI, independent review and protected-main issue #107 gate merge.
+  Rollback: revert this probe/test/bilingual-doc change.
+
+### Fixed (issue #147; draft PR #145 — duplicate indexed-source rows)
+- A disposable first-recall index with two SQLite rows for the same
+  committed Markdown path could report two indexed notes and pass
+  source-backed verification if the table omitted a uniqueness constraint.
+  The benchmark now refuses duplicate source paths with reason
+  duplicate_index_path, rather than accepting inflated note counts.
+  The existing onboarding integration test builds a committed synthetic
+  Git fixture with duplicate source-matching rows; no additional unittest
+  method, network call, dependency or production KB change is needed.
+- Isolated stdlib baseline: 2 rows / 1 unique path were accepted by the
+  old membership-and-count predicate; this is not full-suite or real HTTPS
+  proof. Exact-head CI, independent review and protected-main issue #107
+  still gate release. Rollback: revert these scoped test/probe/docs commits.
+
+
+### Fixed (issue #147; PR #145 draft — read-only SQLite evidence inspection)
+- The disposable first-recall verifier previously used SQLite's writable
+  default connection to validate an existing derived cache. It now opens
+  a `file:` URI with `mode=ro` so validation cannot write that index.
+  The existing onboarding integration test records the actual connection
+  during a synthetic `file://` clone. An isolated standard-library
+  baseline showed that ordinary connect allowed INSERT while read-only
+  URI refused it; this is not a full repository test or an OS sandbox.
+  No runtime KB, personal data, new package, schema or permission change.
+  Exact-head CI, independent review and protected-main issue #107
+  still gate merge. Rollback: revert this bounded change.
+
+### Fixed (issue #147; PR #145 draft — untrusted search header paths)
+- A failed disposable first-recall diagnostic formerly echoed raw search
+  headers in JSON `matched_paths`, even for uncommitted generated notes or
+  denied operational-zone labels. It now exposes only HEAD-tracked,
+  allowed, Markdown-supported filenames, while **any** rejected hit still
+  fails the full trial. The existing disposable Git onboarding fixture and
+  a denied-zone parser override test this red-first case without network
+  or personal data. No runtime KB permission, dependency, schema or OS
+  sandbox change. This is a diagnostic output-hygiene fix, not proof of
+  HTTPS onboarding latency or resolution of privacy issue #140. Merge
+  remains gated on exact-head CI, independent review and #107.
+  Rollback: revert this scoped probe/test/docs change.
+
+### Fixed (issue #147; PR #145 draft — unreported fabricated SQLite body)
+- The disposable clean-clone recall witness previously verified all SQLite
+  paths against committed HEAD but compared full source bytes only for
+  printed hits. A hidden row with a valid committed path and a fabricated
+  body could survive a successful benchmark. It now checks every indexed
+  row's title/body/norm against its guarded Markdown source and fails
+  `indexed_source_mismatch` without revealing the path. Existing onboarding
+  tests exercise a disposable two-file Git fixture, with no new test method.
+  The initial exact-head macOS CI failed because current KB includes
+  committed `09_OPERATIONS` Markdown in its index while ordinary recall
+  must deny that zone. A follow-up uses a narrower *integrity-only* source
+  read inside the public temporary checkout; search hits remain denied in
+  that zone. Existing forged-row expectations were updated to reflect the
+  new, more specific failure reason (observed in macOS CI). This is not a fix
+  for runtime privacy issue #140 / PR #141. No runtime KB change,
+  schema migration or dependency. This adds measured
+  validation work; it is not OS isolation, nor a real HTTPS latency result.
+  Exact-head CI, independent review and issue #107 gate release.
+  Rollback: revert this bounded code/test/bilingual-doc commit.
+
+### Fixed (issue #147; PR #145 draft — uncommitted extra SQLite rows)
+- The disposable clone-to-first-recall witness previously checked only SQLite
+  rows returned as keyword hits. A valid committed hit could hide another
+  indexed row whose source was never tracked by Git, falsely certifying a
+  clean committed-corpus benchmark. It now checks every indexed `notes.path`
+  against the cloned HEAD tree and fails with `uncommitted_index_path`
+  without exposing the extra path. Existing onboarding tests construct a
+  synthetic committed hit plus an extra phantom row in a disposable Git repo.
+  The runtime KB, offline default, dependencies, schemas and permissions are
+  unchanged. It is not a complete protected-zone audit (issue #140).
+  Exact-head CI, independent review and protected-main issue #107 still gate
+  merge. Rollback: revert this bounded probe/test/bilingual-doc commit.
+
+### Fixed (issue #147; PR #145 draft — count failed HEAD/tree verification time)
+- A successful Git transport followed by failed commit verification or a
+  failed/timed-out tracked-tree query previously produced `clone_ms: null`,
+  concealing the cost of that failed first-use attempt. The disposable
+  local `file://` transport regression now forces those outcomes and checks
+  that attempted clone+verification time is non-null and bounded by total
+  elapsed time. No external network, new dependency, production KB, private
+  data or schema change. This is still not an HTTPS performance measurement.
+  Exact-head CI, independent review and protected-main #107 gate merge.
+  Rollback: revert the scoped probe/test/bilingual-doc commit.
+
+### Fixed (issue #147; PR #145 draft — timed-out stage provenance)
+- The optional clean checkout and public GitHub clone-to-recall probe now
+  reports an additive `timeout_phase` alongside `reason: timeout`, identifying
+  preflight, clone, ingest, search or final validation. Successful trials
+  report `null`. The existing regression forces clone/index/search timeouts
+  over a synthetic local `file://` Git transfer with no network. This does
+  not prove actual HTTPS first-use latency or isolate downloaded code at
+  the OS level. No new dependency, data migration, permission or KB change.
+  Exact-head CI, independent review and #107 still gate merge. Rollback:
+  revert this small probe/test/bilingual-documentation change.
+
+### Fixed (issue #147; PR #145 draft — isolated remote scratch paths)
+- Opt-in GitHub clone-to-recall trials previously forwarded the parent's
+  `TMP`, `TEMP` and `TMPDIR` values to downloaded Python, even
+  though `HOME` had been isolated. All three now point to an existing
+  per-trial disposable temp directory. An extended real `file://`
+  transport regression inspects child settings while the trial is active
+  and checks cleanup; a synthetic parent-env comparison reproduced
+  the former gap (3/3 leaked test variables) and the new mapping
+  (3/3 isolated). The default offline path, Python 3.9 floor, KB,
+  dependencies, schemas and user data are unchanged. Environment
+  isolation is **not** an OS filesystem sandbox or proof of real HTTPS
+  first-use latency. Exact-head CI, independent review and #107 still
+  block merge. Rollback: revert this scoped probe/test/docs patch.
+
+### Fixed (issue #147; PR #145 draft — failed remote clone reporting)
+- The opt-in GitHub clone-to-first-recall diagnostic now distinguishes
+  `remote_clone_failed` from `local_clone_failed` and includes elapsed
+  `clone_ms` for nonzero clone exits and clone timeouts. Previously a failed
+  HTTPS attempt looked like a local-clone error with no attempt duration.
+  The existing onboarding regression simulates transport failure and timeout
+  without a network or credentials, and ensures no raw Git stderr enters JSON.
+  Offline behavior, runtime KB, dependencies and stored user data are unchanged.
+  Neither simulation nor local CI measures real HTTPS onboarding. This remains
+  draft until exact-head CI, independent review and protected-main #107.
+  Rollback: revert the scoped probe/test/bilingual-doc change.
+
+### Fixed (issue #147; PR #145 draft — tracked source immutability)
+- The disposable clean-clone recall witness now rejects a trial if
+  ingest/search changes **any Git-tracked file** after checkout, even when
+  SQLite and the rewritten Markdown agree. Formerly this could falsely
+  certify post-clone text as a committed-source hit. A real `file://`
+  transfer regression mutates a synthetic checkout README during ingest.
+  Ignored `.kb/` data is still permitted. This is diagnostic integrity,
+  not executable sandboxing, and does not change the production KB or
+  persisted personal notes. CI/review/#107 remain merge gates; rollback
+  is a scoped revert of this probe/test/bilingual-doc update.
+
+### Fixed (issue #147; PR #145 draft — tracked clean-clone executable)
+- The opt-in GitHub and offline clean-clone recall probe now refuses to
+  execute `scripts/kb.py` if the file is absent from the cloned commit
+  or its worktree bytes changed after checkout. The existing onboarding
+  regression uses real local Git transfers and synthetic mismatches to
+  prove both failures. This is diagnostic provenance, **not a sandbox**:
+  malicious code present in a trusted commit remains in scope for human
+  review. No runtime KB changes, new dependencies or data migration.
+  Exact-head CI, independent review and lawful #107 protection are required
+  before merge. Rollback: revert this probe/test/docs patch.
+
+### Fixed (issue #147; PR #145 draft — disposable child home for remote measurement)
+- Opt-in remote GitHub clone-to-recall trials now set `HOME`/`USERPROFILE`
+  (and matching Windows home-drive fields) to a disposable per-trial directory
+  for both Git and downloaded Python, rather than forwarding the real home
+  path. The existing file-transfer test inspects the actual environment
+  handoff and cleanup. Offline mode remains unchanged; no dependency or
+  persisted user-data migration. This reduces accidental environment exposure
+  but **is not a sandbox**: downloaded code still has the user's OS permissions.
+  Exact-head CI, independent review and lawful #107 protection remain merge
+  gates. Rollback: revert this scoped diagnostic/test/docs commit.
+
+
+### Added (issue #147; PR #145 draft — opt-in public GitHub recall timing)
+- `scripts/clean_checkout_recall.py --github --repeat 3` may now
+  measure a **fixed public HTTPS GitHub clone** through source-backed
+  offline indexing and keyword recall, with exact Git SHA and failure-aware
+  JSON. Default mode is still offline and measures only local clone.
+  Public-mode Git credential helpers, global/system Git config and terminal
+  prompts are disabled; this is not process isolation or a security sandbox.
+  Existing onboarding regression tests an alternative Git `file://`
+  transfer on real temporary clones; that is **not** evidence of measured
+  GitHub HTTPS speed. Windows/macOS/Linux first-use network results remain
+  unknown. No new dependency, model, data migration or permission change.
+  Merge requires exact-head CI, review and protected-main #107 repair;
+  rollback is a scoped revert of this flag, test and documentation.
+
+
+### Fixed (issue #144; PR #145 draft — spaced Markdown paths in local recall)
+- The offline clean-checkout witness now parses normal KB hit headers for
+  Markdown filenames containing spaces or square brackets; the former regex
+  ignored such valid source paths. The existing onboarding regression checks
+  two source names plus an indented excerpt that must not become a hit. An
+  isolated Python stdlib parser reproduction went from 0/2 to 2/2 parsed
+  valid paths; this does **not** certify end-to-end CI or a real user session.
+  The subsequent Git-HEAD, public-path and SQLite content checks are unchanged.
+  No production KB change, dependency, stored data migration or permission
+  change. Rollback: revert this parser/test/docs slice; merge remains gated by
+  exact-head CI, independent review and protected-main checks (#107).
+
+### Fixed (issue #146; PR #145 draft — repeat source-zone validation)
+- The disposable clean-clone recall witness now uses the same fail-closed
+  public Markdown path guard when checking a SQLite row's complete title/body
+  as when verifying its keyword. A direct row comparison previously accepted
+  matching synthetic bytes from `09_OPERATIONS/` or an aliased file without
+  enforcing the source-plane boundary. A test-first negative fixture and an
+  ordinary public-note positive guard both branches. No production KB,
+  stored user data, dependency or schema changes. This remains a diagnostic
+  consistency check, not a race-free sandbox; release is pending CI, review
+  and lawful protected-main checks. Rollback: revert this probe/test/docs slice.
+
+### Fixed (issue #144; PR #145 draft — source/SQLite agreement)
+- The disposable clean-clone recall diagnostic now compares each indexed hit's
+  exact title, body and normalized body with the committed Markdown parsed
+  using the KB's existing frontmatter rules. A fabricated row containing the
+  correct keyword and path but unrelated body previously passed the diagnostic.
+  The existing onboarding test covers the false positive with a synthetic Git
+  fixture. This validates evidence, not process isolation. No new packages,
+  production KB modifications, private data or schema migration. Merge needs
+  final-head eight-job CI, independent review and #107 protection repair.
+  Rollback: revert this scoped test/probe/docs change.
+
+### Fixed (issue #144; PR #145 draft — committed-path recall provenance)
+- The local disposable-clone keyword probe now snapshots the exact `HEAD`
+  tree before indexing and accepts a result only when its source path is
+  committed there. Previously a generated Markdown note and internally
+  consistent SQLite/search output could falsely certify a "committed clone"
+  recall. A synthetic adversarial Git fixture in the existing onboarding
+  test method covers this false-positive. A Git-tree query error fails
+  with `tracked_paths_unavailable`. Only diagnostic evidence changes:
+  production KB indexing may still create notes normally. Stdlib-only;
+  no user-data migration, permission changes or claimed network timing.
+  Exact-head CI, independent review and #107 block merge; rollback: revert
+  the scoped test/probe/docs commits.
+
+### Fixed (issue #146; PR #145 draft — reject aliased Markdown evidence)
+- The disposable local recall diagnostic no longer treats a symlinked
+  `02_WIKI` Markdown alias to `09_OPERATIONS` as a public source witness.
+  It rejects links/junctions in source path segments and direct denied-zone
+  references; real ordinary Markdown stays valid. Existing onboarding
+  regression tests cover aliases with synthetic data on Windows/macOS/Linux.
+  This fixes diagnostic evidence only, not core indexing or OS isolation.
+  No dependency, schema, user data or permission change; revert this scoped
+  commit to roll back. Final-head CI, independent review and #107 block merge.
+
+### Fixed (issue #146; PR #145 draft — confine diagnostic paths)
+- The disposable clean-clone recall probe now rejects linked `scripts/`,
+  `scripts/kb.py`, `.kb/` and `.kb/kb.sqlite` paths (including resolved
+  escapes through a directory junction) before launching code and after each
+  ingest/search phase. It reports `unsafe_checkout_path` instead of
+  following a linked executable or SQLite cache outside the cloned tree.
+  The existing onboarding regression tests normal and synthetic linked
+  path conditions without new discovered test methods. No real secrets,
+  user vaults, production index schema, packages or permissions involved.
+  This guard is not an OS sandbox; the feature is still unreleased.
+  Merge requires exact-head eight-job CI, independent review and #107
+  branch-protection reconciliation. Rollback: revert this bounded change.
+
+### Fixed (issue #144; PR #145 draft — clean-source benchmark preflight)
+- The local-clone-to-first-keyword-hit diagnostic now rejects uncommitted
+  tracked/staged or nonignored untracked source changes with `source_dirty`.
+  Previously Git quietly cloned only committed bytes and a green result could
+  be misread as testing a developer's pending edits. The Git status preflight
+  runs with the existing restricted child environment; its time is separated
+  as `preflight_ms` and excluded from `clone_ms`, but included in the total.
+  An inaccessible or non-Git source fails closed. Existing onboarding tests
+  exercise clean source, dirty tracked and untracked synthetic repositories.
+  This affects **diagnostic truthfulness** only, not normal indexing, private
+  data, permissions, schema or MCP. Full exact-head CI, independent review and
+  protected-main reconciliation (#107) still gate merge. Remote network
+  download and real-user onboarding are **unknown**. Rollback: revert this
+  scoped change.
+
+### Changed (issue #93; PR #145 review; exact-head CI pending)
+- The proposed disposable local-checkout recall probe now includes the **actual cloned Git commit SHA** in each JSON trial and refuses a green repeatability aggregate across mixed source revisions. The revision lookup is included in clone timing; it does not measure GitHub download, Python setup, host integration or actual-user onboarding. Existing onboarding regressions check commit provenance and a synthetic mixed-revision failure. No new dependencies, production index semantics, credentials or personal data access.
+
+### Changed (issue #144; PR #145 draft — three-trial cross-platform CI)
+- The four Windows/Ubuntu jobs and focused macOS first-use job now run
+  `clean_checkout_recall.py --repeat 3` instead of one local trial. Each
+  trial clones committed Markdown independently and validates a SQLite-backed
+  source keyword hit. Existing JSON includes every outcome, success rate and
+  median including failures; any failed trial fails the CI step. A regression
+  holds the executable workflow command, not a comment. This covers **offline
+  local** Git clones only, not network download, Python setup or real users.
+  Final-head eight-job CI, independent review and lawful repair of #107
+  remain required before merge. No production runtime, dependencies, private
+  notes or permissions change. Rollback: revert this CI/test/docs commit.
+
+### Added (issue #144; PR #145 draft — repeatable local-clone recall)
+- The existing offline first-keyword-hit probe supports optional `--repeat 1..5`
+  with a fresh disposable clone for each attempt. JSON records individual
+  outcomes, successes, success rate, inclusive median, and maximum duration;
+  any failure makes the aggregate exit nonzero. The no-argument single-trial
+  output retains its previous fields. Existing onboarding tests cover two
+  real clones, invalid counts and mixed pass/fail aggregation without adding
+  unittest methods. This is **not** a network-clone/real-user benchmark or
+  released functionality. Final-head CI, independent review and #107 remain
+  required. No private data, dependencies or permissions change; rollback is
+  the scoped probe/test/docs commit.
+
+### Fixed (issue #144; PR #145 draft — source-backed local recall evidence)
+- The clean local-clone keyword diagnostic now independently checks committed
+  Markdown text or the source filename for the published query, instead of
+  accepting a self-consistent but fabricated SQLite row as sufficient proof.
+  Source reads stay inside the disposable checkout; unavailable or undecodable
+  notes fail closed. The existing onboarding regression includes a committed
+  fixture where SQLite claims `memory` but the note does not. This changes
+  benchmark integrity only, not the production search index, dependencies,
+  permissions or user data. Exact-head CI, independent review and protected-main
+  check reconciliation (#107) still gate merge. Remote download and real-user
+  first-use latency remain unknown. Rollback: revert this scoped commit.
+
+### Fixed (issue #144; PR #145 draft — local keyword evidence check)
+- The clean local-checkout first-hit diagnostic now confirms that every
+  reported SQLite row's stored title or normalized body actually contains
+  the documented `memory` query. Previously, a plausible search printout,
+  existing source path and valid-but-unrelated SQLite row could be counted
+  as a keyword hit. An adversarial committed Git fixture in the existing
+  onboarding test method covers that false-positive alongside corrupt SQLite.
+  This fixes **benchmark truthfulness**, not user indexing, permissions,
+  data formats or MCP. Final-head CI/review remain required; remote GitHub
+  clone and real-user setup remain unmeasured.
+  Rollback: revert this scoped probe/test/doc change.
+
+### Changed (issue #144; PR #145 draft — cross-platform local-clone recall)
+- The existing stdlib-only clean committed-clone-to-first-keyword-hit JSON
+  probe is now a required step in all four Ubuntu 24.04/Windows × Python
+  3.9/3.12 matrix jobs, in addition to the macOS focused job. An onboarding
+  regression refuses a commented-out/misplaced matrix step. This is **CI
+  coverage**, not a remote-network clone benchmark or a released user feature.
+  Final-head checks and independent review must pass before merge; protected-
+  main status-context drift remains tracked in #107. No private data, secrets,
+  third-party packages, schema or access policy change. Rollback: revert this
+  scoped workflow/test/documentation commit.
+
+### Fixed (issue #144; PR #145 draft — macOS clean-checkout CI wiring)
+- The macOS workflow's claimed `clean_checkout_recall.py` execution
+  was embedded in a comment by literal escaped newline characters;
+  a passing substring check could not distinguish that from an actual
+  CI step. The YAML now has a standalone executable step and the
+  existing onboarding regression matches the step and adjacent
+  `run:` as physical lines. The recorded red baseline is
+  [Actions #44877287752](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44877287752);
+  final-head eight-job validation, independent review and lawful
+  main-protection repair remain required before release. No new
+  dependency, credentials, personal files or security setting changed.
+
+
+### Added (issue #144; PR #145 draft — local committed-clone timing)
+- A stdlib-only `scripts/clean_checkout_recall.py` probe creates a temporary
+  no-hardlinks clone of the committed source, executes the real offline
+  `kb.py ingest` / `search "memory"` quickstart, and checks matching
+  source paths against SQLite rows before reporting failure-aware JSON and
+  separate local-clone, index, search and total milliseconds. The existing
+  onboarding regression tests its CLI contract and a dedicated macOS CI step
+  publishes the run. This is **local Git clone**, not GitHub network download,
+  full end-user setup, a semantic-recall benchmark or a released feature.
+  No new dependencies, private user data, production index schema, permissions
+  or architecture change. Gate: final-head CI and independent review;
+  rollback: revert this scoped probe/test/workflow/doc series.
+
+### Added (issue #144; PR #145 in review — real README keyword witness)
+- CI now runs the README's real scripts/kb.py ingest then
+  scripts/kb.py search "memory" on checked-out public Markdown in the
+  four Windows/Ubuntu jobs and the macOS first-recall job. Unlike
+  synthetic-only smoke, a zero-hit search fails. The existing onboarding
+  regression holds the CI steps and ordering. Final-head CI, review and
+  lawful protected-main drift #107 resolution remain required before merge.
+  No remote clone timing, semantic recall, real-user success or released
+  capability is claimed. The runner-local .kb/ index is ignored by Git;
+  no production KB behavior, dependencies, private data or ACL changes.
+  Rollback: revert this scoped CI/test/docs commit.
+
+
+### Changed (issue #144; PR #145 in review — macOS health before first-use witness)
+- The macOS 15 / Python 3.12 focused onboarding job now runs the real
+  `scripts/health.py` gate *before* its synthetic first-recall tests.
+  Previously macOS recall could be green without proving source-tree
+  integrity there. An existing onboarding regression checks both presence
+  and order of the workflow step. The prior head's eight successful CI
+  jobs do not certify this new step; require exact-head CI, independent
+  review and resolution of protected-main check-name drift (#107).
+  No user memory, production KB, packages, permissions or core architecture
+  change. This is not a full macOS test matrix or clone-to-first-result
+  timing claim. Rollback: revert the scoped CI/test/docs change.
+
+### Changed (issue #144; PR #145 in review — macOS private-home onboarding regression)
+- The dedicated macOS 15/Python 3.12 job now runs *both* existing
+  `test_first_*.py` modules, not just the synthetic low-level probe. That
+  adds an actual disposable install, private-home keyword search and
+  parent-only environment canary regression to the macOS witness. An existing
+  test verifies the CI step so coverage cannot silently shrink again. The
+  earlier probe-only macOS commit passed all eight jobs in
+  [run 44832855401](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44832855401);
+  that result does **not** verify this changed job. Require fresh exact-head
+  CI, review and protected-main check repair before merge. No production
+  data, dependencies, permissions, or architecture changed; no full macOS
+  suite or network-clone timing is claimed. Rollback the focused CI and test
+  assertions if a real supported-platform failure is reproduced.
+
+### Added (issues #93/#144; PR #145 in review — macOS recall witness)
+- The workflow now has a dedicated macOS 15 / Python 3.12 job running
+  the existing focused first-recall unittest and an installed-home smoke
+  with synthetic JSON output. The former seven jobs covered Ubuntu and
+  Windows only. An existing regression checks the macOS job's steps.
+  This does not certify the entire macOS suite, clone time or production
+  security. Eight exact-head CI jobs and independent review are required.
+  Rollback only the workflow, assertion and docs; no data migration.
+
+### Fixed (issues #93/#144; PR #145 in review — SQLite verification deadline)
+- The installed-home synthetic first-recall probe now includes SQLite row/body
+  verification in `elapsed_ms` and treats a validation finishing past the shared
+  trial deadline as a timeout, even if subprocess output looks successful.
+  SQLite lock waiting is bounded by the remaining time; this does not provide
+  a preemptive disk-I/O or OS sandbox guarantee. A synthetic clock regression
+  extends an existing test method, preserving test count. No installed user
+  memory, production KB schema, packages, permission controls or network
+  behavior changed. Final-head CI and independent review are required before
+  merge; no claim of complete clone-to-first-result timing is made.
+
+### Fixed (issue #144; PR #145 in review — installed-home SQLite evidence)
+- The disposable installed-home first-success probe now checks SQLite `notes`
+  against two synthetic source paths and exact bodies plus the total indexed
+  row count. A CLI that prints plausible ingest/search output but creates
+  corrupt or empty SQLite no longer counts as success. The installer also
+  includes template Markdown, so this does not assume only two total rows.
+  The adversarial regression extends an existing test method. The analogous
+  default-mode proof remains separately proposed in PR #111 and needs
+  reconciliation. No personal data, new dependency, access rule or network
+  behavior changed. Exact-head CI and review remain release gates.
+
+
+### Fixed (issues #93 and #144; PR #145 in review — default first-recall deadline)
+- The keyword-only synthetic probe now budgets ingestion and search
+  against one monotonic 30-second trial deadline rather than permitting
+  each subprocess 30 seconds. Its JSON marks a late result as `timeout`
+  instead of silently extending the stated limit. A deterministic
+  fake-clock regression covers the two stages without increasing the
+  collected test count. This is a local diagnostic limit, **not** a
+  measured clean-clone installation or end-user five-minute result.
+  No KB schema, user data, package, host permission or architecture
+  change; exact-head CI and independent review remain mandatory.
+
+
+### Fixed (issue #144; PR #145 in review — installed-home smoke time budget)
+- The synthetic installed-home first-recall probe now shares one 180-second
+  default wall-clock budget across installation, ingest and search rather than
+  allowing each process up to 180 seconds. A deterministic synthetic clock
+  regression confirms no search process starts after the budget is exhausted;
+  the visible JSON still reports timeout as a failure. The budget constrains
+  only this disposable local diagnostic, **not** git clone or full user setup.
+  No user data, dependency, permission or index schema change. Awaiting
+  exact-head cross-platform CI and review before release.
+
+### Fixed (issue #144; PR #145 in review — installed-home probe process environment)
+- The opt-in installed-home smoke now launches the real installer, indexer and
+  search with an explicit reduced environment instead of automatically
+  forwarding parent API keys and `PYTHONPATH`. Existing onboarding coverage
+  runs all three processes with synthetic parent-only canaries and confirms
+  their absence, as well as successful indexed retrieval. The default smoke
+  remains separately tracked in PR #134. This is environment minimization,
+  not a sandbox; no private note bytes, access permissions or packages changed.
+  Exact-head CI and independent review are still required.
+
+
+### Changed (issue #144; first-result quickstart in review)
+- An opt-in `first_success.py --installed-home --repeat 1` probe now measures
+  disposable local installation through a synthetic source-cited keyword hit.
+  It validates the installed CLI rather than only the source checkout and
+  prints failure-aware JSON. CI runs this separately on Windows and Ubuntu;
+  the existing onboarding unittest checks its JSON contract. No real user
+  files, cloud/model service, new dependency or runtime permission changes.
+  This excludes clone and editor time; complete under-five-minute onboarding
+  and macOS results remain unverified until independently measured.
+- An installed-home private-note integration now exercises the actual
+  documented optional setup path, not just the README command order:
+  `install.py --target` provisions a disposable external home, the test
+  writes only a synthetic `02_WIKI/my-first-note.md`, and the *shipped*
+  `kb.py` must ingest and recover that source path. It uses the existing
+  onboarding unittest method, preserving the collected test count. This
+  does not measure clone-to-first-result time or certify operating-system
+  file permissions. Exact-head cross-platform CI is required before merge.
+- The README's first copy/paste block now puts a real local `kb.py ingest` and
+  `kb.py search "memory"` before the complete maintainer health/unit suite.
+  The latter stays available in a separate contributor-verification section.
+  The existing onboarding test now checks the copy/paste block, rather than
+  merely finding the commands somewhere in the page. No production code,
+  permission setting, private user data or dependency changed. This change
+  **does not** establish a measured under-five-minute clone-to-first-result
+  experience or real-user adoption; CI and independent platform timing remain
+  required.
+- The Persian `00_START_HERE/README_FA.md` now has a real clone-to-first-keyword-result
+  path before optional maintainer checks, with corrected fenced code blocks and
+  portable Python launcher guidance. The existing synthetic onboarding regression
+  now covers both human-language entrypoints and command order, without adding
+  a test method or changing runtime behavior. Clean-clone timings remain unknown.
+
+
+- The bilingual quickstarts now show how to install a **separate local
+  brain outside the public source clone**, add a harmless test note,
+  build its local keyword index and verify a source-path search result.
+  The existing onboarding test guards the directory/command ordering.
+  The installer already refuses nonempty destinations. This does not
+  encrypt the user's files or establish a complete setup-time benchmark;
+  verify the parent directory's Git/sync boundaries before storing
+  private notes. Pending exact-head CI; PR #145 remains Draft.
+
+- The English and Persian onboarding guides now return from the optional
+  `../my-private-brain` directory to `../second-brain-os` before running
+  **full repository** health and unittest checks. Previously those commands
+  would run inside the installed home, which ships only its installed-home
+  test, potentially giving a misleading contributor verification. The
+  existing onboarding test guards this working-directory transition. No
+  runtime behavior, permissions or user files were changed; full CI on the
+  new head remains a merge requirement.
+
 ### Fixed (issue #102; PR #103 review; CI recheck pending)
 - The Codex TOML path regression now decodes emitted string literals before
   comparing their values. CI run #43537155432 found its JSON-lowercase-escape

@@ -25,6 +25,1081 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Require Markdown file types in first-recall evidence (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Observed in isolation:** the old path predicate accepted synthetic regular .txt and .json files as Markdown evidence; the patched predicate rejects both and keeps the .md positive control (3/3 local assertions). This is not an observed production KB fault.
+- [x] **Bounded test-first fix:** require the same platform-aware *.md pattern as common.iter_markdown in the disposable clone's source validator, including corpus integrity mode. Existing onboarding unittest checks exact matching non-Markdown rows and keyword refusal; no new test method, dependency, schema or permission change.
+- [ ] **Release gate:** exact-head CI, independent review and authorized branch-protection repair (#107). Previous head 9bd5050 passed all eight jobs (Actions run 45242895438); that evidence does not certify this change. Local full checkout blocked by DNS. Rollback: revert scoped test and validator/docs commits.
+
+**Next 1 (P0):** resolve protected-main check drift through an authorized administrator and review/merge already-green work; do not keep restarting CI for speculative changes.
+**Next 2 (P1):** collect actual public HTTPS timings with SHA and failed trials on Windows/macOS/Linux; separate Python setup. External risk input: [Mem0 #7047](https://github.com/mem0ai/mem0/issues/7047) requests source-message provenance; no external code copied.
+
+### P0 — Complete Unicode folding at the final indexed-hit gate (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Isolated regression reproduced:** the probe's last SQLite-hit check still used casefold alone on (title + normalized body), so a source-backed fullwidth title such as `ｍｅｍｏｒｙ` was rejected by this *diagnostic predicate*. The actual KB's FTS5 behavior for title-only matches remains a separate compatibility question; **no real-user failure is claimed**.
+- [x] **Bounded change:** the last check uses the same NFKC/casefold/Persian-letter helper already used for committed Markdown and indexed body; add a synthetic direct regression in the existing onboarding unittest (including a negative control). No dependency, schema, runtime KB change or permission expansion.
+- [ ] **Release gate:** verify eight exact-head jobs (the previous head completed 7/8; macOS was canceled), get independent review, reconcile obsolete protected-main checks in #107. **Rollback:** revert the narrow verifier/test/docs commit; no data migration.
+
+**Next 1 (P0):** finish exact-head CI including macOS without weakening protection; record cancellation causes and independent review.
+**Next 2 (P1):** collect repeatable public HTTPS clone-to-first-recall timings on Windows/macOS/Linux with SHA, failures and clear exclusion of Python setup; unknown until measured.
+
+### P0 — Match Unicode source terms with the real KB normalizer (#147 / draft PR #145; 2026-11-23)
+
+- [x] **False-negative reproduced in isolation:** Python casefold-only search does not find `memory` in committed Markdown containing the compatibility-width string `ｍｅｍｏｒｙ`, although the KB index applies NFKC normalization. This is a local predicate reproduction, **not** a user report or an HTTPS speed measurement.
+- [x] **S-sized fix and regression:** share one stdlib NFKC/casefold/Persian-letter normalizer between the probe's guarded Markdown keyword check and SQLite/source comparison. Extend the existing synthetic unittest for fullwidth source text, fullwidth filename, Persian letter variants and a negative match. No new dependency, OS sandbox, runtime KB modification or schema change.
+- [ ] **Merge gate:** exact-head cross-platform CI, independent review and authorized protected-main required-check reconciliation (#107). **Rollback:** revert this single probe/test/docs commit; no migration.
+
+**Next 1 (P0):** inspect all eight exact-commit CI jobs and resolve #107 without bypasses; keep PR #145 Draft until reviews and required checks permit merge.
+**Next 2 (P1):** benchmark public HTTPS clone to real first recall on Windows/macOS/Linux, including failures and commit provenance; installation time remains a separate unknown.
+Competitive watch: [Letta shared-memory conflict repair #4832](https://github.com/letta-ai/letta-code/issues/4832) flags concurrent-write caution; no external code copied.
+
+---
+
+### P0 — Prevent duplicate-source inflation in clean-clone recall (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Reproduced a false-green predicate:** an isolated stdlib SQLite
+      fixture with no unique key stored two rows for one path: row count 2,
+      unique committed source count 1. The prior membership/count check
+      accepted both paths (2/2), although the report would overstate notes.
+      This was a local predicate reproduction, **not** a completed GitHub
+      clone or a demonstrated production KB bug.
+- [x] **S-sized test-first change:** extend the existing disposable Git
+      onboarding integration fixture to write identical, source-matching
+      SQLite rows for a single committed Markdown path; require
+      duplicate_index_path. The verifier now refuses duplicate corpus
+      paths before certifying indexed notes. No change to runtime KB,
+      schema, personal notes, external dependencies or permissions.
+- [ ] **Release gate:** final-head 8/8 Actions jobs on Ubuntu/Windows/
+      macOS plus cross-host backup, independent review and authorized
+      repair of stale protected-main required contexts (#107).
+      **Rollback:** revert the scoped test/probe/docs commits; no migration.
+
+**Next 1 (P0):** verify exact-head full CI and independently reconcile #107
+before considering Draft PR #145 for merge.
+**Next 2 (P1):** obtain honest HTTPS download-to-first-recall measurements,
+including failures and exact commits, on Windows/macOS/Linux; separate
+Python setup time. External parallel risk input: Basic Memory #1771
+reports duplicate SQLite search-index rows (2026-10-17), **not** evidence
+that Second Brain OS's runtime index has the same defect.
+
+---
+
+### P0 — Read-only SQLite verification for disposable first-recall evidence (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Measured isolated baseline:** standard-library `sqlite3.connect(path)`
+      allowed an INSERT into a disposable SQLite fixture, whereas the same
+      file opened as `path.as_uri() + "?mode=ro"` with `uri=True`
+      refused the INSERT with a read-only error (one local experiment).
+- [x] **S-sized fix:** the probe's source-backed SQLite verification opens
+      its existing cache read-only. The existing onboarding integration test
+      records the actual connection during local `file://` transport
+      and rejects non-URI or writable validation. No new runtime KB behavior,
+      dependencies, schema, private data or host permission changes.
+- [ ] **Acceptance:** exact-head Windows/Ubuntu/macOS and backup CI,
+      independent security review and lawful protection-context repair (#107).
+      Rollback: revert this scoped probe/test/docs commit.
+
+**Next 1 (P0):** complete and inspect all eight exact-head CI jobs,
+review the patch independently and reconcile #107 without bypass.
+**Next 2 (P1):** measure actual HTTPS clone-to-first-recall across
+Windows/macOS/Linux with times, failures, exact SHA and reproducible steps.
+Competitor features remain research-only pending independent measurements.
+
+---
+
+### P0 — Suppress untrusted search-result filenames in first-recall JSON (#147 / PR #145; 2026-11-23)
+
+- [x] **Red-first regression:** the local synthetic indexer could print
+      `02_WIKI/generated-memory.md` even though it created that file only
+      after cloning; the failed benchmark echoed the uncommitted path in
+      `matched_paths`. A second synthetic parser override printed a
+      denied `09_OPERATIONS` label. Both are untrusted search headers, not
+      legitimate evidence paths.
+- [x] **Bounded fix (S):** retain raw hits only for internal validation;
+      expose only Git-HEAD-tracked, allowed, source-supported hit names in
+      JSON. A rejected header still fails the whole trial even when other
+      hits are valid. Reuse existing onboarding integration regression;
+      default offline behavior, index contents, permissions, dependencies
+      and source files remain unchanged. No OS sandbox is claimed.
+- [ ] **Acceptance / release gate:** exact-head matrix and macOS CI,
+      independent review and lawful protected-main #107 reconciliation.
+      **Rollback:** revert this scoped probe/test/bilingual-doc change.
+
+**Next 1 (P0):** verify all exact-head CI jobs and reconcile #107 with
+authorized review; do not merge Draft PR #145 prematurely.
+**Next 2 (P1):** run real HTTPS first-recall measurements on
+Windows/macOS/Linux, with revision-pinned failures, timestamps and OS context.
+Research watch: [Basic Memory stale FTS report](https://github.com/basicmachines-co/basic-memory/issues/765)
+and [Letta cross-agent isolation](https://github.com/letta-ai/letta-code/issues/2666)
+are external risk prompts only; no source copied.
+
+---
+
+### P0 — Validate unreported SQLite rows against committed source (#147 / PR #145; 2026-11-23)
+
+- [x] **Reproducible baseline:** the diagnostic checked that all indexed
+      paths belonged to Git HEAD, but checked title/body/norm only for printed
+      hits. A synthetic two-note index with one correct hit and another
+      *committed* path carrying fabricated bytes could pass.
+- [x] **Bounded fix (S):** verify the title, complete body and folded text of
+      every SQLite note against its guarded Markdown source. The existing
+      corpus includes committed `09_OPERATIONS` Markdown; integrity-only
+      checking can read such bytes inside a disposable PUBLIC checkout,
+      while normal source-hit checks still reject restricted zones. A CI
+      macOS red run on SHA `924f4e39` caught the mismatch; the follow-up
+      preserves the recall boundary and adds that exact regression.
+      This does not resolve runtime KB privacy issue #140 / PR #141. Return
+      `indexed_source_mismatch` without printing a suspect path. Extend the
+      existing disposable Git fixture and unittest; stdlib only; no runtime
+      KB, schema, credential or dependency changes. **Rollback:** revert the
+      scoped source/test/bilingual-doc commit.
+- [ ] **Merge gate:** exact-HEAD 8-job GitHub Actions, independent review,
+      and lawful correction of protected-main required checks (#107).
+      Full-corpus validation adds work to a diagnostic, not a process sandbox
+      or measured HTTPS onboarding guarantee.
+
+**Next 1 (P0):** reconcile #107 with an authorized maintainer and secure
+independent review; confirm every CI job on the precise commit SHA.
+**Next 2 (P1):** measure actual public HTTPS clone-to-first-hit on
+Windows/macOS/Linux with dated success/failure rates and source SHAs;
+record unknown rather than claiming an unmeasured five-minute result.
+
+Research comparison: [Basic Memory indexing discussions](https://github.com/basicmachines-co/basic-memory/issues/1771)
+and [Letta stale skill index](https://github.com/letta-ai/letta-code/issues/4337)
+are risk prompts, not proof of corresponding SBO bugs or reused code.
+
+---
+
+### P0 — Reject uncommitted extra rows in clean-checkout recall evidence (#147 / PR #145; 2026-11-23)
+
+- [x] **Reproducible witness gap:** the diagnostic validated only the SQLite
+      rows printed as search hits. A synthetic index could also contain a
+      phantom, uncommitted path, report the right row count and still pass.
+- [x] **Bounded fix (S):** verify every indexed `notes.path` belongs to
+      the cloned `HEAD` tracked-file set. Return `uncommitted_index_path`
+      without printing the untrusted path. Existing two-method onboarding test
+      creates a real disposable Git fixture with one valid hit and one phantom
+      index row; no new dependencies, permissions or runtime KB changes.
+- [ ] **Merge gate:** exact-head cross-platform CI including backup restore,
+      independent review and lawful resolution of #107. This is an index
+      provenance test, not protected-zone enforcement (#140) or a sandbox.
+      **Rollback:** revert this one probe/test/bilingual-doc commit.
+
+**Next 1 (P0):** complete exact-head CI and independent security review;
+resolve stale protected-main required checks under issue #107 without bypass.
+**Next 2 (P1):** collect dated real public HTTPS first-recall timings on
+Windows/macOS/Linux, with failure counts and pinned commit SHAs; avoid
+unmeasured under-five-minute claims.
+
+Research prompts only, not copied: [Basic Memory orphan index reports](https://github.com/basicmachines-co/basic-memory/issues/1771)
+and [Letta stale indexed skills](https://github.com/letta-ai/letta-code/issues/4337).
+No claim of identical defects in Second Brain OS.
+
+---
+
+### P1 — Account for failed post-transfer Git verification (#147 / PR #145; 2026-11-23)
+
+- [x] **Observed diagnostic defect:** after Git finished transferring a disposable
+      clone, a failed `git rev-parse HEAD` or `git ls-tree HEAD` returned
+      `commit_unverified` / `tracked_paths_unavailable` with `clone_ms: null`.
+      A verification timeout in this same stage also lost its attempted time.
+- [x] **Bounded fix (S):** preserve elapsed clone-and-Git-verification time
+      in those failed trials without treating them as successes. The existing
+      file-transfer regression injects failed HEAD, failed tree and timed-out
+      tree queries; `elapsed_ms >= clone_ms` must hold in every case. No real
+      network, runtime KB, dependency, schema or user-data change.
+- [ ] **Acceptance:** exact-head Ubuntu/Windows matrix, focused macOS and backup
+      CI green, independent review and lawful reconciliation of obsolete
+      protected-main checks (#107); PR #145 remains Draft until then.
+      **Rollback:** revert this one probe/test/bilingual-doc commit.
+
+**Next 1 (P0):** secure independent review and reconcile #107 without weakening
+branch protection; verify exact-head CI before any merge.
+**Next 2 (P1):** run dated real HTTPS download-to-first-hit trials on
+Windows/macOS/Linux with SHA, successful and failed attempts; do not substitute
+simulated Git errors for live user experience.
+
+Research inputs, not copied features: [Basic Memory SQLite duplicate-index report](https://github.com/basicmachines-co/basic-memory/issues/1771)
+and [Letta's stale skill-index report](https://github.com/letta-ai/letta-code/issues/4337).
+Neither is evidence of the same defect in this repository.
+
+---
+
+### P1 — Attribute first-recall timeouts to their actual stage (#147 / PR #145; 2026-11-23)
+
+- [x] **Observed diagnostic gap:** `reason: timeout` did not distinguish
+      clone/download delays from an indexer stall, keyword search or
+      validation timeout. Failed attempts were hard to interpret.
+- [x] **Bounded fix (S):** additive `timeout_phase` JSON field labels
+      `preflight`, `clone`, `ingest`, `search` or `validation` on timeout
+      and is `null` on successful runs. The existing test method forces
+      clone, ingest and search timeouts via local `file://` Git transport;
+      no real HTTPS performance or new dependency is claimed.
+- [ ] **Merge acceptance:** complete exact-head Ubuntu/Windows matrix, macOS
+      focus and backup/restore CI, independent review and lawful resolution of
+      #107. No merge while PR #145 remains Draft or protected checks drift.
+      **Rollback:** revert this probe/test/bilingual-doc change.
+
+**Next 1 (P0):** reconcile protected-main required check contexts (#107) through
+authorized review and verify all exact-head CI results before merging #145.
+**Next 2 (P1):** collect dated real HTTPS first-recall success/failure timings
+on Windows/macOS/Linux, with commit SHA and timeout phases; unknown stays unknown.
+
+---
+
+### P0 — Keep remote benchmark scratch files outside caller temp dirs (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline:** the remote benchmark replaced child `HOME` and
+      `USERPROFILE`, but `_child_env` still forwarded ambient
+      `TMP`, `TEMP` and `TMPDIR` values to downloaded Python.
+      Reproduced with synthetic parent-only temp paths on Linux / Python
+      3.13.5 (old: 3/3 inherited; isolated mapping: 3/3 redirected).
+      No private files or secrets were read.
+- [x] **Bounded repair (S):** create a per-trial `isolated-home/tmp`
+      and point all three child temp variables there for opt-in
+      `--github` transfers. The existing file-transfer onboarding test
+      checks those values **during actual subprocess launch** and verifies
+      cleanup; the default local/offline mode is untouched. No dependency,
+      schema migration, new test method or change in KB behavior.
+- [ ] **Merge acceptance:** full exact-head CI (Windows/Ubuntu Python
+      3.9/3.12, focused macOS and backup/restore), independent review
+      and lawful protection-context reconciliation (#107); local fixture
+      comparisons are not real HTTPS performance evidence. Downloaded
+      Python retains filesystem/network access: this is not a sandbox.
+      **Rollback:** revert this small probe/test/docs patch.
+
+**Next 1 (P0):** independently review the growing Draft PR #145 and reconcile
+#107 required checks before merging; report all exact-head CI conclusions.
+**Next 2 (P1):** run repeatable HTTPS-to-first-hit measurements on
+Windows/macOS/Linux with SHA, dated conditions, successes and failures;
+first-use latency and real-user adoption remain unknown.
+
+---
+
+### P1 — Record failed HTTPS clone attempts honestly (#147 / PR #145; 2026-11-22)
+
+- [x] **Reproduced source defect:** on clone return code != 0, the
+      diagnostic always reported `local_clone_failed` even for opt-in
+      public GitHub HTTPS and left `clone_ms: null`; network attempts could
+      not be distinguished or timed in per-trial JSON.
+- [x] **Bounded repair (S):** report `remote_clone_failed` for HTTPS
+      failures, preserve attempted transfer time on nonzero exit and clone
+      timeout; local failures remain `local_clone_failed`. Extend the
+      existing onboarding regression with simulated transport failure and
+      timeout, no actual network, no new dependency/test method/schema change.
+      Never print raw transport stderr in benchmark JSON.
+- [ ] **Acceptance:** verify the exact-head four Ubuntu/Windows matrix,
+      focused macOS and three backup jobs; independent security review and
+      protected-main #107 must be reconciled before merge. Actual HTTPS
+      throughput, under-five-minute first use and user adoption remain
+      unknown. Rollback: revert this scoped probe/test/bilingual-doc change.
+
+**Next 1 (P0):** reconcile #107 required checks and independent review;
+check all exact-head CI jobs, do not bypass protection or merge a Draft PR.
+**Next 2 (P1):** run real HTTPS-to-first-hit trials on Windows/macOS/Linux
+with SHA, dated conditions and failed-attempt counts; do not extrapolate
+from simulated error tests.
+
+---
+
+### P0 — Reject tracked-source mutation during first-recall measurement (#147 / PR #145; 2026-11-22)
+
+- [x] **Reproduced integrity gap:** the previous diagnostic checked source
+      paths against HEAD's tree but compared SQLite with *current* checkout
+      Markdown bytes. An indexer editing tracked Markdown after clone could
+      make both agree and produce a false committed-source success.
+- [x] **Bounded fix (S):** after ingest/search, fail closed on any nonzero
+      `git diff --quiet --no-ext-diff HEAD --` and report
+      `tracked_checkout_modified`. Extend the existing onboarding test
+      with a real disposable `file://` checkout whose README is edited
+      during ingest. No new test method, dependencies, schema, core KB or
+      persisted user-data changes. Gitignored derived `.kb/` stays allowed.
+- [ ] **Acceptance:** exact-head CI on four Windows/Ubuntu matrix jobs,
+      focused macOS and three independent backup jobs; independent review
+      and lawful resolution of protected-main required contexts (#107).
+      No claim of an OS sandbox or live HTTPS onboarding duration.
+      **Rollback:** revert this diagnostic/test/bilingual-doc slice.
+
+**Next 1 (P0):** verify exact-head CI, independent source review and
+protected-main #107 before any merge; coordinate #111/#134 overlap.
+**Next 2 (P1):** run actual public GitHub HTTPS-to-first-hit measurements
+on Windows/macOS/Linux with observed SHA, failures and environment; until
+then first-use duration and real-user success are unknown.
+
+---
+
+### P0 — Validate executable provenance before clean-clone recall (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline (reviewed):** Markdown evidence was verified against HEAD,
+      but the Python indexer was only checked for existence and non-symlink
+      path. Modified executable bytes after clone could run under the original
+      `commit_sha`; a source commit alone did not certify the launched code.
+- [x] **Small stdlib fix (S):** require `scripts/kb.py` in cloned HEAD's
+      tracked file list and a clean Git worktree diff for that path before
+      executing Python. Existing onboarding unittest now exercises a missing
+      tracked entry and post-clone code tampering via real local file-transfer
+      clones, without new discovered test count or dependencies.
+- [ ] **Merge acceptance:** exact-head health and all CI jobs plus
+      independent security review and lawful #107 required-check resolution.
+      This verifies provenance, not the safety of malicious *committed* code.
+      No core KB/storage/schema change. Rollback: revert this scoped
+      diagnostic, regression and bilingual documentation patch.
+
+**Next 1 (P0):** verify all exact-head CI conclusions and independent review,
+then reconcile #107 and overlapping PRs without bypassing protection.
+**Next 2 (P1):** measure real HTTPS GitHub clone-to-first-hit on
+Windows/macOS/Linux with times, SHA, trial failures and environment;
+local file-transfer results cannot substitute for real-user onboarding.
+
+---
+
+### P0 — Reduce ambient home-path exposure in the opt-in GitHub recall probe (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline (reviewed in draft source):** downloaded `scripts/kb.py`
+      was executed with child `HOME`/`USERPROFILE` inherited from the caller.
+      Git credential-helper suppression alone does not hide the local home
+      path from downloaded Python.
+- [x] **Bounded fix (S):** per remote trial, create a throwaway home
+      and set child `HOME`/`USERPROFILE` plus Windows home-drive fields.
+      Extend the existing file-transfer regression to observe this environment
+      on Git and indexer calls and check temporary cleanup. The offline
+      default is unchanged; no dependency, schema, or permission changes.
+- [ ] **Acceptance:** verify exact-head eight-job CI on Windows, Ubuntu,
+      macOS; obtain independent review and resolve protected-main #107
+      without bypass. This is environment hygiene, **not** process sandboxing:
+      the downloaded indexer retains filesystem/network privileges.
+      Rollback: revert this scoped diagnostic/test/docs commit.
+
+**Next 1 (P0):** verify CI and independent review for #145; reconcile #107
+and overlapping PRs before merging.
+**Next 2 (P1):** measure actual HTTPS GitHub-to-first-hit on three OS
+families with failure counts, date and SHA; real-user under-five-minute
+success remains unknown.
+
+### P1 — Optional real public GitHub clone to first recall (#147 / PR #145; 2026-11-22)
+
+- [x] **Baseline:** the prior local no-hardlinks clone omits remote GitHub
+      download; existing measured milliseconds cannot substantiate a user's
+      network first-run time. GitHub issue #147 records the acceptance and
+      rollback; no performance result is inferred.
+- [x] **Bounded change (S):** add opt-in `--github` to the existing
+      stdlib probe. The fixed public HTTPS source cannot be redirected by a
+      CLI argument. Preserve HEAD/Markdown/SQLite verification, committed SHA,
+      per-run results and strict failure handling. Avoid credential helpers,
+      terminal prompts and user/system Git config; no core KB or storage change.
+- [ ] **Acceptance:** the existing onboarding unittest exercises real Git
+      transfer over `file://` on Windows/Ubuntu/macOS and keeps default
+      offline mode. Verify exact-head eight-job CI and independent review.
+      This is NOT a verified GitHub HTTPS latency benchmark or a sandbox.
+      Rollback: revert the optional flag, regression and bilingual docs;
+      no schema, permission or user-data migration.
+
+**Next 1 (P0):** check exact-head CI and independent review of #145;
+reconcile #107's obsolete main protection contexts without weakening checks.
+**Next 2 (P1):** run actual public GitHub HTTPS-to-first-hit measurements
+with independent attempts and failure counts on Windows, macOS and Linux,
+capturing dates, commit SHAs and network environment before a five-minute claim.
+
+### P0 — Recheck the public-source boundary for SQLite evidence (#146 / PR #145; 2026-11-22)
+
+- [x] **Reproduced synthetic baseline:** the old SQLite/source row comparator read
+      a synthetic path under the denied `09_OPERATIONS/` zone and accepted perfectly
+      matching synthetic restricted bytes. The keyword verifier rejected that
+      path, but the independent row comparator did not. This is a diagnostic
+      consistency gap, not an observed production data leak.
+- [x] **Test-first bounded fix (S):** a single non-aliased public Markdown
+      path resolver now governs both keyword and row/source comparisons.
+      Synthetic assertions cover a public positive, restricted-zone negative,
+      and a mocked linked-path negative on Windows. No dependency, schema,
+      permission default or production KB change; this does not eliminate
+      filesystem races or implement sandboxing.
+- [ ] **Acceptance:** exact-head CI health plus eight jobs, independent
+      security review, conflict reconciliation (#111/#134) and protected-main
+      required-check repair (#107). Rollback: revert the scoped test/diagnostic/
+      documentation commits; no personal state migration.
+
+**Next 1 (P0):** finish exact-SHA CI and independent provenance review; reconcile
+#107 without disabling branch protection.
+**Next 2 (P1):** benchmark remote GitHub download to the first real keyword
+hit on Windows, macOS and Linux, recording run count, errors and provenance;
+five-minute end-to-end usability remains unknown.
+
+### P0 — Verify index content against committed note bytes (#144 / PR #145; 2026-11-22)
+
+- [x] **Synthetic red-first case:** a fabricated KB command can write a SQLite
+      row for committed `memory.md`, print the same path and quote the keyword,
+      yet store a body that never occurred in that Markdown. The prior path,
+      keyword and row-count assertions accepted the mismatch.
+- [x] **Bounded stdlib fix:** compare each SQLite hit's full title, body and
+      normalized body with the committed source, using existing frontmatter
+      parsing rules; reject disagreement as `no_source_backed_hit`. A regression
+      uses a synthetic Git fixture in an existing test method. No new packages,
+      runtime KB change, user-data migration or test-count drift.
+- [ ] **Merge gate:** full final-head health, all eight CI jobs, independent
+      review and lawful protected-main required-check repair (#107).
+      Rollback: revert this small diagnostic/test/docs commit.
+
+**Next 1 (P0):** verify #145 exact-head CI and provenance review; reconcile
+overlap with #111/#134 and fix #107 without reducing protections.
+**Next 2 (P1):** measure remote GitHub download-to-first-hit on Windows,
+macOS and Linux with timestamp, failure counts, network and host details;
+the full under-five-minute outcome is unknown.
+
+### P0 — Require committed sources in the clean-checkout recall witness (#144 / PR #145; 2026-11-22)
+
+- [x] **Red-first reproduced (synthetic):** a temporary clone can be made to
+      ingest a note created by its own test executable, print a matching
+      keyword hit and store a consistent SQLite row. Existence and keyword
+      checks alone accept this as "committed" Markdown despite the path not
+      existing in the commit. An isolated Git tree fixture confirms the
+      generated note is absent from `HEAD`; no personal files used.
+- [x] **Bounded fix (S):** snapshot `git ls-tree -r -z --name-only HEAD`
+      before running the indexer, require every reported path to be in that
+      immutable list and preserve all existing SQLite/source checks. An
+      existing onboarding test method carries the forged generated-hit
+      regression without changing discovered-test counts. A missing tree
+      query fails closed as `tracked_paths_unavailable`; a generated hit
+      remains `no_source_backed_hit`. Stdlib-only, no runtime KB change.
+- [ ] **Acceptance:** exact-head health plus all eight Windows/Ubuntu/macOS
+      and backup CI jobs; independent review; protected-main correction
+      (#107). No claim about network clone or real users. Rollback: revert
+      this narrow test/probe/docs series; no migration.
+
+**Next 1 (P0):** verify the final #145 SHA with all CI jobs, review Git
+path provenance and reconcile #107 without bypassing branch protection.
+**Next 2 (P1):** measure complete remote download-to-first-result with
+independent failures, clock, OS/Python and network provenance, then decide
+whether the quickstart meets five minutes.
+
+### P0 — Reject Markdown aliases crossing memory-zone boundaries in recall evidence (#146 / PR #145; 2026-11-22)
+
+- [x] **Reproduced baseline:** the draft diagnostic's source verifier resolved
+      a synthetic Markdown alias under `02_WIKI/` into the existing restricted
+      `09_OPERATIONS/` zone in a disposable fixture, then incorrectly accepted that
+      as an independent public-source witness. Isolated Python symlink test
+      reproduced this false-positive; no real private data was read.
+- [x] **Bounded fix (S):** require regular, non-aliased Markdown paths, reject
+      links/junctions in any path segment and denied source planes, and keep
+      ordinary public Markdown hits working. An existing onboarding test method
+      covers regular, direct-restricted, traversal, simulated alias (Windows)
+      and real alias where permitted. No new dependency or runtime KB change.
+      A rejected witness yields the existing `no_source_backed_hit` reason.
+- [ ] **Merge gate:** final SHA must pass eight CI jobs, independent review
+      and #107 protected-main status reconciliation. Rollback: revert this
+      small probe/test/docs commit; no schema or private-data migration.
+
+**Next 1 (P0):** verify exact-head #145 CI, review source-path containment,
+and resolve protected-main required-context drift (#107) without bypass.
+**Next 2 (P1):** benchmark complete remote download to the first useful
+result on real Windows/macOS/Linux environments with failure counts.
+
+### P0 — Reject linked scripts and SQLite cache paths in first-recall probe (#146 / PR #145; 2026-11-22)
+
+- [x] **Observed baseline:** `Path.is_file()` follows links. The draft local-clone
+      diagnostic could launch a symlinked `scripts/kb.py` or consult a linked
+      the `kb.sqlite` cache outside its disposable clone. Isolated synthetic path
+      tests reproduced this API behavior; no real secrets or user vaults used.
+- [x] **Bounded fix (S):** refuse symlinks/junction escapes for `scripts/`,
+      `scripts/kb.py`, `.kb/` and the `kb.sqlite` cache before launching the
+      indexer and recheck after ingest and search. Explicit failure reason:
+      `unsafe_checkout_path`. Extend the existing onboarding regression,
+      with Windows-compatible synthetic alias checks and a real symlink check
+      where permitted. No dependency, production KB schema, permission or
+      persisted personal data change; this is not a process sandbox.
+- [ ] **Gate:** 8/8 final-head CI jobs including macOS, Windows/Ubuntu and
+      cross-host restore; independent security review; protected-main
+      required-check correction (#107) before merge. Rollback: revert this
+      scoped diagnostic/test/docs commit.
+
+**Next 1 (P0):** verify #145's exact-head CI and reconcile #111/#134/#145,
+protected `main` contexts (#107), and independent review.
+**Next 2 (P1):** measure repeatable remote clone-to-first-recall latency,
+failures and hardware/network provenance across three OS families.
+
+### P0 — Refuse misleading local-recall benchmarks from dirty sources (#144 / PR #145; 2026-11-21)
+
+- [x] **Baseline (reproduced by adversarial fixture):** `git clone --local`
+      ignores staged, modified and untracked source work. The previous
+      diagnostic measured the old commit and could still print a green
+      result even though it did not benchmark the developer's visible edits.
+- [x] **Scoped fix (S):** preflight `git status --porcelain=v1` with the
+      existing restricted child environment. Reject nonignored changes with
+      `source_dirty`; refuse unreadable/non-Git sources with
+      `source_status_unavailable`. Report `preflight_ms` separately so
+      `clone_ms` stays a real local clone+SHA duration. Regression exercises
+      untracked and modified tracked source files and a clean real checkout.
+      No third-party package, schema, runtime memory, approval or access
+      semantics change. Rollback: revert this scoped probe/test/docs commit.
+- [ ] **Acceptance gate:** verify the final SHA using full health and all
+      eight CI jobs; require independent review and reconcile protected-main
+      check contexts (#107) before merge. This probe does **not** measure
+      remote GitHub download, Python install or real users.
+
+**Next 1 (P0):** finish exact-head CI and lawfully reconcile protected
+`main` checks (#107) before merging #145; coordinate with #111/#134.
+**Next 2 (P1):** publish repeated real **remote** clone-to-first-hit trials
+with timestamp, failure count, OS, network conditions and hardware. The
+five-minute user experience remains **unknown**.
+
+### P1 — Require repeated local-recall evidence in CI (#144 / PR #145; 2026-11-21)
+
+- [x] **Baseline:** the committed-checkout probe supports 1–5 independent
+      trials, but the five CI platform/Python jobs ran only the default **one**
+      attempt. That cannot show intermittent failures or a per-job denominator.
+- [x] **Scoped CI correction (S):** all four Windows/Ubuntu jobs and the
+      focused macOS job now run `python scripts/clean_checkout_recall.py
+      --repeat 3`. The existing probe uses a disposable clone per trial
+      and reports per-trial failures, success rate, median (including failures)
+      and maximum elapsed time; any failed trial rejects the job. The existing
+      unittest holds the active YAML step against regression. No production
+      index, user data, dependency, permission or architecture change.
+- [ ] **Acceptance:** require 3/3 source-backed *local* hits in each of
+      five platform/Python jobs and eight successful exact-head CI jobs,
+      including cross-host restore. Independent review and protected-main
+      check-context repair (#107) gate any merge. Remote clone-to-first-use
+      latency remains **unknown**. Rollback: revert this CI/test/docs commit.
+
+**Next 1 (P0):** verify exact-head CI; reconcile #111/#134/#145 and repair
+#107 without weakening protected-main checks.
+**Next 2 (P1):** record repeated **remote** clone-to-first-hit trials with
+machine/network context, timestamps and failure counts on three OSes.
+Competitor-risk signal (not a demonstrated SBO defect, no code copied):
+[Letta #5594](https://github.com/letta-ai/letta-code/issues/5594)
+reports Git overhead on large local-memory repositories; independently
+evaluate corpus-size scaling before making a performance claim.
+
+### P1 — Repeatable honest local-clone recall trials (#144 / PR #145; 2026-11-21)
+
+- [x] **Baseline:** the existing committed-checkout probe executes exactly
+      one local Git clone, indexing and keyword lookup, so intermittent first-
+      recall failure and trial-to-trial latency cannot be represented.
+- [x] **Bounded improvement (S):** optional `--repeat 1..5` runs fresh
+      disposable clones, reports all trials plus successful count, success rate,
+      inclusive median and maximum duration; any failure produces a nonzero
+      exit. Existing no-argument single-trial JSON remains compatible. No
+      packages, remote clone, private files, schema migrations or access
+      changes. Rollback: revert this probe/test/docs commit.
+- [ ] **Acceptance:** execute a real two-clone regression, an invalid-count
+      refusal and a mixed success/failure aggregate test; confirm full
+      health, Windows/Ubuntu/macOS checks and cross-host restore on final SHA.
+      Protected-main required-check drift (#107) and independent review still
+      gate merge. Repeated local measurements are **not** independent end-user
+      network-to-first-result evidence.
+
+**Next 1 (P0):** reconcile green exact-head CI, #111/#134 overlap, and
+protected-main context drift #107 before a policy-compliant merge.
+**Next 2 (P1):** separately measure *remote* checkout-to-first-hit trials
+on Windows/macOS/Linux with hardware, network, failures and timestamps.
+
+### P0 — Verify local-recall evidence against committed Markdown (#144 / PR #145; 2026-11-21)
+
+- [x] **Reproduced in isolation:** the prior local-clone probe could accept a
+      plausible CLI output and valid SQLite row containing `memory` even
+      when the committed source note and its filename contained no such term.
+      The derived index alone is not independent source evidence.
+- [x] **Bounded correction (S):** after normal path/index checks, require the
+      committed Markdown text or source filename to contain the literal query;
+      resolve sources within the temporary checkout before reading and refuse
+      undecodable or missing files. Extend the existing adversarial Git fixture
+      with a valid index that contradicts its committed Markdown. No third-party
+      dependency, production KB change, private data or permission expansion.
+      Rollback: revert this probe/test/docs commit.
+- [ ] **Acceptance:** exact-head focused test, real local-clone probe and all
+      eight CI jobs pass, followed by independent review and lawful correction
+      of required-check drift (#107). This is a source-evidence check, not a
+      remote GitHub download benchmark or a sandbox guarantee.
+
+**Next 1 (P0):** verify final-head CI and reconcile overlapping #111, #134
+and #145 before any branch-protection-compliant merge.
+**Next 2 (P1):** run repeated remote clone-to-first-recall trials with
+machine/network context and failures on Windows, macOS and Linux.
+
+### P0 — Refuse keyword-free SQLite evidence in local-clone recall (#144 / PR #145; 2026-11-21)
+
+- [x] **Reproduced code gap:** the first-hit probe previously checked only that
+      SQLite contained the reported count and paths. A synthetic committed
+      Git fixture with a valid SQLite notes row whose title and normalized
+      body *did not contain the query* could still print a source path and
+      be reported as a successful keyword hit.
+- [x] **Bounded fix (S):** require each reported path's indexed title or
+      normalized body to contain the literal documented keyword `memory`,
+      in addition to existing source-path and row-count checks. The existing
+      onboarding test method now covers a valid-but-unrelated SQLite fixture
+      as well as corrupt SQLite. No new dependency, schema, permission,
+      network service, user data or production KB change.
+- [ ] **Merge acceptance:** confirm real lookup and adversarial refusal
+      in final-head CI (all 8 jobs), reconcile #111/#134/#145 and required-
+      check drift #107, then obtain permitted independent review. This
+      measures **local** committed checkout, not GitHub network download or
+      guaranteed sub-five-minute first use. Rollback: revert this isolated
+      benchmark/test/doc change.
+
+**Next 1 (P0):** confirm exact-head Windows, Ubuntu, macOS and restore
+jobs, and resolve protected-main check drift without weakening rules.
+**Next 2 (P1):** collect repeated remote clone-to-first-hit samples,
+including failures and machine/network provenance, before making
+end-user latency or growth claims.
+
+### P0 — Measure clean local-checkout recall across CI operating systems (#144 / PR #145, 2026-11-21)
+
+- [ ] **Observed baseline:** `scripts/clean_checkout_recall.py` and its local-clone
+      timing were exercised as a dedicated workflow step only on macOS.
+      The four Ubuntu/Windows matrix jobs checked real public Markdown and
+      synthetic installed-home recall, but did not execute the same clone probe.
+      Therefore no platform-comparable local clone timing was available there.
+- [ ] **Bounded change (S):** add the *existing* offline probe as a real YAML step
+      to each Python 3.9/3.12 × Ubuntu 24.04/Windows job. Extend an existing
+      onboarding regression to refuse a comment-only step or a misplaced step.
+      No new package, network access, cache persistence, permissions, real user
+      memory, or architecture change. **Rollback:** revert this CI/test/docs commit.
+- [ ] **Acceptance:** on the final head, 4/4 matrix jobs plus the independent
+      macOS job execute the same probe and produce honest JSON, 8/8 workflow jobs
+      pass, and any `status=fail` makes the corresponding job red. This measures
+      local committed Git clone → index → keyword hit only. Remote clone,
+      interpreter setup, personal-memory onboarding and sub-five-minute real
+      first use remain **unknown**; do not publish them as benchmarks.
+
+**Next 1 (P0):** verify the final-head CI step outputs and eight conclusions;
+reconcile overlap among PRs #111/#134/#145 and protected-main issue #107.
+**Next 2 (P1):** design separately repeatable *remote* clone-to-first-hit
+trials on Windows/macOS/Linux with failures, medians and hardware records.
+
+### P0 — Repair a commented-out macOS clean-checkout probe (#144 / PR #145, 2026-11-21)
+
+- [ ] **Measured red baseline:** on draft head `ff50e149`,
+      `.github/workflows/ci.yml` contained literal backslash-n characters
+      in one comment line. The advertised macOS clean-checkout step was
+      commented out rather than executed. The full test run in
+      [Actions #44877287752](https://github.com/iAlirezaaa/second-brain-os/actions/runs/44877287752)
+      reported a missing standalone step; earlier success does not verify
+      the latest branch. Later branch-push workflow records showed zero
+      jobs and remain a separate diagnostic, not a pass.
+- [ ] **S, bounded fix:** serialize that YAML block as actual lines and tighten
+      the existing onboarding regression to match a standalone step plus
+      the immediately following `run:` line. No new test method, library,
+      permission, network service, persistent user data or core change.
+      Rollback: revert this single CI/test/documentation commit.
+- [ ] **Acceptance:** macOS executes the real clean *local* Git-clone
+      probe and reports its JSON; the focused test, four matrix jobs and
+      independent backup/restore jobs all pass on this exact head.
+      Review #111/#134 overlaps and resolve #107 through approved
+      branch-protection review before merge. This does **not** measure
+      remote network clone or guarantee a sub-five-minute first use.
+
+**Next 1 (P0):** verify all exact-head CI jobs, inspect missing-job
+push workflows separately, and reconcile PRs #111/#134/#145 and #107.
+**Next 2 (P1):** run repeatable *remote* clone-to-first-hit trials
+with failure counts on Windows, macOS and Linux before advertising a result.
+
+### P0 — Guard the published first recall against silent zero-hit drift (#144; PR #145, 2026-11-21)
+
+- [ ] **S, observed gap:** the Windows/Ubuntu and macOS jobs measured
+      disposable synthetic recall but never ran the first two commands
+      on the real checked-out Markdown. The documented example could return
+      zero hits while synthetic trials remained green. The prior CI
+      lacked this real-checkout command pair (structural baseline).
+- [ ] Run scripts/kb.py ingest then scripts/kb.py search "memory" in four
+      matrix jobs and the dedicated macOS job. Zero-hit search returns a
+      nonzero status. Extend the existing onboarding regression to require
+      both steps and order, without increasing discovered-test counts.
+      No schema changes, dependencies, private data or permission changes.
+- [ ] **Acceptance:** both real-checkout steps and all eight jobs succeed
+      on the final SHA; independent review and protected-main check-context
+      repair (#107) precede merge. This proves a CI public-corpus keyword
+      result, not remote-clone latency, under-five-minute setup, or real
+      user success. **Rollback:** revert this one CI/test/docs commit.
+
+**Next 1 (P0):** inspect eight exact-head job conclusions and reconcile
+#111/#134 alongside #145 and #107 without bypassing protection.
+**Next 2 (P1):** measure remote clone through first source-backed keyword
+hit on Windows/macOS/Linux with repeat and failure counts.
+
+### P0 — macOS first-use evidence must also pass health (#144, PR #145; 2026-11-21)
+
+- [ ] **S, red-first:** the existing focused macOS 15/Python 3.12 CI
+      job proved synthetic install and recall but did not invoke
+      `scripts/health.py`; a separate integrity-gate regression on macOS
+      could therefore coexist with a green first-recall witness.
+      The existing onboarding test asserts the macOS job runs health
+      **before** its focused regression suite. No new discovered test method.
+- [ ] Add a standalone `Vault health (macOS)` step to that same job,
+      without changing the required Ubuntu/Windows matrix, backup/restore,
+      cache, core runtime, dependencies or user files.
+      **Acceptance:** the macOS health step, the macOS focused/installed
+      recall steps and all seven other jobs succeed on the exact new SHA;
+      independent review and the unchanged protected-main rules remain
+      mandatory before merge. This is *not* full macOS-suite coverage or
+      end-to-end Git clone latency. **Rollback:** revert this CI/test/docs
+      delta if an actual supported-runner incompatibility is verified.
+
+**Next 1 (P0):** inspect the exact-head eight-job CI and coordinate #111,
+#134 and #145 with protected-main check-name repair #107; never bypass the
+required checks.
+**Next 2 (P1):** measure clean-clone to source-backed first hit on
+Windows/macOS/Linux, recording repeats, failures and environment provenance
+before claiming a sub-five-minute result.
+
+### P0 — Bound installed-home verification, not just subprocesses (#144, PR #145; 2026-11-20)
+
+- [ ] In the synthetic installed-home first-recall probe, make SQLite source-row
+      verification part of the reported elapsed time and shared 180-second budget.
+      The earlier reported elapsed time stopped after keyword search, even though
+      two SQL reads and source-body checks still ran before declaring success.
+      Bound SQLite lock waiting to remaining time and return `timeout` if the
+      final verification crosses the deadline. This is best-effort wall-clock
+      accounting, not preemptive cancellation of arbitrary disk I/O.
+- [ ] Test-first regression within existing `tests/test_first_success_probe.py`:
+      three synthetic subprocess successes and valid SQLite rows, but a mocked
+      verification crossing a one-second deadline must report failure. Preserve
+      test count and existing no-private-data fixtures. Require focused test,
+      health, all seven exact-head CI jobs and independent review before merge.
+      No production KB or schema changes, new packages or user-data writes.
+      Rollback: revert this isolated probe/test/docs delta if verified to regress.
+
+**Next 1 (P0):** inspect the exact-head seven CI jobs and reconcile overlapping
+#111/#134/#145 changes, then resolve protected-main required contexts (#107)
+without bypassing security or reviewer requirements.
+**Next 2 (P1):** measure clean-checkout-to-first-sourced-recall on Windows,
+macOS and Linux with repeat counts and failure provenance; report sub-five-minute
+claims only after reproducible results, then evaluate host handshakes.
+
+### P1 — macOS onboarding contract coverage (#144, PR #145; 2026-11-21)
+
+- [ ] Extend the macOS 15/Python 3.12 CI witness to run both
+      `tests/test_first_success_probe.py` and
+      `tests/test_first_session_onboarding.py` with a focused
+      `test_first_*.py` discovery pattern. The latter exercises the real
+      temporary personal-home installation, note ingestion, source-path
+      retrieval, bilingual command-order regression and parent-only
+      synthetic credential canaries. Ubuntu/Windows already run it through
+      the full suite. The existing onboarding test now refuses a
+      probe-only macOS job; no new test method or dependency is added.
+- [ ] Acceptance: the focused macOS job and all seven other jobs must
+      succeed on the **new exact head**; check job logs and obtain
+      independent review. The prior commit d44f510 had 8/8 successful
+      jobs in Actions run 44832855401, which verifies only the older
+      probe-only macOS job. No claim is made for the complete macOS
+      suite, user data, host sandbox or end-to-end clone latency.
+      Rollback: revert only the CI test-discovery pattern, its assertion
+      and corresponding documentation if a supported runner demonstrates
+      incompatibility.
+
+**Next 1 (P0):** verify all eight new-head CI jobs; reconcile overlapping
+#111/#134/#145 and repair stale protected-main checks in #107 without bypass.
+**Next 2 (P1):** separately measure GitHub network clone through first
+source-backed hit on Windows/macOS/Linux, recording repeats, elapsed times
+and failures before making any under-five-minute claim.
+
+### P1 — macOS isolated first-recall witness (#93/#144, PR #145; 2026-11-20)
+
+- [ ] A macOS 15 / Python 3.12 CI job executes the existing focused
+      first-recall unittest and the disposable installed-home keyword probe.
+      Previously seven CI jobs ran only on Ubuntu/Windows; macOS was unknown.
+      Its own OS label, Python and commands are guarded by an existing test.
+- [ ] Accept only after all eight jobs on the exact final SHA are green:
+      four Ubuntu/Windows test jobs, one scoped macOS smoke and three backup
+      jobs. This is not a full macOS test suite, a Git-clone timer, or a real
+      user's five-minute benchmark. No dependency, ACL, runtime schema or
+      personal data changes. Rollback: revert the scoped workflow/test/docs.
+
+**Next 1 (P0):** reconcile #111/#134/#145, verify eight exact-head CI jobs,
+and repair protected-main status contexts (#107) by authorized review only.
+**Next 2 (P1):** benchmark true clone-to-first-source-hit on three OSes,
+including repeat/failure counts and checkout/runner provenance.
+
+---
+
+## Active priorities — 2026-11-20 (review after CI and external feedback)
+
+- **P0 evidence integrity — installed-home recall (2026-11-20; #144 / PR #145).**
+  The installed-home synthetic probe accepted the printed indexed count,
+  matching search-result path and a merely existing SQLite file as a success,
+  without reading any indexed rows. A deliberately forged CLI that wrote
+  corrupt bytes in the disposable SQLite index could appear green. The existing regression
+  now rejects that fixture. The probe reads SQLite `notes` after actual
+  installation, checks both synthetic Markdown bodies and source paths,
+  and requires the real row count to equal the printed count. A fresh
+  install includes other template notes (52 on Linux 3.12 in CI
+  run 44778490785), so it does not require exactly two total rows.
+  This is synthetic diagnostic integrity, not semantic correctness,
+  host sandboxing or a five-minute end-user benchmark.
+  **Acceptance:** adversarial regression red on old code, focused test and
+  installed-home probe green on exact patch, all seven current Windows/
+  Ubuntu CI jobs green, independent review before merge. No package,
+  migration, permission change or writes to personal vaults.
+  **Rollback:** revert scoped SQLite validation if verified supported SQLite
+  cannot read the derived index; preserve the false-green test.
+  **Next 1 (P0):** confirm 7/7 exact-head CI; reconcile PR #111
+  (default-mode SQLite proof) and #134 (default-mode environment isolation);
+  repair protected-main check-name drift (#107) without bypass.
+  **Next 2 (P1):** independently measure clean clone to first sourced hit
+  on Windows/macOS/Linux with hardware, dataset, failures, repeats and elapsed
+  time; do not claim under five minutes without evidence.
+
+
+- **P0 default first-recall subprocess deadline (2026-11-20; #93/#144, PR #145).**
+  The keyword-only synthetic `scripts/first_success.py --repeat 3` probe
+  previously allowed ingest and search **30 seconds each** instead of
+  the expected 30-second trial budget. Both stages now share a monotonic
+  remaining-time deadline; a late search is a `timeout` failure even
+  when it returns successfully. The existing focused unittest method
+  uses a synthetic clock (0.6 seconds per stage, 1.0-second budget)
+  to assert timeout and a smaller search allowance, without increasing
+  the number of discovered tests. This is not an end-user onboarding timer
+  or evidence of under-five-minute clean-clone recall.
+  Acceptance: focused regression, health gate, and all seven exact-head
+  Ubuntu/Windows plus backup/restore CI jobs, followed by independent
+  review and the protected-main status-context repair in #107. No
+  runtime/KB schema, dependency, permission or user-data changes.
+  Rollback: revert the probe deadline and its regression if an
+  independently reproduced supported-platform failure is found.
+  **Next 1 (P0):** verify PR #145 exact-head CI, reconcile #111/#134
+  overlap and #107 required checks; do not bypass protection.
+  **Next 2 (P1):** measure true clone-to-first-sourced-hit on clean
+  Windows/macOS/Linux hosts with hardware, failed attempts and source
+  fixture identifiers (#93); keep unknowns explicit.
+
+
+- **P0 installed-home total runtime budget (2026-11-20; #144 / PR #145).**
+  The synthetic `first_success.py --installed-home` probe previously allowed
+  the installer, indexer and search subprocess to each consume the full
+  180-second timeout (up to 540 seconds per trial). It now passes **remaining
+  time from one deadline** to each subprocess and refuses to start the next
+  stage after that deadline. A deterministic fake-clock regression within the
+  existing unittest method covers the old 3-launch failure and the new
+  2-launch timeout, without altering the discovered test count. This bounds
+  the *synthetic diagnostic*, **not** git clone, editor use, or real end-user
+  onboarding; a sub-five-minute first-use outcome remains unknown.
+  Acceptance: the focused regression and all seven exact-head Ubuntu/Windows
+  CI jobs; an independent reviewer must inspect timeout handling. Rollback
+  the probe's deadline helper and its bounded regression if a supported OS
+  shows a verified failure; no user files, ACL, dependencies or KB schema change.
+  **Next 1 (P0):** finish exact-head CI, reconcile security PR #134,
+  validate protected-main required checks (#107), and review before merge.
+  **Next 2 (P1):** time a true clean clone through the first sourced hit on
+  Windows, macOS and Linux (#93) and publish corpus/hash/hardware metadata.
+
+- **P0 installed-home probe child-environment isolation (2026-11-20; #144 / PR #145).**
+  The newly added optional install+recall benchmark launched the installer and
+  two installed KB subprocesses with the entire shell environment, potentially
+  forwarding unrelated API credentials and Python import overrides. It now
+  uses a minimal OS-launch environment for all three. The existing real
+  integration test injects synthetic parent-only canaries and verifies every
+  child's environment while also requiring successful local keyword recall.
+  This aligns with, but does not replace, the default-probe fix in #133/PR #134.
+  A filtered child environment is not an OS sandbox or protection against
+  all parent-process import overrides.
+  Acceptance: seven green exact-head CI jobs (Ubuntu/Windows py3.9/3.12 plus
+  backup/restore) and independent review. Rollback only this scoped patch if
+  a required OS launch variable is demonstrated by a failing platform test.
+  **Next 1 (P0):** reconcile PR #134 with #145 and protected-main check
+  contexts (#107) before merging, without bypassing branch protection.
+  **Next 2 (P1):** measure end-to-end clone-to-first-hit duration and
+  failure rate on Windows/macOS/Linux, with hardware/provenance (#93).
+
+- **P0 — truthful first use and security.** Resolve verified CI failures and protected
+  `main` check-context drift ([#107](https://github.com/iAlirezaaa/second-brain-os/issues/107))
+  without bypassing branch protection. Reconcile privacy PR #141 and synthetic-fixture PR #142
+  against their actual checks, not earlier green runs. Issue #144 is a bounded
+  human-quickstart correction: in README the first copy/paste block should
+  clone, build a local keyword index and show a path-backed hit **before**
+  invoking health and the 1,126-test maintainer suite. The existing
+  `tests/test_first_session_onboarding.py` clone-block test now guards this order.
+  Verification: CI on Windows/Ubuntu Python 3.9/3.12 and the backup jobs;
+  no sub-five-minute clone-to-recall timing is claimed. Agent
+  `skills/first-session/SKILL.md` keeps its stricter audit-first protocol.
+  The Persian human quickstart now also starts with a real cloned-repo ingest
+  and keyword search. Both human entrypoints share an ordering regression,
+  while `first_success.py` measures only a disposable synthetic corpus.
+  The CI matrix now runs `python scripts/first_success.py --repeat 3`
+  as its own visible smoke step, so a JSON success rate and synthetic recall
+  latency are recorded separately for Ubuntu/Windows on Python 3.9/3.12.
+  Acceptance: all four matrix runs and the three backup/restore jobs must
+  pass on the **exact** head SHA; these numbers exclude clone time and
+  macOS, and are not evidence of the five-minute target. Rollback: revert
+  the single CI step and its onboarding assertion if platform behavior
+  disproves the design; preserve all existing test and security gates.
+- **P0 follow-up (2026-11-20) — measurable *installed-home* recall, not a clone benchmark.**
+  The existing #144 Draft PR now adds an explicit opt-in synthetic
+  `scripts/first_success.py --installed-home --repeat 1` mode. It measures
+  local `install.py --target`, temporary-note creation, the installed
+  `kb.py` index and source-path recall in one bounded JSON record. The
+  current CI matrix runs the same probe on Windows/Ubuntu Python 3.9/3.12.
+  Acceptance: installed-home mode must return nonzero on failed install,
+  indexing, missing index or incorrect hit; the onboarding regression must
+  parse its JSON and verify the synthetic source path; all seven exact-head
+  CI jobs must finish green before merging. The probe excludes clone time,
+  editor time, macOS and human data. Rollback: revert only the mode,
+  regression, CI step and corresponding notes; no new dependencies,
+  user-file writes outside a temporary directory or architecture changes.
+  **Next 1 (P0):** reconcile protected `main` required-check drift (#107)
+  and secure independent review before merge; never bypass protection.
+  **Next 2 (P1):** instrument complete clean-clone-to-first-recall elapsed
+  time and failure counts on Windows/macOS/Linux (#93), with provenance
+  and no unmeasured five-minute claim.
+- **P1 — measured host integrations and onboarding.** Keep version-pinned,
+  permission-reviewed, synthetic-data MCP handshakes for Claude Code, Codex
+  and OpenCode separate from merely printing a host config. Improve bilingual
+  instructions and reproducible first-result measurements; do not report
+  setup time or host support that has not been tested.
+- **P2 — optional usability surfaces.** Explore a local-only memory/provenance
+  and permissions viewer, reversible import/export and collaboration only
+  behind explicit access/identity gates and tested rollback.
+- **P3 — independent research.** Evaluate Mem0, Basic Memory, Letta and
+  OpenMemory with source-dated evidence, license review and comparable
+  synthetic benchmarks before any independently useful adoption.
+
+For major features, require a proposal, ADR, compatibility test, explicit
+permission boundary and rollback procedure; new dependencies additionally
+must pass Constitution §2's admission gates with stdlib fallback.
+
+- **P0 onboarding safety follow-up (issue #144, PR #145).** The first
+  source-repo search is a demo, not a home for personal notes. English and
+  Persian quickstarts now give a non-destructive `install.py --target`
+  example in a new sibling directory, followed by an editable Markdown
+  note and keyword hit in that separate home. Existing onboarding
+  regression guards path and command order with no additional discovered
+  test methods. This is guidance, not a claim of OS filesystem isolation,
+  encryption, or a measured installation time. The target must be empty;
+  users must check parent directories for other Git/sync boundaries.
+  Rollback: revert these five documentation/test edits; no user data,
+  dependency, index schema or permission settings are touched.
+
+- **P0 contributor-check execution context (issue #144; PR #145; 2026-11-20).**
+  After the optional `cd ../my-private-brain` walkthrough, the English and
+  Persian guides still ran "full repository" health/unittest commands in the
+  **installed home**, which ships only `tests/test_installed_home.py` rather
+  than the source suite (installer `PROOF` and `CODE_DIRS`). Both guides now
+  explicitly return to `../second-brain-os` before those commands. The
+  existing onboarding test refuses the wrong working directory without
+  increasing the collected test count. Acceptance: exact-head seven-job CI
+  success plus human confirmation of the checkout path; do not equate a green
+  installed-home test with a green source test suite. Rollback: revert these
+  bounded documentation assertions; no user data or runtime logic is changed.
+
+- **P0 executable personal-home recall (issue #144; PR #145; 2026-11-20).**
+  The human quickstart promises that an independently installed home can
+  index a synthetic `02_WIKI/my-first-note.md` and retrieve its source path.
+  A new assertion inside the existing first-session integration test now
+  **runs** `scripts/install.py --target` against a disposable sibling,
+  creates that note, and invokes the *installed* `scripts/kb.py` via the
+  installed working directory. It requires a locally created SQLite index
+  and a path-backed hit, not just the presence of commands in README.
+  Acceptance: all four Ubuntu/Windows Python 3.9/3.12 jobs plus three
+  cross-machine backup jobs must pass on the **new** exact head SHA; an
+  installed-home fixture is not a real-user five-minute or macOS benchmark.
+  No permissions, source notes, core logic or dependencies change.
+  Rollback: revert this single added test block if cross-platform execution
+  disproves the path, and record the counterexample before changing docs.
+
+**Next 1:** Verify the new executable private-home test and PR #145's exact SHA across all seven CI jobs, and leave it in
+review while required branch-protection contexts remain mismatched.
+
+**Next 2:** Run a genuinely clean-clone **Windows/macOS/Linux** first-result
+timing study (clone, interpreter check, index, source-path hit), with source,
+repeats and failed attempts recorded as failures; only then judge the
+under-five-minute usability target.
+
+---
+
+### P0/P1 — Observable local Git checkout to first source hit (#144; PR #145, 2026-11-21)
+
+- [ ] **P0, S:** Run `scripts/clean_checkout_recall.py` from a checkout.
+      A no-hardlinks local Git clone must index only committed Markdown and
+      produce at least one verified SQLite-backed source path for
+      `python scripts/kb.py search "memory"`. Return nonzero and a stable
+      JSON failure reason for missing Git, zero hits, corrupt index or timeout.
+      The existing onboarding test guards its schema and the macOS CI invocation.
+      Record clone/index/search/total milliseconds without claiming remote
+      network speed, Python setup, private data or semantic retrieval.
+- [ ] **P0:** Require final-head health, full Windows/Ubuntu matrix, macOS
+      first-use witness and independent backup/restore CI before merge.
+      Reconcile overlapping #111/#134/#145 and resolve required-check drift
+      #107 through normal admin review, never bypassing branch protection.
+- [ ] **P1:** Independently time *remote* clone through a real first
+      source-backed result on clean Windows/macOS/Linux installations,
+      recording version, repetitions, failures and source provenance.
+      Only then assess the under-five-minute onboarding target.
+
+**Next 1 (P0):** inspect the final-head eight-job CI, fix any red step and
+coordinate overlapping security/probe PRs before a lawful merge.
+**Next 2 (P1):** measure real remote download + Python setup + first hit on
+three platforms with complete failure counts and no synthetic benchmark claim.
+
+---
+
+### P0 — Keep spaced Markdown names in local first-recall evidence (#144 / draft PR #145; 2026-11-22)
+
+- [x] **Reproduced a real parser false negative (S):** the old diagnostic
+      hit-header regex returned no results for the KB's normal output when a
+      Markdown path had spaces or square brackets. An isolated Python stdlib
+      demonstration returned 0 of 2 valid paths with the previous regex and
+      2 of 2 with the corrected parser; an indented excerpt was not counted.
+- [x] **Scoped correction:** parse the KB's unindented `path.md  [zone]`
+      output without rejecting legal Git filenames. The existing onboarding
+      unittest method checks both valid names and the indented non-hit, without
+      increasing the measured test-method count. All paths remain subject to
+      exact HEAD tracking, public-source and SQLite row/content checks. No
+      production KB change, new dependency or user-data migration.
+- [ ] **Acceptance:** run the exact-head Ubuntu/Windows/macOS and backup CI,
+      obtain independent review, and resolve the stale protected-main required
+      checks (#107) legally. No merge while any gate is incomplete. Rollback:
+      revert this parser/test/docs slice only.
+
+**Next 1 (P0):** check eight exact-head CI jobs, reconcile existing #145 and
+#107, and request independent review before merge.
+**Next 2 (P1):** measure network clone through the first usable result on
+Windows, macOS and Linux, including environment, failures and timestamps.
+
+---
+
+## P0 — Auditable committed-revision recall timings (#93, PR #145; under review)
+
+- [ ] **S** Record the actual `git rev-parse HEAD` of the disposable checkout
+      in each `clean_checkout_recall.py` JSON trial, including its verification
+      overhead in the same elapsed-time budget. If Git cannot verify the revision,
+      fail closed rather than reporting a passing source-backed result.
+- [ ] Fail the aggregate when individually successful trials came from different
+      revisions. Extend the existing onboarding integration test to compare the
+      reported SHA to its source checkout and reject mocked mixed-SHA trials.
+      Review exact-head CI across all five Windows/Ubuntu/macOS environments
+      and backup gates before changing this to done.
+- [ ] Keep `main` and public release unchanged until review, exact-head CI,
+      and the obsolete required contexts in #107 are repaired legitimately.
+      This is local Git clone timing only, not GitHub download or user setup.
+
+**Next 1 (P0):** verify exact-head CI, independent review and protected-main
+required-context alignment (#107), then reconcile overlapping #111/#134/#145.
+**Next 2 (P1):** benchmark genuine network clone to first cited result
+on Windows/macOS/Linux with repeat counts, failure rate and commit provenance.
+
+---
+
+## P0 — Report elapsed work in timed-out first-recall stages (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Baseline:** a subprocess timeout during `kb.py ingest` or
+      `kb.py search` skipped the normal elapsed-time assignment, leaving
+      `ingest_ms`/`search_ms` null even while total `elapsed_ms` counted
+      the attempted work. `timeout_phase` alone identifies the stage but
+      does not quantify its cost.
+- [x] **Small reversible fix:** preserve the elapsed phase duration in the
+      existing timeout handler; extend the existing isolated `file://`
+      onboarding regression for both timeout phases. No method-count change,
+      new dependency, production KB or user-data mutation. This synthetic
+      timeout test is not a public HTTPS performance measurement.
+- [ ] **Merge gate:** exact-head full CI, independent security review, and
+      authorized repair of obsolete protected-main check contexts (#107).
+      Rollback: revert this bounded probe/test/docs change.
+
+**Next 1 (P0):** review completed exact-head CI, obtain independent review,
+and reconcile #107 without weakening branch protection.
+**Next 2 (P1):** measure real public HTTPS clone-to-first-hit on all three
+operating systems with dated SHA, failure counts and explicit unknowns.
+
+Competitor risk input (not code adopted): [Letta shared-memory conflict
+handling](https://github.com/letta-ai/letta-code/issues/4832) illustrates why
+multi-agent persistence needs conservative write-conflict tests.
+
 ---
 
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
