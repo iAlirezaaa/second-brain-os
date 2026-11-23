@@ -705,7 +705,7 @@ class FirstSessionOnboarding(unittest.TestCase):
         self.assertEqual(forged["reason"], "no_source_backed_hit", forged)
         self.assertEqual(forged_valid_sqlite["status"], "fail", forged_valid_sqlite)
         self.assertEqual(forged_valid_sqlite["reason"],
-                         "no_source_backed_hit", forged_valid_sqlite)
+                         "indexed_source_mismatch", forged_valid_sqlite)
         self.assertEqual(forged_source_only["status"], "fail", forged_source_only)
         self.assertEqual(forged_generated["matched_paths"],
                          ["02_WIKI/generated-memory.md"], forged_generated)
@@ -714,7 +714,7 @@ class FirstSessionOnboarding(unittest.TestCase):
                          "no_source_backed_hit", forged_generated)
         self.assertEqual(forged_body["matched_paths"], ["02_WIKI/memory.md"])
         self.assertEqual(forged_body["status"], "fail", forged_body)
-        self.assertEqual(forged_body["reason"], "no_source_backed_hit", forged_body)
+        self.assertEqual(forged_body["reason"], "indexed_source_mismatch", forged_body)
         self.assertEqual(forged_source_only["reason"],
                          "no_source_backed_hit", forged_source_only)
 

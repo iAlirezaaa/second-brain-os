@@ -18,8 +18,10 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
   committed `09_OPERATIONS` Markdown in its index while ordinary recall
   must deny that zone. A follow-up uses a narrower *integrity-only* source
   read inside the public temporary checkout; search hits remain denied in
-  that zone. This is not a fix for runtime privacy issue #140 / PR #141,
-  runtime KB change, schema migration or dependency. This adds measured
+  that zone. Existing forged-row expectations were updated to reflect the
+  new, more specific failure reason (observed in macOS CI). This is not a fix
+  for runtime privacy issue #140 / PR #141. No runtime KB change,
+  schema migration or dependency. This adds measured
   validation work; it is not OS isolation, nor a real HTTPS latency result.
   Exact-head CI, independent review and issue #107 gate release.
   Rollback: revert this bounded code/test/bilingual-doc commit.
