@@ -25,6 +25,34 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Suppress untrusted search-result filenames in first-recall JSON (#147 / PR #145; 2026-11-23)
+
+- [x] **Red-first regression:** the local synthetic indexer could print
+      `02_WIKI/generated-memory.md` even though it created that file only
+      after cloning; the failed benchmark echoed the uncommitted path in
+      `matched_paths`. A second synthetic parser override printed a
+      denied `09_OPERATIONS` label. Both are untrusted search headers, not
+      legitimate evidence paths.
+- [x] **Bounded fix (S):** retain raw hits only for internal validation;
+      expose only Git-HEAD-tracked, allowed, source-supported hit names in
+      JSON. A rejected header still fails the whole trial even when other
+      hits are valid. Reuse existing onboarding integration regression;
+      default offline behavior, index contents, permissions, dependencies
+      and source files remain unchanged. No OS sandbox is claimed.
+- [ ] **Acceptance / release gate:** exact-head matrix and macOS CI,
+      independent review and lawful protected-main #107 reconciliation.
+      **Rollback:** revert this scoped probe/test/bilingual-doc change.
+
+**Next 1 (P0):** verify all exact-head CI jobs and reconcile #107 with
+authorized review; do not merge Draft PR #145 prematurely.
+**Next 2 (P1):** run real HTTPS first-recall measurements on
+Windows/macOS/Linux, with revision-pinned failures, timestamps and OS context.
+Research watch: [Basic Memory stale FTS report](https://github.com/basicmachines-co/basic-memory/issues/765)
+and [Letta cross-agent isolation](https://github.com/letta-ai/letta-code/issues/2666)
+are external risk prompts only; no source copied.
+
+---
+
 ### P0 — Validate unreported SQLite rows against committed source (#147 / PR #145; 2026-11-23)
 
 - [x] **Reproducible baseline:** the diagnostic checked that all indexed
