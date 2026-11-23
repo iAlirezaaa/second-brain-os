@@ -335,7 +335,11 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             cache = checkout / ".kb" / "kb.sqlite"
             if valid_hits and cache.is_file():
                 try:
-                    with closing(sqlite3.connect(str(cache), timeout=max(0.001, remaining()))) as conn:
+                    # Verifying a derived cache must never grant SQLite write access.
+                    # pathlib.as_uri handles quoting and Windows drive paths.
+                    with closing(sqlite3.connect(
+                            cache.as_uri() + "?mode=ro", uri=True,
+                            timeout=max(0.001, remaining()))) as conn:
                         actual_count = conn.execute("SELECT COUNT(*) FROM notes").fetchone()[0]
                         # A matching path and nonempty index are insufficient:
                         # verify the real indexed title/body actually contain

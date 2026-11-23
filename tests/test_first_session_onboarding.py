@@ -298,9 +298,25 @@ class FirstSessionOnboarding(unittest.TestCase):
                             for key in ("TMP", "TEMP", "TMPDIR")))
             return env
 
-        with patch.object(clean_module, "_child_env",
-                          side_effect=capture_remote_env) as observed_env:
+        # Red-first (#147): ordinary sqlite3.connect(path) is writable.
+        # Observe the actual verification open, not just a helper contract.
+        cache_connections = []
+        original_db_connect = clean_module.sqlite3.connect
+
+        def observe_cache_connection(database, *args, **kwargs):
+            cache_connections.append((str(database), kwargs.get("uri", False)))
+            return original_db_connect(database, *args, **kwargs)
+
+        with patch.object(clean_module.sqlite3, "connect",
+                          side_effect=observe_cache_connection), patch.object(
+                clean_module, "_child_env",
+                side_effect=capture_remote_env) as observed_env:
             transferred = clean_module.measure(ROOT.as_uri(), remote=True)
+        self.assertTrue(cache_connections, "recall must inspect SQLite evidence")
+        self.assertTrue(all(
+            is_uri and database.startswith("file:") and database.endswith("?mode=ro")
+            for database, is_uri in cache_connections),
+            "SQLite witness must use read-only URI connections")
         self.assertTrue(isolated_temp_seen, "remote mode must spawn children")
         self.assertTrue(all(isolated_temp_seen),
                         "remote subprocesses must use a real throwaway temp dir")

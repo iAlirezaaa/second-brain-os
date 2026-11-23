@@ -6,6 +6,18 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — read-only SQLite evidence inspection)
+- The disposable first-recall verifier previously used SQLite's writable
+  default connection to validate an existing derived cache. It now opens
+  a `file:` URI with `mode=ro` so validation cannot write that index.
+  The existing onboarding integration test records the actual connection
+  during a synthetic `file://` clone. An isolated standard-library
+  baseline showed that ordinary connect allowed INSERT while read-only
+  URI refused it; this is not a full repository test or an OS sandbox.
+  No runtime KB, personal data, new package, schema or permission change.
+  Exact-head CI, independent review and protected-main issue #107
+  still gate merge. Rollback: revert this bounded change.
+
 ### Fixed (issue #147; PR #145 draft — untrusted search header paths)
 - A failed disposable first-recall diagnostic formerly echoed raw search
   headers in JSON `matched_paths`, even for uncommitted generated notes or

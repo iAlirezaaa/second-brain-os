@@ -104,6 +104,10 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
+The disposable diagnostic opens the existing SQLite cache in **read-only URI
+mode** while validating its evidence: inspection must not have write access.
+This is not a runtime KB permission gate or a filesystem sandbox.
+
 The diagnostic also validates **every** SQLite `notes` row against its
 committed Markdown source, not just returned keyword hits: a plausible,
 unreported row with a tracked path but fabricated content fails with

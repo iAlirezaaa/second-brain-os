@@ -25,6 +25,29 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Read-only SQLite verification for disposable first-recall evidence (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Measured isolated baseline:** standard-library `sqlite3.connect(path)`
+      allowed an INSERT into a disposable SQLite fixture, whereas the same
+      file opened as `path.as_uri() + "?mode=ro"` with `uri=True`
+      refused the INSERT with a read-only error (one local experiment).
+- [x] **S-sized fix:** the probe's source-backed SQLite verification opens
+      its existing cache read-only. The existing onboarding integration test
+      records the actual connection during local `file://` transport
+      and rejects non-URI or writable validation. No new runtime KB behavior,
+      dependencies, schema, private data or host permission changes.
+- [ ] **Acceptance:** exact-head Windows/Ubuntu/macOS and backup CI,
+      independent security review and lawful protection-context repair (#107).
+      Rollback: revert this scoped probe/test/docs commit.
+
+**Next 1 (P0):** complete and inspect all eight exact-head CI jobs,
+review the patch independently and reconcile #107 without bypass.
+**Next 2 (P1):** measure actual HTTPS clone-to-first-recall across
+Windows/macOS/Linux with times, failures, exact SHA and reproducible steps.
+Competitor features remain research-only pending independent measurements.
+
+---
+
 ### P0 — Suppress untrusted search-result filenames in first-recall JSON (#147 / PR #145; 2026-11-23)
 
 - [x] **Red-first regression:** the local synthetic indexer could print
