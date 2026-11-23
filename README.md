@@ -104,6 +104,12 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
+The diagnostic also validates **every** SQLite `notes` row against its
+committed Markdown source, not just returned keyword hits: a plausible,
+unreported row with a tracked path but fabricated content fails with
+`indexed_source_mismatch` (the untrusted path is not printed). This
+extra verification is included in measured total time, but is not an OS sandbox.
+
 The diagnostic snapshots the committed Git tree **before ingest**. A path
 created by the indexing process (even if its Markdown, SQLite row and printed
 hit agree) is **not** a committed-source hit and fails with

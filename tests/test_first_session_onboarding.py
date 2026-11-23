@@ -650,6 +650,32 @@ class FirstSessionOnboarding(unittest.TestCase):
             self.assertEqual(phantom_index["status"], "fail", phantom_index)
             self.assertEqual(phantom_index["reason"], "uncommitted_index_path",
                              phantom_index)
+            # RED-FIRST (#147): an indexed row can cite a second, real
+            # committed path but invent its contents. HEAD path membership
+            # alone and a correct printed memory hit must not certify it.
+            # Reuse the existing disposable two-note Git fixture.
+            indexer = fake_repo / "scripts" / "kb.py"
+            current_indexer = indexer.read_text(encoding="utf-8")
+            self.assertIn("02_WIKI/phantom.md", current_indexer)
+            indexer.write_text(
+                current_indexer.replace("02_WIKI/phantom.md",
+                                        "02_WIKI/claim.md"),
+                encoding="utf-8")
+            for args in (("add", "scripts/kb.py"),
+                         ("-c", "user.name=Fixture", "-c",
+                          "user.email=fixture@example.invalid", "commit",
+                          "-qm", "synthetic committed path with forged index bytes")):
+                step = subprocess.run(["git", *args], cwd=str(fake_repo),
+                                      capture_output=True, text=True, timeout=30)
+                self.assertEqual(step.returncode, 0, step.stdout + step.stderr)
+            forged_committed_row = clean_module.measure(fake_repo)
+            self.assertEqual(forged_committed_row["matched_paths"],
+                             ["02_WIKI/memory.md"], forged_committed_row)
+            self.assertEqual(forged_committed_row["indexed_notes"], 2)
+            self.assertEqual(forged_committed_row["status"], "fail",
+                             forged_committed_row)
+            self.assertEqual(forged_committed_row["reason"],
+                             "indexed_source_mismatch", forged_committed_row)
             # A local clone ignores uncommitted work; accepting it as a live
             # source benchmark would conceal the files a newcomer is editing.
             untracked = fake_repo / "02_WIKI" / "draft-untracked.md"

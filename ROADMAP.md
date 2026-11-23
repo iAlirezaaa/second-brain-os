@@ -25,6 +25,35 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Validate unreported SQLite rows against committed source (#147 / PR #145; 2026-11-23)
+
+- [x] **Reproducible baseline:** the diagnostic checked that all indexed
+      paths belonged to Git HEAD, but checked title/body/norm only for printed
+      hits. A synthetic two-note index with one correct hit and another
+      *committed* path carrying fabricated bytes could pass.
+- [x] **Bounded fix (S):** verify the title, complete body and folded text of
+      every SQLite note against its guarded Markdown source. Return
+      `indexed_source_mismatch` without printing a suspect path. Extend the
+      existing disposable Git fixture and unittest; stdlib only; no runtime
+      KB, schema, credential or dependency changes. **Rollback:** revert the
+      scoped source/test/bilingual-doc commit.
+- [ ] **Merge gate:** exact-HEAD 8-job GitHub Actions, independent review,
+      and lawful correction of protected-main required checks (#107).
+      Full-corpus validation adds work to a diagnostic, not a process sandbox
+      or measured HTTPS onboarding guarantee.
+
+**Next 1 (P0):** reconcile #107 with an authorized maintainer and secure
+independent review; confirm every CI job on the precise commit SHA.
+**Next 2 (P1):** measure actual public HTTPS clone-to-first-hit on
+Windows/macOS/Linux with dated success/failure rates and source SHAs;
+record unknown rather than claiming an unmeasured five-minute result.
+
+Research comparison: [Basic Memory indexing discussions](https://github.com/basicmachines-co/basic-memory/issues/1771)
+and [Letta stale skill index](https://github.com/letta-ai/letta-code/issues/4337)
+are risk prompts, not proof of corresponding SBO bugs or reused code.
+
+---
+
 ### P0 — Reject uncommitted extra rows in clean-checkout recall evidence (#147 / PR #145; 2026-11-23)
 
 - [x] **Reproducible witness gap:** the diagnostic validated only the SQLite

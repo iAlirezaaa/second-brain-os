@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — unreported fabricated SQLite body)
+- The disposable clean-clone recall witness previously verified all SQLite
+  paths against committed HEAD but compared full source bytes only for
+  printed hits. A hidden row with a valid committed path and a fabricated
+  body could survive a successful benchmark. It now checks every indexed
+  row's title/body/norm against its guarded Markdown source and fails
+  `indexed_source_mismatch` without revealing the path. Existing onboarding
+  tests exercise a disposable two-file Git fixture, with no new test method,
+  runtime KB change, schema migration or dependency. This adds measured
+  validation work; it is not OS isolation, nor a real HTTPS latency result.
+  Exact-head CI, independent review and issue #107 gate release.
+  Rollback: revert this bounded code/test/bilingual-doc commit.
+
 ### Fixed (issue #147; PR #145 draft — uncommitted extra SQLite rows)
 - The disposable clone-to-first-recall witness previously checked only SQLite
   rows returned as keyword hits. A valid committed hit could hide another

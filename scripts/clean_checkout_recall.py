@@ -338,13 +338,20 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                         # corpus came from this checkout. Count every SQLite
                         # source against the tracked HEAD tree, not only the
                         # paths the search happened to print.
-                        indexed_paths = [path for (path,) in conn.execute(
-                            "SELECT path FROM notes")]
-                    if (len(indexed_paths) != actual_count
-                            or any(not isinstance(path, str) or
-                                   path not in tracked_paths
-                                   for path in indexed_paths)):
+                        corpus_rows = list(conn.execute(
+                            "SELECT path, title, body, norm FROM notes"))
+                    if (len(corpus_rows) != actual_count
+                            or any(not isinstance(row[0], str) or
+                                   row[0] not in tracked_paths
+                                   for row in corpus_rows)):
                         result["reason"] = "uncommitted_index_path"
+                        return result
+                    # One honest printed hit cannot validate every other row.
+                    # Apply the same public-source and symlink policy to all.
+                    if any(not _indexed_row_matches_source(
+                            checkout, path, (title, body, norm))
+                           for path, title, body, norm in corpus_rows):
+                        result["reason"] = "indexed_source_mismatch"
                         return result
                     valid_hits = (
                         actual_count == result["indexed_notes"]
