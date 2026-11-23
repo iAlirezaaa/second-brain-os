@@ -1045,6 +1045,33 @@ on Windows/macOS/Linux with repeat counts, failure rate and commit provenance.
 
 ---
 
+## P0 — Report elapsed work in timed-out first-recall stages (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Baseline:** a subprocess timeout during `kb.py ingest` or
+      `kb.py search` skipped the normal elapsed-time assignment, leaving
+      `ingest_ms`/`search_ms` null even while total `elapsed_ms` counted
+      the attempted work. `timeout_phase` alone identifies the stage but
+      does not quantify its cost.
+- [x] **Small reversible fix:** preserve the elapsed phase duration in the
+      existing timeout handler; extend the existing isolated `file://`
+      onboarding regression for both timeout phases. No method-count change,
+      new dependency, production KB or user-data mutation. This synthetic
+      timeout test is not a public HTTPS performance measurement.
+- [ ] **Merge gate:** exact-head full CI, independent security review, and
+      authorized repair of obsolete protected-main check contexts (#107).
+      Rollback: revert this bounded probe/test/docs change.
+
+**Next 1 (P0):** review completed exact-head CI, obtain independent review,
+and reconcile #107 without weakening branch protection.
+**Next 2 (P1):** measure real public HTTPS clone-to-first-hit on all three
+operating systems with dated SHA, failure counts and explicit unknowns.
+
+Competitor risk input (not code adopted): [Letta shared-memory conflict
+handling](https://github.com/letta-ai/letta-code/issues/4832) illustrates why
+multi-agent persistence needs conservative write-conflict tests.
+
+---
+
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
 
 - [ ] CI run #43537155432 failed on all four OS/Python test jobs because the

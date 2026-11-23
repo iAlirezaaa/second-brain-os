@@ -104,6 +104,11 @@ configured to run the same disposable local-clone probe in all four
 Ubuntu/Windows Python 3.9/3.12 jobs and the focused macOS 15 job; only
 completed exact-commit runs provide evidence. None measures network download.
 
+A timed-out indexing or keyword-search subprocess now retains its attempted
+`ingest_ms` or `search_ms` duration alongside `reason: timeout` and
+`timeout_phase`. Failed time is not presented as a successful recall or
+network measurement; these values only cover work attempted in that phase.
+
 The disposable diagnostic opens the existing SQLite cache in **read-only URI
 mode** while validating its evidence: inspection must not have write access.
 This is not a runtime KB permission gate or a filesystem sandbox.

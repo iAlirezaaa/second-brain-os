@@ -6,6 +6,16 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; draft PR #145 — failed ingest/search timing)
+- The disposable clone-to-first-recall benchmark now records attempted
+  `ingest_ms` or `search_ms` when that subprocess times out, instead of
+  omitting the time spent in the failed stage. Existing offline `file://`
+  timeout regressions require these durations and a failure result.
+  No change to real KB behavior, network transfer, dependencies, schema or
+  private data. Timing on actual HTTPS first-use remains unknown.
+  Exact-head CI, independent review and protected-main issue #107 gate merge.
+  Rollback: revert this probe/test/bilingual-doc change.
+
 ### Fixed (issue #147; draft PR #145 — duplicate indexed-source rows)
 - A disposable first-recall index with two SQLite rows for the same
   committed Markdown path could report two indexed notes and pass

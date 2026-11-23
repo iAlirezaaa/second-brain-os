@@ -401,6 +401,14 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
             result["reason"] = "ok"
             return result
     except subprocess.TimeoutExpired:
+        # A subprocess deadline can fire *inside* invoke(), before the normal
+        # phase-duration assignment. Keep that failed attempt measurable.
+        if phase == "ingest" and result["ingest_ms"] is None:
+            result["ingest_ms"] = round(
+                (time.perf_counter() - clone_end) * 1000, 3)
+        elif phase == "search" and result["search_ms"] is None:
+            result["search_ms"] = round(
+                (time.perf_counter() - ingest_end) * 1000, 3)
         result["reason"] = "timeout"
         result["timeout_phase"] = phase
         return result
