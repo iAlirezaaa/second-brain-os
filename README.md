@@ -171,6 +171,8 @@ is not merged.
 
 ### Optional public GitHub download-to-first-recall diagnostic (in review)
 
+Untrusted keyword-search headers can print uncommitted or denied-zone filenames. The draft diagnostic now omits those unsafe names from JSON `matched_paths` while still failing the entire attempt; only Git-committed, allowed, source-supported hit paths are exposed. This does not authorize reading private data or constitute process isolation.
+
 The witness also checks **every SQLite-indexed source path** against the
 cloned commit, not just the keyword hits shown on screen. If an index includes
 an uncommitted or invented path, it fails with `uncommitted_index_path`
