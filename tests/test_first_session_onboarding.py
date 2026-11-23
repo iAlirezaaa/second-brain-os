@@ -437,6 +437,12 @@ class FirstSessionOnboarding(unittest.TestCase):
                     phase_failure = clean_module.measure(ROOT.as_uri(), remote=True)
                 self.assertEqual(phase_failure["reason"], "timeout", phase_failure)
                 self.assertEqual(phase_failure["timeout_phase"], phase, phase_failure)
+                # A timed-out index/search is a measured failed attempt, not
+                # zero work. Its phase duration must remain visible in JSON.
+                self.assertIsInstance(phase_failure[phase + "_ms"], float,
+                                      phase_failure)
+                self.assertGreaterEqual(phase_failure["elapsed_ms"],
+                                        phase_failure[phase + "_ms"])
                 self.assertIsInstance(phase_failure["elapsed_ms"], float)
         
         
