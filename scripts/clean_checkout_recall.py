@@ -96,7 +96,10 @@ def _public_markdown_source(checkout, relative_path, integrity_only=False):
     """
     try:
         relative = Path(relative_path)
-        if relative.is_absolute() or ".." in relative.parts:
+        # The real corpus walks *.md (common.iter_markdown). A committed
+        # regular file of another type is not indexed Markdown evidence.
+        if (relative.is_absolute() or ".." in relative.parts
+                or not relative.match("*.md")):
             return None
         root = checkout.resolve(strict=True)
         candidate = checkout / relative

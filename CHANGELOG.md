@@ -6,6 +6,10 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; draft PR #145 — Markdown evidence boundary)
+- The clean-clone recall validator no longer accepts non-Markdown regular files as indexed note evidence, even when a synthetic SQLite row matches their bytes. The path guard now follows the actual corpus's platform-aware `*.md` pattern. Existing onboarding regression covers .txt and .json refusals while retaining the Markdown positive control.
+- Isolated path-predicate evidence: 3/3 assertions; full exact-head CI and independent review pending. No runtime KB, dependency, data migration or permission change. Rollback: revert scoped test/validator/docs commits. No actual HTTPS timing claimed.
+
 ### Fixed (issue #147; draft PR #145 — final Unicode indexed-hit gate)
 - The disposable clean-clone recall probe's final SQLite-hit test still used
   casefold alone on the stored title plus normalized body. A fullwidth

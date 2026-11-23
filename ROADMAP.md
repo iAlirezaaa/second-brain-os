@@ -25,6 +25,15 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Require Markdown file types in first-recall evidence (#147 / draft PR #145; 2026-11-23)
+
+- [x] **Observed in isolation:** the old path predicate accepted synthetic regular .txt and .json files as Markdown evidence; the patched predicate rejects both and keeps the .md positive control (3/3 local assertions). This is not an observed production KB fault.
+- [x] **Bounded test-first fix:** require the same platform-aware *.md pattern as common.iter_markdown in the disposable clone's source validator, including corpus integrity mode. Existing onboarding unittest checks exact matching non-Markdown rows and keyword refusal; no new test method, dependency, schema or permission change.
+- [ ] **Release gate:** exact-head CI, independent review and authorized branch-protection repair (#107). Previous head 9bd5050 passed all eight jobs (Actions run 45242895438); that evidence does not certify this change. Local full checkout blocked by DNS. Rollback: revert scoped test and validator/docs commits.
+
+**Next 1 (P0):** resolve protected-main check drift through an authorized administrator and review/merge already-green work; do not keep restarting CI for speculative changes.
+**Next 2 (P1):** collect actual public HTTPS timings with SHA and failed trials on Windows/macOS/Linux; separate Python setup. External risk input: [Mem0 #7047](https://github.com/mem0ai/mem0/issues/7047) requests source-message provenance; no external code copied.
+
 ### P0 — Complete Unicode folding at the final indexed-hit gate (#147 / draft PR #145; 2026-11-23)
 
 - [x] **Isolated regression reproduced:** the probe's last SQLite-hit check still used casefold alone on (title + normalized body), so a source-backed fullwidth title such as `ｍｅｍｏｒｙ` was rejected by this *diagnostic predicate*. The actual KB's FTS5 behavior for title-only matches remains a separate compatibility question; **no real-user failure is claimed**.
