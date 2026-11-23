@@ -160,6 +160,13 @@ is not merged.
 
 ### Optional public GitHub download-to-first-recall diagnostic (in review)
 
+The witness also checks **every SQLite-indexed source path** against the
+cloned commit, not just the keyword hits shown on screen. If an index includes
+an uncommitted or invented path, it fails with `uncommitted_index_path`
+instead of certifying a misleading successful recall. This is an integrity
+check, not a full security/access-control audit; protected-zone exclusions
+are tracked separately in issue #140.
+
 `python scripts/clean_checkout_recall.py --github --repeat 3` opts in to
 a real **HTTPS clone from this project's fixed public GitHub URL**, followed
 by the same committed-tree, SQLite and Markdown checks as the offline probe.

@@ -6,6 +6,19 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Fixed (issue #147; PR #145 draft — uncommitted extra SQLite rows)
+- The disposable clone-to-first-recall witness previously checked only SQLite
+  rows returned as keyword hits. A valid committed hit could hide another
+  indexed row whose source was never tracked by Git, falsely certifying a
+  clean committed-corpus benchmark. It now checks every indexed `notes.path`
+  against the cloned HEAD tree and fails with `uncommitted_index_path`
+  without exposing the extra path. Existing onboarding tests construct a
+  synthetic committed hit plus an extra phantom row in a disposable Git repo.
+  The runtime KB, offline default, dependencies, schemas and permissions are
+  unchanged. It is not a complete protected-zone audit (issue #140).
+  Exact-head CI, independent review and protected-main issue #107 still gate
+  merge. Rollback: revert this bounded probe/test/bilingual-doc commit.
+
 ### Fixed (issue #147; PR #145 draft — count failed HEAD/tree verification time)
 - A successful Git transport followed by failed commit verification or a
   failed/timed-out tracked-tree query previously produced `clone_ms: null`,

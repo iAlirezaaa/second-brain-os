@@ -25,6 +25,33 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+### P0 — Reject uncommitted extra rows in clean-checkout recall evidence (#147 / PR #145; 2026-11-23)
+
+- [x] **Reproducible witness gap:** the diagnostic validated only the SQLite
+      rows printed as search hits. A synthetic index could also contain a
+      phantom, uncommitted path, report the right row count and still pass.
+- [x] **Bounded fix (S):** verify every indexed `notes.path` belongs to
+      the cloned `HEAD` tracked-file set. Return `uncommitted_index_path`
+      without printing the untrusted path. Existing two-method onboarding test
+      creates a real disposable Git fixture with one valid hit and one phantom
+      index row; no new dependencies, permissions or runtime KB changes.
+- [ ] **Merge gate:** exact-head cross-platform CI including backup restore,
+      independent review and lawful resolution of #107. This is an index
+      provenance test, not protected-zone enforcement (#140) or a sandbox.
+      **Rollback:** revert this one probe/test/bilingual-doc commit.
+
+**Next 1 (P0):** complete exact-head CI and independent security review;
+resolve stale protected-main required checks under issue #107 without bypass.
+**Next 2 (P1):** collect dated real public HTTPS first-recall timings on
+Windows/macOS/Linux, with failure counts and pinned commit SHAs; avoid
+unmeasured under-five-minute claims.
+
+Research prompts only, not copied: [Basic Memory orphan index reports](https://github.com/basicmachines-co/basic-memory/issues/1771)
+and [Letta stale indexed skills](https://github.com/letta-ai/letta-code/issues/4337).
+No claim of identical defects in Second Brain OS.
+
+---
+
 ### P1 — Account for failed post-transfer Git verification (#147 / PR #145; 2026-11-23)
 
 - [x] **Observed diagnostic defect:** after Git finished transferring a disposable

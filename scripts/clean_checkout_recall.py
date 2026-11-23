@@ -334,6 +334,18 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                                 (path,)).fetchone()
                             for path in hits
                         ]
+                        # A valid hit does not prove the *rest* of the indexed
+                        # corpus came from this checkout. Count every SQLite
+                        # source against the tracked HEAD tree, not only the
+                        # paths the search happened to print.
+                        indexed_paths = [path for (path,) in conn.execute(
+                            "SELECT path FROM notes")]
+                    if (len(indexed_paths) != actual_count
+                            or any(not isinstance(path, str) or
+                                   path not in tracked_paths
+                                   for path in indexed_paths)):
+                        result["reason"] = "uncommitted_index_path"
+                        return result
                     valid_hits = (
                         actual_count == result["indexed_notes"]
                         and all(
