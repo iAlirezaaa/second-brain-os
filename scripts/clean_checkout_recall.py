@@ -362,6 +362,13 @@ def measure(source=ROOT, timeout=TIMEOUT, remote=False):
                                    for row in corpus_rows)):
                         result["reason"] = "uncommitted_index_path"
                         return result
+                    # A SQLite fixture need not have PRIMARY KEY on path.
+                    # Repeated rows from one genuine note are not distinct
+                    # indexed sources: reject an inflated indexed_notes count
+                    # even when each duplicate independently matches HEAD.
+                    if len({row[0] for row in corpus_rows}) != actual_count:
+                        result["reason"] = "duplicate_index_path"
+                        return result
                     # One honest printed hit cannot validate every other row.
                     # Apply the same public-source and symlink policy to all.
                     if any(not _indexed_row_matches_source(
