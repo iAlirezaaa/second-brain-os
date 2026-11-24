@@ -25,6 +25,270 @@ until it is linked · contradictions are recorded, never overwritten · every fe
 test before the next starts · evidence survives a `git clone` · a gate that reports `errors: 0`
 over something it cannot see is a silent gate, not a clean house.
 
+
+---
+
+## P0 — Release-gate reconciliation and next priorities (2026-11-24; #107, #144, #147)
+
+- [ ] **P0 (S):** authorized administrator aligns the two Ubuntu required contexts in #107, preserving all other checks and their sources. The read-only runbook in `00_START_HERE/BRANCH_PROTECTION.md` now includes a before/after comparison. Six isolated synthetic cases executed locally (one accepted migration, five expected refusals); the repository regression in `tests/test_phase37_ci_python_floor.py` and final-head CI still require verification. No settings change or merge claimed.
+- [ ] **P0 (M):** reconcile existing overlapping onboarding/security PRs #111, #134, #141, #145 before new features; verify health, independent review and exact-head CI. Measure actual HTTPS clone-to-first-recall on Windows/macOS/Linux (#147), including failures and provenance; five minutes remains a target, not a measured end-to-end result.
+- [ ] **P1 (M):** after P0, demonstrate installed Claude Code/Codex/OpenCode MCP handshakes with synthetic notes and permission tests; improve bilingual README and lightweight documentation, use cases, and reproducible installation/retrieval metrics. No host certification based on config snippets alone.
+- [ ] **P2 (L):** propose optional read-only memory/provenance/activity UI and permission-gated import/export/collaboration; review threat model, ADR, rollback and tests before implementation.
+- [ ] **P3 (L):** evaluate Mem0, Basic Memory, Letta and OpenMemory capabilities independently; adopt only measured, architecture-compatible features under Constitution §2 with a stdlib fallback. Basic Memory #1771 (2026-10-17) is an external user report about duplicate search-index rows, not a demonstrated defect here; use it as a future test hypothesis (https://github.com/basicmachines-co/basic-memory/issues/1771).
+
+**Next 1 (P0):** authorized repair of #107, then independently review and verify the exact head of #112.
+**Next 2 (P0):** reconcile the existing privacy/first-recall fixes and run the actual public HTTPS benchmark (#147); leave the measured local results distinct from real-user onboarding.
+
+Release/discovery work remains gated on a usable reviewed version: honest README/social preview and topics, no external promotion without authorization. Unknown real-user metrics stay unknown.
+
+---
+
+## P0 — Refuse conditionally skipped mandatory CI tests (#107; PR #112; 2026-11-18)
+
+- [x] **P0 failure mode (S, synthetic):** a `jobs.test.if: false` condition
+  or a `Unit tests` step with `if: false` after its `run:` line could
+  be accepted by the read-only required-check audit even though the test
+  suite never executes. This is a negative fixture, not an assertion that
+  the live CI currently skips tests.
+- [x] **Test first:** extend the existing
+  `tests/test_phase37_ci_python_floor.py` test (commit `920b543`) with
+  job-level and step-level skip cases, without inflating collected test counts.
+- [x] **Bounded stdlib fix:** `scripts/ci_floor.py` now refuses `if:`
+  conditions on mandatory test jobs/steps; unsupported conditional layouts
+  require explicit review, rather than a false test-coverage claim.
+  No workflow runner, branch permission, dependency or user-data change.
+- [ ] **Acceptance:** the focused Python-floor unittest, full unittest suite,
+  `python scripts/health.py`, and seven exact-head Actions jobs must pass;
+  independent review and authorized repair of required-context drift in #107
+  remain prerequisites for merge.
+- **Rollback:** revert the condition guard and regression additions if a
+  justified conditional test layout is introduced; replace this narrow
+  parser with a separately reviewed behavior-preserving audit, not a waived
+  CI requirement.
+
+**Next 1 (P0):** inspect final-head seven-job CI and independently review PR #112,
+then align protected-main required checks via an authorized administrator.
+
+**Next 2 (P0/P1):** measure true clean-checkout first successful retrieval on
+Windows/macOS/Linux using synthetic data and published repeatable commands
+before asserting a sub-five-minute setup time.
+
+---
+
+## P0 — Require active, failure-propagating unittests in CI (#107; PR #112; 2026-11-18)
+
+- [x] **Baseline (S):** the required-context audit validated matrix assignments but still accepted a test job that never ran the unit suite, replaced it with a successful no-op, or muted failure using `continue-on-error: true`. These are synthetic negative fixtures, not failures observed in deployed CI.
+- [x] **Test-first:** three new negative assertions extend the existing CI-floor unittest without altering the collected test count (commit `12e3ed4`).
+- [x] **Bounded fix:** stdlib-only static audit now requires the active `Unit tests` command `python -m unittest discover -s tests -v` and rejects unknown/truthy `continue-on-error` (commit `c880f43`). Unsupported layouts require review; CI workflow, user data and permissions are unchanged.
+- [ ] **Acceptance:** focused Python 3.9+ test, complete unit suite, health gates, all seven exact-head CI jobs, independent review and authorized #107 protected-main check repair before merge.
+- **Rollback:** revert only the focused guard/test pair if a legitimate updated workflow layout is rejected; never waive actual CI validation or repository protection.
+
+**Next 1 (P0):** verify seven exact-head Actions jobs and request independent review.
+**Next 2 (P0/P1):** authorized admin aligns Ubuntu required contexts; measure clean first recall on Windows/macOS/Linux before a sub-five-minute claim.
+
+---
+
+## P0 — Ensure CI matrix labels match actual runners/interpreters (#107; PR #112, 2026-11-18)
+
+- [x] **Observed failure mode (S):** an inline jobs.test matrix could
+  claim Windows + Python 3.9 while runs-on was hardcoded to Ubuntu or
+  actions/setup-python was hardcoded to 3.12. The former audit derived
+  four check names from the matrix, without verifying those assignments.
+  These are synthetic negative fixtures, **not** changes observed in
+  the repository's real CI configuration.
+- [x] **Test first:** two regressions in
+  `tests/test_phase37_ci_python_floor.py` require the read-only audit and
+  offline floor gate to reject a fixed runner and fixed Python pin
+  (commit `82e9b4a`).
+- [x] **Bounded fix:** `scripts/ci_floor.py` now accepts only the
+  deployed matrix.os runner selection and setup-python matrix.python-version
+  pin. Unrecognized layouts fail closed and need independent review rather
+  than a false matrix coverage claim (commit `7aa0268`). No YAML dependency,
+  workflow edit, runtime agent change, network request or permission change.
+- [ ] **Acceptance:** focused Python 3.9+ unit tests, full `health.py`,
+  and all seven exact-head Actions jobs (Ubuntu + Windows Python 3.9/3.12,
+  backup seal/restore). No merge while #107's protected-main checks are
+  obsolete or independent review is absent.
+- **Rollback:** revert the validator/test pair if a real supported workflow
+  layout is incorrectly rejected; never relax the floor or branch protection
+  merely to obtain a green check.
+
+**Next 1 (P0):** verify seven CI jobs at this head; an authorized administrator
+then aligns protected-main Ubuntu required contexts without removing Windows
+or review requirements (issue #107).
+
+**Next 2 (P0/P1):** measure clean-checkout first recall with synthetic notes
+on Windows, macOS and Linux, recording durations, hardware and repeat counts
+before publishing any sub-five-minute claim.
+
+---
+
+## P0 — Do not invent excluded GitHub Actions checks (#107; PR #112, 2026-11-18)
+
+- [x] **Baseline:** an active `jobs.test.strategy.matrix.exclude` for
+      Ubuntu 24.04 / Python 3.9 made the old Cartesian-product parser
+      manufacture `test (ubuntu-24.04, 3.9)` despite that combination
+      never being scheduled. An isolated copy of the prior extraction
+      reproduced the false emitted check; no real workflow was changed.
+- [x] **Test first:** extend the existing
+      `tests/test_phase37_ci_python_floor.py` refusal case with a synthetic
+      excluded matrix; require an explicit ValueError and nonzero health
+      problem. Test commit `c4c7a03`; no new test method or count claim.
+- [x] **Fix:** `scripts/ci_floor.py` rejects unmodeled `include` or
+      `exclude` test-matrix exceptions rather than deriving fictitious
+      required check contexts. Implementation commit `723ec66`. This
+      conservative gate does **not** add full YAML parsing, new dependencies,
+      hosted settings access or change runner behavior.
+- [ ] **Acceptance:** `python -m unittest discover -s tests -p
+      'test_phase37_ci_python_floor.py' -v`, `python scripts/health.py`,
+      full unittest discovery, and all seven final-head GitHub CI jobs pass.
+      Only isolated old/new extraction assertions were run locally; DNS
+      prevented full-clone verification. Validate supported YAML layouts
+      before widening the parser.
+- [ ] **Merge blocker:** administrator must reconcile stale required Ubuntu
+      check contexts on protected `main` without weakening protections;
+      independent review remains required.
+- **Rollback:** revert only the new test and fail-closed guard if a legitimate
+  workflow becomes unrecognized; preserve the prohibition on claiming
+  nonexistent matrix jobs and keep the branch protected.
+
+**Next 1 (P0):** independently verify the latest SHA's seven CI jobs, then
+resolve the admin-only required-check drift tracked in issue #107.
+
+**Next 2 (P0/P1):** add a separately proposed, test-first matrix-exception
+expander if real workflows need `include/exclude`; otherwise retain the
+safe refusal and measure clean-clone first recall across supported OSes.
+
+---
+
+## P0 — Refuse a commented-out nightly Python pin (#107; PR #112, 2026-11-17)
+
+- [x] **Reproduction:** `.github/workflows/loop.yml` with only
+  `# python-version: "3.12"` under `setup-python` was misread as a valid
+  interpreter pin by `workflow_matrix()`, so the local CI-floor gate could
+  give a false green. An isolated run of the prior extraction regex returned
+  `["3.12"]` for this disabled setting.
+- [x] **Test first:** extend the existing nightly-loop regression in
+  `tests/test_phase37_ci_python_floor.py` with the commented-only fixture;
+  assert the extracted versions are empty and `check()` refuses them.
+- [x] **Small stdlib fix:** ignore whole-line YAML comments when extracting
+  workflow versions and runners; no workflow, network, branch rule, user data
+  or Python support floor changes.
+- [ ] **Acceptance:** run `python -m unittest discover -s tests -p 'test_phase37_ci_python_floor.py' -v`,
+  `python scripts/ci_floor.py`, full health/unit suite, and verify all **seven**
+  Ubuntu/Windows + backup/restore CI jobs on the final SHA. Focused isolated
+  parser assertions are not equivalent to full-repo tests.
+- [ ] **Merge gate:** protected `main` still references old Ubuntu status
+  names (#107); do not merge or mark Released until an authorized fix and
+  independent review.
+- **Rollback:** revert this test/parser pair if an active supported YAML
+  workflow is wrongly rejected; retain the fail-closed requirement.
+
+**Next 1 (P0):** inspect the exact final-head CI run, investigate any failed
+Windows/Linux matrix job, and complete review without bypassing protection.
+
+**Next 2 (P0/P1):** repair protected-main required check names through authorized
+administration and obtain reproducible clean-checkout first-recall measurements
+on Windows, macOS and Linux; unknown until actually measured.
+
+---
+
+## P0 — Prove the tested interpreter floor, not commented workflow text (#107; PR #112)
+
+- [x] **S · test-first:** an obsolete `# python-version: ["3.9", "3.12"]`
+  comment in `ci.yml` must not make the floor gate pass when the real
+  `jobs.test` matrix runs only Python 3.11 and 3.12. The broad legacy
+  `workflow_matrix()` regex reads the comment first; the emitted test
+  contexts from `expected_required_test_contexts()` expose the actual
+  versions. Regression added within the existing
+  `test_a_floor_ci_never_installs_is_named` method (no new collected test).
+- [x] **S · implementation:** require the actual `jobs.test` contexts to
+  include `test (OS, 3.9)`. This does not depend on a backup job,
+  commenter text or remote GitHub settings; no packages or I/O added.
+  A mismatched matrix now returns a named nonzero `INVALID` result.
+- [ ] **Acceptance:** `python -m unittest tests.test_phase37_ci_python_floor`
+  and `python scripts/ci_floor.py` pass on a real checkout; GitHub
+  Actions must complete Ubuntu/Windows 3.9/3.12 plus three backup jobs
+  on the **final** head SHA. An isolated predicate repro is not a full
+  repository test. Do not mark Verified or merge until final CI succeeds.
+- [ ] **Still blocked:** protected `main` uses obsolete Ubuntu status
+  names; only an authorized administrator may repair #107 without
+  weakening other protections.
+- **Rollback:** revert this bounded test and gate addition if it rejects
+  a genuinely supported `jobs.test` matrix; preserve protections and
+  do not hide false-green versions by changing Python's declared floor.
+
+**Next 1 (P0):** verify all seven GitHub Actions jobs on this PR's final
+SHA, then request independent review before any merge.
+
+**Next 2 (P0/P1):** repair required-check drift through authorized
+settings and collect real clean-clone first-recall elapsed times with
+synthetic fixtures on Windows/macOS/Linux; unknown until measured.
+
+---
+
+## P0 — Fail-closed Python-version audit for CI and nightly loop (#107; PR #112, CI pending)
+
+- [ ] **S** A malformed `jobs.test` Python version such as `banana` must
+      produce a named INVALID/REFUSED outcome rather than a `TypeError`
+      traceback. Baseline: `parse_version("banana")` was `None`, then
+      compared to the `(3, 9)` tuple. The existing test method
+      `test_a_floor_ci_never_installs_is_named` now covers this case.
+- [ ] **S** The nightly `python-version: "banana"` scalar must not disappear
+      from regex extraction and be accepted as an empty loop version list.
+      A zero/invalid parsed version count must fail closed. The existing
+      `test_a_nightly_loop_on_a_floating_image_is_named` covers this case;
+      no new dependencies, network calls, branch-rule changes or test-count
+      claims. Verify the exact final SHA through real Ubuntu/Windows CI
+      and backup jobs before review or merge.
+- [ ] **Rollback:** revert the two guarded validations and fixture assertions
+      if a supported workflow is incorrectly rejected; never weaken the
+      requirement for parseable Python versions merely to restore a green gate.
+
+**Next 1 (P0):** verify this branch's full seven-job CI and independent
+review, then repair protected-main's stale required Ubuntu contexts through
+the authorized repository settings (#107), not an administrator bypass.
+
+**Next 2 (P0/P1):** measure clean-checkout-to-first-recall elapsed time using
+synthetic notes on Windows/macOS/Linux; separate recorded data from estimates.
+
+---
+
+## P0 — Protected-main required check drift (issue #107; auditable, admin fix pending)
+
+- [x] **S** Add a **read-only, opt-in** GitHub branch-status diagnostic to
+      `scripts/ci_floor.py` (`--live-protection` public GET, or
+      `--branch-json` for offline replay). It derives the four `jobs.test`
+      check names from the checked-in CI matrix, refuses absent/malformed
+      branch-protection data and reports missing/obsolete contexts. The
+      existing regression `tests/test_phase37_ci_python_floor.py` now tests
+      correct, stale and unverifiable snapshots without increasing test count.
+      No new dependency, default network traffic, admin write or bypass.
+- [x] **P0 CI coverage:** the offline floor gate now rejects a `jobs.test`
+      matrix missing either Ubuntu or Windows, even if a backup job runs
+      on the missing OS. Three regression cases cover Linux hidden by an
+      Ubuntu backup, absent Windows, and an unrecognizable `jobs.test`
+      job. This closes a false-green path in the same read-only CI audit;
+      no branch rules or workflows are modified. Test:
+      `tests/test_phase37_ci_python_floor.py`.
+- [ ] **P0 blocker:** an administrator must replace the stale
+      `test (ubuntu-latest, 3.9/3.12)` required contexts with the actual
+      `test (ubuntu-24.04, 3.9/3.12)` checks while preserving Windows checks
+      and all other protections. Documented in
+      `00_START_HERE/BRANCH_PROTECTION.md`.
+      Observed on 2026-11-14:
+      https://api.github.com/repos/iAlirezaaa/second-brain-os/branches/main
+      and https://github.com/iAlirezaaa/second-brain-os/actions/runs/43587402335.
+      Seven green CI jobs do not imply the protected-branch merge gate passed.
+- [ ] Verify the new diagnostic in full Ubuntu/Windows CI, independently
+      confirm the live required statuses after admin action, then only merge
+      approved changes once GitHub actually permits it.
+
+**Next 1:** reconcile the two obsolete Ubuntu branch-protection contexts
+without bypassing protection; re-audit and inspect PR #105 mergeability.
+**Next 2:** after a permitted merge, test the next pinned-runner matrix change
+against required check names before claiming CI and branch rules agree.
+
 ---
 
 ## P1 — Safe Codex CLI local MCP snippet (issue #102; under review)
