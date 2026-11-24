@@ -71,6 +71,73 @@ untouched. The diagnostic does **not** administer GitHub; this integration
 does not have branch-protection write access. Do **not** use an admin bypass,
 force push, fictitious status, or a renamed job that conceals its runner.
 
+## Verify the before/after check sources (2026-11-24)
+
+Before changing settings, save the public JSON from the branch-summary URL
+above as `before.json` (browser Save As, JSON rather than HTML); after
+the authorized change, save a fresh response as `after.json`. Store both
+outside the checkout. The 2026-11-24 read-only response listed App ID 15368
+for all four required checks. Preserve each existing check source; the
+number is an observation, not a hardcoded requirement for another repo.
+
+For this exact two-context migration, copy the following example into a
+temporary `verify_contexts.py` file outside the checkout. It compares
+both context names and app IDs, including unrelated checks, and refuses
+a missing Windows check, a changed source, an unchanged snapshot, or
+duplicate entries. The example uses only Python 3.9+ standard library.
+
+<!-- context-migration-example -->
+```python
+import json
+import sys
+from pathlib import Path
+
+
+def checks(path):
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if data.get("protected") is not True:
+        raise ValueError("main is not reported protected")
+    required = data["protection"]["required_status_checks"]
+    rows = required["checks"]
+    mapping = {row["context"]: row["app_id"] for row in rows}
+    if len(mapping) != len(rows) or set(mapping) != set(required["contexts"]):
+        raise ValueError("duplicate or inconsistent required checks")
+    return mapping
+
+
+try:
+    before, after = (checks(path) for path in sys.argv[1:])
+    expected = dict(before)
+    for version in ("3.9", "3.12"):
+        old = f"test (ubuntu-latest, {version})"
+        new = f"test (ubuntu-24.04, {version})"
+        if new in expected or old not in expected:
+            raise ValueError("unexpected before snapshot; inspect manually")
+        expected[new] = expected.pop(old)
+    if after != expected:
+        raise ValueError("required context names or check sources changed unexpectedly")
+except (OSError, KeyError, TypeError, ValueError) as exc:
+    raise SystemExit(f"REFUSED: {exc}")
+print("OK: only the two required Ubuntu context names changed")
+```
+<!-- /context-migration-example -->
+
+Run it from the directory containing the three temporary files:
+
+```sh
+python verify_contexts.py before.json after.json
+```
+
+On Windows, use `py -3` if that is the verified Python launcher; on
+macOS/Linux use `python3` if needed. This is an offline, read-only
+comparison. A passing comparison **does not** prove review rules,
+rulesets, strictness, enforcement for administrators or the live PR's
+merge eligibility; inspect those independently in GitHub settings.
+If the detailed settings are inaccessible, stop before merging.
+The public branch summary is not a complete protection-policy backup.
+Do not claim that the migration was performed merely because the
+synthetic example passes.
+
 After the change, rerun `--live-protection`, inspect the actual seven CI
 jobs and the PR's `mergeable_state`, and merge only if **all** repository
 rules permit it. The audit checks the `test` matrix contexts, **not** all

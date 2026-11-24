@@ -28,6 +28,21 @@ over something it cannot see is a silent gate, not a clean house.
 
 ---
 
+## P0 — Release-gate reconciliation and next priorities (2026-11-24; #107, #144, #147)
+
+- [ ] **P0 (S):** authorized administrator aligns the two Ubuntu required contexts in #107, preserving all other checks and their sources. The read-only runbook in `00_START_HERE/BRANCH_PROTECTION.md` now includes a before/after comparison. Six isolated synthetic cases executed locally (one accepted migration, five expected refusals); the repository regression in `tests/test_phase37_ci_python_floor.py` and final-head CI still require verification. No settings change or merge claimed.
+- [ ] **P0 (M):** reconcile existing overlapping onboarding/security PRs #111, #134, #141, #145 before new features; verify health, independent review and exact-head CI. Measure actual HTTPS clone-to-first-recall on Windows/macOS/Linux (#147), including failures and provenance; five minutes remains a target, not a measured end-to-end result.
+- [ ] **P1 (M):** after P0, demonstrate installed Claude Code/Codex/OpenCode MCP handshakes with synthetic notes and permission tests; improve bilingual README and lightweight documentation, use cases, and reproducible installation/retrieval metrics. No host certification based on config snippets alone.
+- [ ] **P2 (L):** propose optional read-only memory/provenance/activity UI and permission-gated import/export/collaboration; review threat model, ADR, rollback and tests before implementation.
+- [ ] **P3 (L):** evaluate Mem0, Basic Memory, Letta and OpenMemory capabilities independently; adopt only measured, architecture-compatible features under Constitution §2 with a stdlib fallback. Basic Memory #1771 (2026-10-17) is an external user report about duplicate search-index rows, not a demonstrated defect here; use it as a future test hypothesis (https://github.com/basicmachines-co/basic-memory/issues/1771).
+
+**Next 1 (P0):** authorized repair of #107, then independently review and verify the exact head of #112.
+**Next 2 (P0):** reconcile the existing privacy/first-recall fixes and run the actual public HTTPS benchmark (#147); leave the measured local results distinct from real-user onboarding.
+
+Release/discovery work remains gated on a usable reviewed version: honest README/social preview and topics, no external promotion without authorization. Unknown real-user metrics stay unknown.
+
+---
+
 ## P0 — Refuse conditionally skipped mandatory CI tests (#107; PR #112; 2026-11-18)
 
 - [x] **P0 failure mode (S, synthetic):** a `jobs.test.if: false` condition

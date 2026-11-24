@@ -6,6 +6,17 @@ versioning: SemVer. Nightly-loop activity lives in `14_CANDIDATES/loop/` and is
 
 ## [Unreleased]
 
+### Documentation (issue #107; PR #112; pending final-head CI)
+- Add a read-only before/after required-check context and app-source comparison
+  to the administrator runbook, with cross-platform Python invocation and
+  explicit limitations. The documented snippet was executed against six
+  synthetic snapshot pairs (one valid migration and five expected refusals);
+  an existing CI-floor test now exercises that same snippet. No branch
+  settings, workflow, permissions, dependencies, runtime or user data change.
+  ROADMAP records release-gate priorities P0–P3; no release or live migration
+  is claimed.
+
+
 ### Fixed (issue #107; PR #112 conditional required tests; pending exact-head CI)
 - The stdlib-only Python-floor/required-context auditor now refuses to call
   mandatory CI test coverage verified when a `jobs.test` job or the `Unit tests`

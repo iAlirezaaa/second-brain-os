@@ -131,6 +131,44 @@ class TestRefusals(unittest.TestCase):
                 self.assertTrue(ci_floor.required_status_context_problems(root, bad),
                                 "unknown/absent protection must not look green")
 
+            # The administrator runbook's offline example must preserve
+            # both context names and their original check sources.
+            guide = (ROOT / "00_START_HERE/BRANCH_PROTECTION.md").read_text(
+                encoding="utf-8")
+            snippet = guide.split("<!-- context-migration-example -->", 1)[1]
+            snippet = snippet.split("```python\n", 1)[1].split("```", 1)[0]
+            example = root / "verify_contexts.py"
+            example.write_text(snippet, encoding="utf-8")
+            before_names = [name.replace("ubuntu-24.04", "ubuntu-latest")
+                            for name in wanted]
+
+            def branch_snapshot(names, sources, protected=True):
+                return {"protected": protected, "protection": {
+                    "required_status_checks": {"contexts": names, "checks": [
+                        {"context": name, "app_id": source}
+                        for name, source in zip(names, sources)]}}}
+
+            before_path = root / "before.json"
+            after_path = root / "after.json"
+            before_path.write_text(json.dumps(branch_snapshot(
+                before_names, [15368] * 4)), encoding="utf-8")
+            cases = [
+                (branch_snapshot(wanted, [15368] * 4), 0),
+                (branch_snapshot(wanted, [42, 15368, 15368, 15368]), 1),
+                (branch_snapshot(wanted[:-1], [15368] * 3), 1),
+                (branch_snapshot(before_names, [15368] * 4), 1),
+                (branch_snapshot(wanted, [15368] * 4, protected=False), 1),
+                (branch_snapshot(wanted + [wanted[0]], [15368] * 5), 1),
+            ]
+            for after, expected_code in cases:
+                after_path.write_text(json.dumps(after), encoding="utf-8")
+                result = common.run_utf8([sys.executable, str(example),
+                                          str(before_path), str(after_path)],
+                                         cwd=str(root))
+                self.assertEqual(result.returncode, expected_code,
+                                 result.stdout + result.stderr)
+
+
     def test_floor_refuses_linux_only_in_backup(self):
         """Issue #107: an Ubuntu backup job cannot stand in for a Linux test job."""
         with tempfile.TemporaryDirectory() as tmp:
